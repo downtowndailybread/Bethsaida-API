@@ -1,10 +1,8 @@
 package org.downtowndailybread.model
 
+import spray.json.JsValue
+
 case class ClientAttribute(
                             attributeType: ClientAttributeType,
-                            attributeValue: String,
-                            metadata: Metadata
+                            attributeValue: JsValue
                           ) extends ModelBase
-
-
-

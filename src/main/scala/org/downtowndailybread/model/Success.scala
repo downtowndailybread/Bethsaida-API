@@ -1,4 +1,3 @@
 package org.downtowndailybread.model
 
-trait ModelBase {
-}
+case class Success(message: String)
