@@ -12,8 +12,6 @@ create table metadata
 alter table metadata owner to postgres
 ;
 
-
-
 create table canonical_type
 (
 	rid serial not null
@@ -55,4 +53,3 @@ alter table canonical_id owner to postgres
 create unique index canonical_id_id
 	on canonical_id (id)
 ;
-

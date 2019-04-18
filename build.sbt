@@ -17,6 +17,10 @@ libraryDependencies += "com.zaxxer" % "HikariCP" % "3.3.1"
 
 libraryDependencies += "org.postgresql" % "postgresql" % "9.4-1200-jdbc41"
 
+libraryDependencies += "org.flywaydb" % "flyway-core" % "5.2.4"
+
+libraryDependencies += "com.github.swagger-akka-http" %% "swagger-akka-http" % "1.0.0"
+
 libraryDependencies += "org.scalamock" %% "scalamock" % "4.1.0" % Test
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test

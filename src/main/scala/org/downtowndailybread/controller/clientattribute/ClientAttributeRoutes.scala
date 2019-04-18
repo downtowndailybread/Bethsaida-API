@@ -1,10 +1,8 @@
-package org.downtowndailybread.controller.client
+package org.downtowndailybread.controller.clientattribute
 
+import akka.http.scaladsl.server.Directives.{complete, get, path, pathPrefix}
 import org.downtowndailybread.json.JsonSupport
-import akka.http.scaladsl.server.Directives._
-import org.downtowndailybread.model.ClientAttributeType
 import org.downtowndailybread.request.{ClientAttributeTypeRequest, DatabaseSource}
-import spray.json.JsNumber
 
 trait ClientAttributeRoutes {
   this: JsonSupport =>

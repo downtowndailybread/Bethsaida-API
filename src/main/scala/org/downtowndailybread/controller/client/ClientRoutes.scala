@@ -3,6 +3,8 @@ package org.downtowndailybread.controller.client
 import java.util.UUID
 
 import akka.http.scaladsl.server.Directives._
+import org.downtowndailybread.controller.client.attendence.AttendenceRoutes
+import org.downtowndailybread.controller.clientattribute.ClientAttributeRoutes
 import org.downtowndailybread.json.JsonSupport
 import org.downtowndailybread.model.{Client, ClientAttribute, Success}
 import org.downtowndailybread.request.{ClientRequest, DatabaseSource}
@@ -53,6 +55,4 @@ trait ClientRoutes
       }
     }
   }
-
-
 }
