@@ -1,13 +1,17 @@
 package org.downtowndailybread
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import org.downtowndailybread.controller.Routes
-import org.downtowndailybread.model.exceptions.DDBException
-import org.downtowndailybread.model.json.JsonSupport
+import org.downtowndailybread.model.{Client, ClientAttribute, ClientAttributeType}
+import org.downtowndailybread.exceptions.DDBException
+import org.downtowndailybread.json.JsonSupport
+import org.downtowndailybread.request.{ClientAttributeTypeRequest, ClientRequest, DatabaseSource}
 
 import scala.io.StdIn
 
@@ -37,7 +41,20 @@ object ApiMain extends JsonSupport with Routes{
     }
   }
 
+
+//    ClientAttributeTypeRequest.updateClientAttributeType(ClientAttributeType())
+
+
     val bindingFuture = Http().bindAndHandle(route, "localhost", port)
+//
+//
+//
+//    val uuid = ClientRequest.upsertClient(Client(None, Seq(ClientAttribute(ClientAttributeType("name", "string", true), "Teddy Guenin"))))
+//    val client = ClientRequest.getClientById(uuid)
+//    println(client)
+//    val updatedClient = client.copy(client.id, ClientAttribute(ClientAttributeType("dateofbirth", "date", true), "1990-01-01") :: Nil)
+//    println(ClientRequest.upsertClient(updatedClient))
+//    println(ClientRequest.getClientById(uuid))
 
     println(s"Server online at http://localhost:$port/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return

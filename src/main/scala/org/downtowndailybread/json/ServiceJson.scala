@@ -1,4 +1,4 @@
-package org.downtowndailybread.model.json
+package org.downtowndailybread.json
 
 import org.downtowndailybread.model.Service
 import spray.json.{JsArray, JsBoolean, JsNumber, JsObject, JsString, JsValue, RootJsonWriter}

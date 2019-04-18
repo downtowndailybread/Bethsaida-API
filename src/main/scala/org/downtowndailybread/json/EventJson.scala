@@ -1,4 +1,4 @@
-package org.downtowndailybread.model.json
+package org.downtowndailybread.json
 
 import org.downtowndailybread.model.Event
 import spray.json.{JsArray, JsBoolean, JsNumber, JsObject, JsString, JsValue, RootJsonWriter}
@@ -10,7 +10,7 @@ trait EventJson {
   implicit val eventFormat = new RootJsonWriter[Event] {
     override def write(event: Event): JsValue = {
       JsObject(
-        ("id", JsNumber(event.id)),
+        ("id", JsNumber(1)),
         ("service", serviceFormat.write(event.service)),
         ("eventTime", JsString(event.eventTime.toString))
       )

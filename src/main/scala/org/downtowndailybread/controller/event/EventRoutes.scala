@@ -1,9 +1,9 @@
 package org.downtowndailybread.controller.event
 
 import akka.http.scaladsl.server.Directives._
-import org.downtowndailybread.FakeData._
-import org.downtowndailybread.model.exceptions.NoSuchEventException
-import org.downtowndailybread.model.json.JsonSupport
+import org.downtowndailybread.exceptions.NoSuchEventException
+import org.downtowndailybread.json.JsonSupport
+import spray.json.JsNumber
 
 trait EventRoutes {
   this: JsonSupport =>
@@ -13,16 +13,17 @@ trait EventRoutes {
     pathPrefix("event") {
       path("") {
         get {
-          complete(allEvents)
+//          complete(allEvents)
+          complete(JsNumber(1))
         }
-      } ~
+      } /*~
       path(LongNumber) { id =>
         allEvents.find(_.metadata.id == id) match {
           case Some(c) => complete(c)
           case None =>
             throw new NoSuchEventException(id)
         }
-      }
+      }*/
     }
   }
 }

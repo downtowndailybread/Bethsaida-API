@@ -1,3 +1,3 @@
-package org.downtowndailybread.model.exceptions
+package org.downtowndailybread.exceptions
 
 class MissingDataException(message: String) extends DDBException(message)
