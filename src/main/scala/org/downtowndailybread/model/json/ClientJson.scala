@@ -20,8 +20,8 @@ trait ClientJson {
         ("id", JsNumber(client.metadata.id)),
         ("name", JsString(
           client.attributes.find(_.attributeType == Name).map(_.attributeValue).get)),
-        ("attributes", JsObject(
-          client.attributes.map(attrib => (attrib.attributeType.name, clientAttributeFormat.write(attrib))).toMap
+        ("attributes", JsArray(
+          client.attributes.map(attrib => clientAttributeFormat.write(attrib)).toList
         )),
         ("onboardingComplete", JsBoolean(
           ClientAttributeTypes.attributes.filter(_.required).forall(
