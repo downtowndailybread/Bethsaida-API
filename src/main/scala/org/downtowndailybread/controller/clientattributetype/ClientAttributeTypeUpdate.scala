@@ -2,13 +2,12 @@ package org.downtowndailybread.controller.clientattributetype
 
 
 import akka.http.scaladsl.server.Directives._
-import org.downtowndailybread.ApiGlobalResources
 import org.downtowndailybread.exceptions.clientattributetype.ClientAttributeTypeInsertionErrorException
 import org.downtowndailybread.json.JsonSupport
 import org.downtowndailybread.model.{ClientAttributeType, ClientAttributeTypeInternal}
 import org.downtowndailybread.request.{ClientAttributeTypeRequest, DatabaseSource}
 
-class ClientAttributeTypeUpdate extends JsonSupport with ApiGlobalResources {
+class ClientAttributeTypeUpdate extends JsonSupport {
 
   def updateClientAttributeTypeRoute() = {
     path(Segment / "update") {

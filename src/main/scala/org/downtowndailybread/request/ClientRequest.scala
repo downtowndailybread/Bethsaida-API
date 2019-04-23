@@ -13,7 +13,11 @@ class ClientRequest(val conn: Connection) extends DatabaseRequest {
 
   val clientAttributeTypesRequester = new ClientAttributeTypeRequest(conn)
 
-  def getAllClients(): Seq[Client] = {
+  def getAllClients(uuid: Option[UUID] = None): Seq[Client] = {
+    val filter = uuid match {
+      case Some(id) => "cid.id = ?"
+      case None => "(1=1 or ''=?)"
+    }
     val sql =
       s"""
          |select * from (select distinct on (cid.id,
@@ -28,10 +32,12 @@ class ClientRequest(val conn: Connection) extends DatabaseRequest {
          |                           left join client_attribute_type cattribtype on cattrib.type_id = cattribtype.id
          |               where 1 = 1
          |                 and ctype.type = 'client'
+         |                 and $filter
          |               order by cid.id, cattribtype.id, cattrib.rid desc) all_attribs
          |where is_valid
       """.stripMargin
     val statement = conn.prepareStatement(sql)
+    statement.setString(1, uuid.map(_.toString).getOrElse(""))
 
     val result = statement.executeQuery()
 
@@ -54,14 +60,14 @@ class ClientRequest(val conn: Connection) extends DatabaseRequest {
   }
 
   def getClientById(id: UUID): Client = {
-    getAllClients().find(_.id == id) match {
-      case Some(client) => client
-      case None => throw new ClientNotFoundException(id)
+    getAllClients(Some(id)) match {
+      case client :: Nil => client
+      case _ => throw new ClientNotFoundException(id)
     }
   }
 
 
-  def insertClient(attribs: Seq[AttribNameValuePair]): UUID = {
+  def insertClient(attribs: Seq[AttribNameValuePair]): Unit = {
     val clientId = insertCanonicalId(conn, Client)
     val attributeTypes = new ClientAttributeTypeRequest(conn).getClientAttributeTypes()
       .map { case ClientAttributeTypeInternal(id, atype) => (atype.name, id) }.toMap
@@ -85,11 +91,9 @@ class ClientRequest(val conn: Connection) extends DatabaseRequest {
     }
 
     val numResults = ps.executeBatch()
-
-    clientId
   }
 
-  def updateClient(id: UUID, attribs: Seq[AttribNameValuePair]): UUID = {
+  def updateClient(id: UUID, attribs: Seq[AttribNameValuePair]): Unit = {
     val existingClient = getClientById(id)
     val attributeType = new ClientAttributeTypeRequest(conn).getClientAttributeTypes()
     val newAttributes = attribs.map {
@@ -135,7 +139,5 @@ class ClientRequest(val conn: Connection) extends DatabaseRequest {
 
       val numResults = ps.executeBatch()
     }
-
-    id
   }
 }

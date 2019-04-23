@@ -23,7 +23,11 @@ class ClientAttributeTypeRequest(val conn: Connection) extends DatabaseRequest {
   }
 
 
-  def getClientAttributeTypes(): Seq[ClientAttributeTypeInternal] = {
+  def getClientAttributeTypes(attributeName: Option[String] = None): Seq[ClientAttributeTypeInternal] = {
+    val filter = attributeName match {
+      case Some(attribName) =>  s"catype.name = $attribName"
+      case None => "1=1"
+    }
     val sql =
       """
         |select
@@ -40,7 +44,9 @@ class ClientAttributeTypeRequest(val conn: Connection) extends DatabaseRequest {
         |                     from client_attribute_type catype
         |                            left join canonical_id cid on catype.id = cid.id
         |                            left join canonical_type ctype on cid.type = ctype.id
-        |                     where ctype.type = ?)
+        |                     where ctype.type = ?
+        |                     and $filter
+        |                     )
         |and meta.is_valid
       """.stripMargin
     createSeq(
@@ -54,18 +60,18 @@ class ClientAttributeTypeRequest(val conn: Connection) extends DatabaseRequest {
   }
 
   def getClientAttributeTypeInternalByName(attribName: String): ClientAttributeTypeInternal = {
-    getClientAttributeTypes().find(_.tpe.name == attribName) match {
-      case Some(cat) => cat
-      case None => throw new ClientAttributeTypeNotFoundException(attribName)
+    getClientAttributeTypes(Some(attribName)) match {
+      case cat :: Nil => cat
+      case _ => throw new ClientAttributeTypeNotFoundException(attribName)
     }
   }
 
   def newClientAttributeType(cat: ClientAttributeType): UUID = {
-    getClientAttributeTypes().find(_.tpe.name == cat.name) match {
-      case None =>
+    getClientAttributeTypes(Some(cat.name)) match {
+      case Nil =>
         val canonicalId = insertCanonicalId(conn, ClientAttributeType)
         updateClientAttributeType(ClientAttributeTypeInternal(canonicalId, cat), true)
-      case Some(c) =>
+      case c :: _ =>
         throw new ClientAttributeTypeAlreadyExistsException(cat.name)
     }
   }
