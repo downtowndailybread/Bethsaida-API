@@ -1,58 +1,19 @@
 package org.downtowndailybread.controller.client
 
-import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
-import org.downtowndailybread.controller.client.attendence.AttendenceRoutes
-import org.downtowndailybread.controller.clientattribute.ClientAttributeRoutes
 import org.downtowndailybread.json.JsonSupport
-import org.downtowndailybread.model.{Client, ClientAttribute, Success}
-import org.downtowndailybread.request.{ClientRequest, DatabaseSource}
 
-trait ClientRoutes
-  extends AttendenceRoutes
-    with ClientAttributeRoutes {
+
+trait ClientRoutes {
   this: JsonSupport =>
 
+  private val newClientRoute = new ClientNew().newClientRoute
+  private val deleteClientRoute = new ClientDelete().deleteClientRoute
+  private val updateClientRoute = new ClientUpdate().updateClientRoute
+  private val findClientRoute = new ClientFind().findClientRoute
+  private val allClientsRoute = new ClientAll().allClientRoute
 
-  val clientRoutes = {
-    pathPrefix("client") {
-      path("new") {
-        post {
-          entity(as[Seq[ClientAttribute]]) {
-            attribs => complete {
-              val id = DatabaseSource.runSql(c => new ClientRequest(c).insertClient(attribs))
-              DatabaseSource.runSql(c => new ClientRequest(c).getClientById(id))
-            }
-          }
-        }
-      } ~
-        pathPrefix(Segment) {
-          idStr =>
-            val id = UUID.fromString(idStr)
-            pathEnd {
-              get(complete(DatabaseSource.runSql(c => new ClientRequest(c).getClientById(id))))
-            } ~
-              path("update") {
-                post {
-                  entity(as[Client]) {
-                    client => {
-                      val id = DatabaseSource.runSql(c => new ClientRequest(c).updateClient(client))
-                      complete(DatabaseSource.runSql(c => new ClientRequest(c).getClientById(id)))
-                    }
-                  }
-                }
-              } ~
-              path("delete") {
-                post {
-                  DatabaseSource.runSql(c => new ClientRequest(c).updateClient(Client(id, Seq())))
-                  complete(Success(s"client id $id successfully deleted"))
-                }
-              }
-        } ~
-      pathEnd {
-        complete(DatabaseSource.runSql(c => new ClientRequest(c).getAllClientInfo()))
-      }
-    }
+  val allClientRoutes = pathPrefix("client") {
+    newClientRoute ~ findClientRoute ~ deleteClientRoute ~ updateClientRoute ~ allClientsRoute
   }
 }

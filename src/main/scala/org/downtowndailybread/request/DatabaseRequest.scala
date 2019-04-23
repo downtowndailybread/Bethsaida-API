@@ -1,6 +1,6 @@
 package org.downtowndailybread.request
 
-import java.sql.{Connection, PreparedStatement, ResultSet}
+import java.sql.{Connection, ResultSet}
 import java.util.UUID
 
 import org.downtowndailybread.model.CanonicalDataType

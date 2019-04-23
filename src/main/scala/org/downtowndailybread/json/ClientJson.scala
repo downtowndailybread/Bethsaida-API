@@ -2,19 +2,38 @@ package org.downtowndailybread.json
 
 import java.util.UUID
 
+import org.downtowndailybread.model.helper.AttribNameValuePair
 import org.downtowndailybread.model.{Client, ClientAttribute, ClientAttributeType}
 import org.downtowndailybread.request.{ClientAttributeTypeRequest, DatabaseSource}
 import spray.json._
-import DefaultJsonProtocol._
 
 trait ClientJson {
+
+  implicit val jsonToClientAttributeList = new RootJsonReader[Seq[AttribNameValuePair]] {
+    override def read(json: JsValue): Seq[AttribNameValuePair] = {
+      json match {
+        case JsArray(elements) => elements.map { pair =>
+          pair match {
+            case JsObject(p) => AttribNameValuePair(
+              p("attribName") match { case JsString(s) => s},
+              p("attribValue")
+            )
+          }
+        }
+      }
+    }
+  }
+
+
 
   implicit val clientAttributeTypeToJson = new RootJsonWriter[ClientAttributeType] {
     override def write(clientAttribType: ClientAttributeType): JsValue = {
       JsObject(
         ("attribName", JsString(clientAttribType.name)),
+        ("attribDisplayName", JsString(clientAttribType.displayName)),
         ("attribDataType", JsString(clientAttribType.dataType)),
         ("attribRequired", JsBoolean(clientAttribType.required)),
+        ("attribRequiredForOnboarding", JsBoolean(clientAttribType.requiredForOnboarding)),
         ("ordering", JsNumber(clientAttribType.ordering))
       )
     }
@@ -26,8 +45,10 @@ trait ClientJson {
         case JsObject(fields) =>
           ClientAttributeType(
             fields("attribName") match { case JsString(value) => value},
+            fields("attribDisplayName") match { case JsString(value) => value},
             fields("attribDataType") match { case JsString(value) => value},
             fields("attribRequired") match { case JsBoolean(value) => value},
+            fields("attribRequiredForOnboarding") match { case JsBoolean(value) => value},
             fields("ordering") match { case JsNumber(value) => value.toInt
             }
           )
@@ -48,7 +69,7 @@ trait ClientJson {
   implicit val jsonToClientAttribute = new RootJsonReader[ClientAttribute] {
     override def read(json: JsValue): ClientAttribute = {
       val allTypes = DatabaseSource.runSql(c => new ClientAttributeTypeRequest(c).getClientAttributeTypes())
-        .map(att => (att._2.name, att._2)).toMap
+        .map(att => (att.tpe.name, att.tpe)).toMap
       json match {
         case JsObject(obj) =>
           ClientAttribute(
@@ -110,7 +131,7 @@ trait ClientJson {
     override def read(json: JsValue): Client = {
       val allClientAttributeTypes =
         DatabaseSource.runSql(c => new ClientAttributeTypeRequest(c).getClientAttributeTypes())
-          .map(r => (r._2.name, r._2)).toMap
+          .map(r => (r.tpe.name, r.tpe)).toMap
       json match {
         case JsObject(c) =>
           Client(

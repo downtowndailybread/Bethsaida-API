@@ -3,14 +3,14 @@ package org.downtowndailybread.json
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.downtowndailybread.exceptions.DDBException
 import org.downtowndailybread.model._
-import spray.json.{DefaultJsonProtocol, JsArray, JsBoolean, JsNumber, JsObject, JsString, JsValue, RootJsonWriter}
+import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, RootJsonWriter}
 
 trait JsonSupport
   extends SprayJsonSupport
     with DefaultJsonProtocol
     with ClientJson
-    with ServiceJson
-    with EventJson
+//    with ServiceJson
+//    with EventJson
 {
 
 
@@ -19,7 +19,6 @@ trait JsonSupport
   implicit val ddbExceptionFormat = new RootJsonWriter[DDBException] {
     override def write(obj: DDBException): JsValue = {
       JsObject(
-        ("status", JsString("error")),
         ("error", JsString(obj.errorType)),
         ("message", JsString(obj.getMessage))
       )

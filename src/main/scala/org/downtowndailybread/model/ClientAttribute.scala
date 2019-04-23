@@ -1,7 +1,5 @@
 package org.downtowndailybread.model
 
-import java.util.UUID
-
 import spray.json.JsValue
 
 case class ClientAttribute(

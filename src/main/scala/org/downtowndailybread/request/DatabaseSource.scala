@@ -3,7 +3,6 @@ package org.downtowndailybread.request
 import java.sql.Connection
 import java.util.Properties
 
-
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 
 object DatabaseSource {

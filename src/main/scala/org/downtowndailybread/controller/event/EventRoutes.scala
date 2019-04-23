@@ -1,7 +1,6 @@
 package org.downtowndailybread.controller.event
 
 import akka.http.scaladsl.server.Directives._
-import org.downtowndailybread.exceptions.NoSuchEventException
 import org.downtowndailybread.json.JsonSupport
 import spray.json.JsNumber
 

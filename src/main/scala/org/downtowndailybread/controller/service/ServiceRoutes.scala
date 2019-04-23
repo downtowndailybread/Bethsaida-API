@@ -1,7 +1,6 @@
 package org.downtowndailybread.controller.service
 
 import akka.http.scaladsl.server.Directives._
-import org.downtowndailybread.exceptions.NoSuchServiceException
 import org.downtowndailybread.json.JsonSupport
 import spray.json.JsNumber
 
