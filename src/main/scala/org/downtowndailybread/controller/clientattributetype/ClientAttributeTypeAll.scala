@@ -1,4 +1,4 @@
-package org.downtowndailybread.controller.clientattribute
+package org.downtowndailybread.controller.clientattributetype
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.json.JsonSupport

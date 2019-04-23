@@ -1,6 +1,6 @@
 package org.downtowndailybread.exceptions.clientattributetype
 
-import org.downtowndailybread.exceptions.DDBException
+import org.downtowndailybread.exceptions.{DDBException, NoSuchIdException}
 
 class ClientAttributeTypeNotFoundException(val name: String)
-  extends DDBException(s"Client attribute type of id $name not found")
+  extends NoSuchIdException(s"client attribute type", name)

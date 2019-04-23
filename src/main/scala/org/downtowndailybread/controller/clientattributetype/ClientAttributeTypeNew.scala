@@ -1,5 +1,6 @@
-package org.downtowndailybread.controller.clientattribute
+package org.downtowndailybread.controller.clientattributetype
 
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.ApiGlobalResources
 import org.downtowndailybread.json.JsonSupport
@@ -16,11 +17,7 @@ class ClientAttributeTypeNew extends JsonSupport with ApiGlobalResources {
             val newAttribIds = cats.map { cat =>
               DatabaseSource.runSql(c => new ClientAttributeTypeRequest(c).newClientAttributeType(cat))
             }
-            complete {
-              DatabaseSource.runSql(c => new ClientAttributeTypeRequest(c).getClientAttributeTypes().filter {
-                cat => newAttribIds.contains(cat.id)
-              }.map(_.tpe))
-            }
+            complete(StatusCodes.Created)
         }
       }
     }

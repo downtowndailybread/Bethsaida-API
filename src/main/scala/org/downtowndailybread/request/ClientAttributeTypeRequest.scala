@@ -3,7 +3,7 @@ package org.downtowndailybread.request
 import java.sql.{Connection, ResultSet}
 import java.util.UUID
 
-import org.downtowndailybread.exceptions.clientattributetype.ClientAttributeTypeAlreadyExistsException
+import org.downtowndailybread.exceptions.clientattributetype.{ClientAttributeTypeAlreadyExistsException, ClientAttributeTypeNotFoundException}
 import org.downtowndailybread.model.{ClientAttributeType, ClientAttributeTypeInternal}
 
 
@@ -53,18 +53,33 @@ class ClientAttributeTypeRequest(val conn: Connection) extends DatabaseRequest {
     ).sortBy(r => (r.tpe.ordering, r.tpe.name))
   }
 
+  def getClientAttributeTypeInternalByName(attribName: String): ClientAttributeTypeInternal = {
+    getClientAttributeTypes().find(_.tpe.name == attribName) match {
+      case Some(cat) => cat
+      case None => throw new ClientAttributeTypeNotFoundException(attribName)
+    }
+  }
+
   def newClientAttributeType(cat: ClientAttributeType): UUID = {
     getClientAttributeTypes().find(_.tpe.name == cat.name) match {
       case None =>
         val canonicalId = insertCanonicalId(conn, ClientAttributeType)
-        updateClientAttributeType(canonicalId, cat, true)
+        updateClientAttributeType(ClientAttributeTypeInternal(canonicalId, cat), true)
       case Some(c) =>
         throw new ClientAttributeTypeAlreadyExistsException(cat.name)
     }
   }
 
-  def updateClientAttributeType(id: UUID, cat: ClientAttributeType, isValid: Boolean): UUID = {
-    val metaId = insertMetadataStatement(conn, true)
+  def deleteClientAttributeType(attribName: String): Unit = {
+    updateClientAttributeType(getClientAttributeTypeInternalByName(attribName), false)
+  }
+
+
+
+  def updateClientAttributeType(attribType: ClientAttributeTypeInternal, isValid: Boolean = true): UUID = {
+    val id = attribType.id
+    val cat = attribType.tpe
+    val metaId = insertMetadataStatement(conn, isValid)
     val sql =
       """
         |insert into client_attribute_type (
@@ -86,5 +101,6 @@ class ClientAttributeTypeRequest(val conn: Connection) extends DatabaseRequest {
     ps.executeUpdate()
 
     id
+
   }
 }

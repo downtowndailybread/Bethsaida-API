@@ -12,7 +12,7 @@ import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import org.downtowndailybread.auth.Authentication
 import org.downtowndailybread.controller.Routes
-import org.downtowndailybread.exceptions.{DDBException, UnauthorizedException}
+import org.downtowndailybread.exceptions.{DDBException, MalformedJsonErrorException, NotFoundException, UnauthorizedException}
 import org.downtowndailybread.json.JsonSupport
 import org.downtowndailybread.request.DatabaseSource
 import org.flywaydb.core.Flyway
@@ -33,6 +33,10 @@ object ApiMain extends JsonSupport with Routes with ApiGlobalResources {
 
     implicit def exceptionHandler: ExceptionHandler =
       ExceptionHandler {
+        case r: NotFoundException =>
+          extractUri {
+            uri => cors() { complete((NotFound, ddbExceptionFormat.write(r)))}
+          }
         case r: DDBException =>
           extractUri {
             uri => cors() {complete((BadRequest, ddbExceptionFormat.write(r)))}
@@ -43,7 +47,7 @@ object ApiMain extends JsonSupport with Routes with ApiGlobalResources {
     implicit def rejectionHandler  = RejectionHandler.newBuilder.handle {
       case MalformedRequestContentRejection(msg, throwable) ⇒ {
         val rejectionMessage = "The request content was malformed:\n" + msg
-        cors() { complete(BadRequest, rejectionMessage) }
+        cors() { complete(BadRequest, throw new MalformedJsonErrorException(rejectionMessage)) }
       }
       case AuthenticationFailedRejection(msg, throwable) => {
         cors() { complete(Unauthorized, new UnauthorizedException())}
