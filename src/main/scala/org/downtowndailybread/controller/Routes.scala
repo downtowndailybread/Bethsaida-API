@@ -3,13 +3,14 @@ package org.downtowndailybread.controller
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.controller.client.ClientRoutes
 import org.downtowndailybread.controller.clientattributetype.ClientAttributeTypeRoutes
+import org.downtowndailybread.controller.service.ServiceRoutes
 import org.downtowndailybread.json.JsonSupport
 
 trait Routes
-  extends ClientRoutes with ClientAttributeTypeRoutes {
+  extends ClientRoutes with ClientAttributeTypeRoutes with ServiceRoutes{
   this: JsonSupport =>
 
   val routes = ignoreTrailingSlash {
-    allClientRoutes ~ allClientAttributeTypeRoutes
+    allClientRoutes ~ allClientAttributeTypeRoutes ~ allServiceRoutes
   }
 }

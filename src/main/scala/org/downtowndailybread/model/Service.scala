@@ -1,3 +1,8 @@
 package org.downtowndailybread.model
 
-case class Service(name: String, metadata: Metadata) extends ModelBase
+import org.downtowndailybread.model.ServiceType.ServiceType
+
+case class Service(
+                    name: String,
+                    serviceType: ServiceType,
+                    schedule: Schedule)
