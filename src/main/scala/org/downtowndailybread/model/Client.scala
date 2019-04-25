@@ -1,6 +1,12 @@
 package org.downtowndailybread.model
 
+import java.util.UUID
+
+
 case class Client(
-                 attributes: Seq[ClientAttribute],
-                 metadata: Metadata
+                   id: UUID,
+                   attributes: Seq[ClientAttribute]
                  ) extends ModelBase
+
+
+

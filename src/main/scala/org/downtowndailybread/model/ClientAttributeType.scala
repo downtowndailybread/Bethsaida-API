@@ -1,25 +1,12 @@
 package org.downtowndailybread.model
 
-//object ClientAttributeType extends Enumeration {
-//
-//  type ClientAttributeType = Value
-//  val name = Value
-//
-//}
-import scala.reflect.runtime.universe._
+import org.downtowndailybread.exception.clientattributetype.ClientAttributeTypeInvalidIdException
 
-
-object ClientAttributeTypes {
-  val attributes = List(
-    Name,
-    DateOfBirth
-  )
+case class ClientAttributeType(
+                                id: String,
+                                clientAttributeTypeAttribute: ClientAttributeTypeAttribute
+                              ) {
+  if (!id.matches("^[A-Za-z0-9_-]*$")) {
+    throw new ClientAttributeTypeInvalidIdException(id)
+  }
 }
-
-
-sealed abstract class ClientAttributeType(val dataType: String, val required: Boolean) {
-  val name = this.getClass.getSimpleName.replace("$", "").toLowerCase
-}
-
-case object Name extends ClientAttributeType("string", true)
-case object DateOfBirth extends ClientAttributeType("date", true)

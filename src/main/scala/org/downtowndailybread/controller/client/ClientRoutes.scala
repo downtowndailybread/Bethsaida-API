@@ -1,31 +1,19 @@
 package org.downtowndailybread.controller.client
 
 import akka.http.scaladsl.server.Directives._
-import org.downtowndailybread.FakeData
-import org.downtowndailybread.model.exceptions.NoSuchClientException
-import org.downtowndailybread.model.json.JsonSupport
+import org.downtowndailybread.json.JsonSupport
 
-trait ClientRoutes extends AttendenceRoutes {
+
+trait ClientRoutes {
   this: JsonSupport =>
 
-  import FakeData._
+  private val newClientRoute = new ClientNew().newClientRoute
+  private val deleteClientRoute = new ClientDelete().deleteClientRoute
+  private val updateClientRoute = new ClientUpdate().updateClientRoute
+  private val findClientRoute = new ClientFind().findClientRoute
+  private val allClientsRoute = new ClientAll().allClientRoute
 
-  val clientRoutes = {
-    pathPrefix("client") {
-      path("") {
-        get {
-          complete(allClients)
-        }
-      } ~
-      path(LongNumber) { id =>
-        allClients.find(_.metadata.id == id) match {
-          case Some(c) => complete(c)
-          case None =>
-            throw new NoSuchClientException(id)
-        }
-      } ~
-      attendenceRoutes
-    }
+  val allClientRoutes = pathPrefix("client") {
+    newClientRoute ~ findClientRoute ~ deleteClientRoute ~ updateClientRoute ~ allClientsRoute
   }
-
 }
