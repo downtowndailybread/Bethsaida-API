@@ -5,9 +5,10 @@ import org.downtowndailybread.json.JsonSupport
 import org.downtowndailybread.model.ClientAttribute
 import org.downtowndailybread.request.{ClientRequest, DatabaseSource}
 
-class ClientUpdate extends JsonSupport {
+trait Update {
+  this: JsonSupport =>
 
-  val updateClientRoute = path(JavaUUID / "update") {
+  val client_updateRoute = path(JavaUUID / "update") {
     id =>
       post {
         entity(as[Seq[ClientAttribute]]) {

@@ -22,6 +22,10 @@ libraryDependencies += "org.flywaydb" % "flyway-core" % "5.2.4"
 
 libraryDependencies += "ch.megard" %% "akka-http-cors" % "0.4.0"
 
+libraryDependencies += "com.auth0" % "java-jwt" % "3.8.0"
+
+libraryDependencies += "commons-codec" % "commons-codec" % "1.12"
+
 libraryDependencies += "org.scalamock" %% "scalamock" % "4.1.0" % Test
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test

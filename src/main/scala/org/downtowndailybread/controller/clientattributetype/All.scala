@@ -4,9 +4,10 @@ import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.json.JsonSupport
 import org.downtowndailybread.request.{ClientAttributeTypeRequest, DatabaseSource}
 
-class ClientAttributeTypeAll extends JsonSupport {
+trait All {
+  this: JsonSupport =>
 
-  def allClientAttributeTypeRoute() =
+  val clientAttributeType_allRoute =
     path(PathEnd) {
       get {
         complete(DatabaseSource.runSql(c =>

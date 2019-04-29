@@ -1,5 +1,3 @@
-
-
 create table metadata
 (
 	rid serial not null
@@ -116,3 +114,57 @@ create table client_meta_info
 
 alter table client_meta_info owner to postgres
 ;
+
+create table b_user
+(
+	rid serial not null
+		constraint user_info_pkey
+			primary key,
+	id uuid not null
+		constraint user_info_id_key
+			unique,
+	metadata_id integer not null references metadata(rid)
+)
+;
+
+alter table b_user owner to postgres
+;
+
+create table user_attribute
+(
+	rid serial not null
+		constraint user_attribute_pkey
+			primary key,
+	user_id uuid not null
+		constraint user_attribute_user_id_fkey
+			references b_user (id),
+	email varchar(500) not null,
+	name varchar(500) not null,
+	metadata_id int not null references metadata(rid)
+)
+;
+
+alter table user_attribute owner to postgres
+;
+
+create table user_access
+(
+	rid serial not null
+		constraint user_access_pkey
+			primary key,
+	user_id uuid not null
+		constraint user_access_user_id_fkey
+			references b_user (id),
+	salt varchar(90),
+	hash varchar(90),
+	confirmed boolean not null,
+	admin_lock boolean not null,
+	user_lock boolean not null,
+	reset_token uuid not null,
+	metadata_id int not null references metadata(rid)
+)
+;
+
+alter table user_access owner to postgres
+;
+

@@ -15,7 +15,9 @@ object DatabaseSource {
     props.setProperty("dataSource.password", "docker")
     props.setProperty("dataSource.databaseName", "ddb")
     props.put("dataSource.logWriter", new PrintWriter(System.out))
-    new HikariConfig(props)
+    val config = new HikariConfig(props)
+    config.setSchema("bethsaida")
+    config
   }
 
   val ds = new HikariDataSource(config)

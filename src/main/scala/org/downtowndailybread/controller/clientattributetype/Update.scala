@@ -1,15 +1,14 @@
 package org.downtowndailybread.controller.clientattributetype
 
-
 import akka.http.scaladsl.server.Directives._
-import org.downtowndailybread.exception.clientattributetype.ClientAttributeTypeInsertionErrorException
 import org.downtowndailybread.json.JsonSupport
 import org.downtowndailybread.model.{ClientAttributeType, ClientAttributeTypeAttribute}
 import org.downtowndailybread.request.{ClientAttributeTypeRequest, DatabaseSource}
 
-class ClientAttributeTypeUpdate extends JsonSupport {
+trait Update {
+  this: JsonSupport =>
 
-  def updateClientAttributeTypeRoute() = {
+  val clientAttributeType_updateRoute = {
     path(Segment / "update") {
       attribName =>
         post {

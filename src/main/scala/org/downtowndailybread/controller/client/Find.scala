@@ -6,9 +6,10 @@ import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.json.JsonSupport
 import org.downtowndailybread.request.{ClientRequest, DatabaseSource}
 
-class ClientFind extends JsonSupport {
+trait Find {
+  this: JsonSupport =>
 
-  val findClientRoute = path(Segment) {
+  val client_findRoute = path(Segment) {
     idStr => get {
       val id = UUID.fromString(idStr)
       pathEnd {

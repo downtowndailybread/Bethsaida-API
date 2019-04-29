@@ -9,8 +9,9 @@ trait JsonSupport
   extends SprayJsonSupport
     with DefaultJsonProtocol
     with ClientJson
-//    with ServiceJson
-//    with EventJson
+    with UserJson
+    //    with ServiceJson
+    //    with EventJson
 {
 
 
