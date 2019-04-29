@@ -115,7 +115,7 @@ create table client_meta_info
 alter table client_meta_info owner to postgres
 ;
 
-create table b_user
+create table user_account
 (
 	rid serial not null
 		constraint user_info_pkey
@@ -127,7 +127,7 @@ create table b_user
 )
 ;
 
-alter table b_user owner to postgres
+alter table user_account owner to postgres
 ;
 
 create table user_attribute
@@ -137,7 +137,7 @@ create table user_attribute
 			primary key,
 	user_id uuid not null
 		constraint user_attribute_user_id_fkey
-			references b_user (id),
+			references user_account (id),
 	email varchar(500) not null,
 	name varchar(500) not null,
 	metadata_id int not null references metadata(rid)
@@ -154,7 +154,7 @@ create table user_access
 			primary key,
 	user_id uuid not null
 		constraint user_access_user_id_fkey
-			references b_user (id),
+			references user_account (id),
 	salt varchar(90),
 	hash varchar(90),
 	confirmed boolean not null,
