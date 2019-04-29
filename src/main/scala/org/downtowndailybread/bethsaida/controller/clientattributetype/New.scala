@@ -5,21 +5,25 @@ import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.ClientAttributeType
 import org.downtowndailybread.bethsaida.request.{ClientAttributeTypeRequest, DatabaseSource}
+import org.downtowndailybread.bethsaida.service.AuthenticationProvider
 
 trait New {
-  this: JsonSupport =>
+  this: AuthenticationProvider with JsonSupport =>
 
   val clientAttributeType_newRoute = {
     path("new") {
-      post {
-        entity(as[Seq[ClientAttributeType]]) {
-          cats =>
-            cats.foreach { cat =>
-              DatabaseSource.runSql(c =>
-                new ClientAttributeTypeRequest(c).insertClientAttributeType(cat))
+      authorizeNotAnonymous {
+        implicit authUser =>
+          post {
+            entity(as[Seq[ClientAttributeType]]) {
+              cats =>
+                cats.foreach { cat =>
+                  DatabaseSource.runSql(c =>
+                    new ClientAttributeTypeRequest(c).insertClientAttributeType(cat))
+                }
+                complete(StatusCodes.Created)
             }
-            complete(StatusCodes.Created)
-        }
+          }
       }
     }
   }

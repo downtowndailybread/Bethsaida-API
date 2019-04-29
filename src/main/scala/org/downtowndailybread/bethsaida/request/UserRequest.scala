@@ -4,11 +4,12 @@ import java.sql.{Connection, ResultSet}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.user.{EmailAlreadyExistsException, UserNotFoundException}
-import org.downtowndailybread.bethsaida.model.{InternalUser, LoginParameters, NewUserParameters}
+import org.downtowndailybread.bethsaida.model.{AnonymousUser, InternalUser, NewUserParameters}
 import org.downtowndailybread.bethsaida.service.{HashProvider, UUIDProvider}
 
 class UserRequest(val conn: Connection)
-  extends DatabaseRequest
+  extends BaseRequest
+    with DatabaseRequest
     with UUIDProvider
     with HashProvider {
 
@@ -55,7 +56,7 @@ class UserRequest(val conn: Connection)
         rs.getString("salt"),
         rs.getString("hash"),
         rs.getBoolean("confirmed"),
-        parseUUID(rs.getString("reset_token")),
+        Some(parseUUID(rs.getString("reset_token"))),
         rs.getBoolean("user_lock"),
         rs.getBoolean("admin_lock")
       )
@@ -74,6 +75,7 @@ class UserRequest(val conn: Connection)
     ps.setString(1, uuid.toString)
 
     extractUserFromRs(ps.executeQuery())
+
   }
 
   def getRawUserFromEmail(email: String): Option[InternalUser] = {
@@ -85,7 +87,7 @@ class UserRequest(val conn: Connection)
     extractUserFromRs(ps.executeQuery())
   }
 
-  def insertLoginInfoRecord(t: InternalUser): Unit = {
+  def insertLoginInfoRecord(t: InternalUser)(implicit au: InternalUser): Unit = {
     val mId = insertMetadataStatement(conn, true)
     val createAccessSql =
       s"""
@@ -122,7 +124,7 @@ class UserRequest(val conn: Connection)
     psAccess.setBoolean(4, t.confirmed)
     psAccess.setBoolean(5, t.adminLock)
     psAccess.setBoolean(6, t.userLock)
-    psAccess.setString(7, t.resetToken.toString)
+    psAccess.setString(7, t.resetToken.map(_.toString).orNull)
     psAccess.setInt(8, mId)
     psAccess.executeUpdate()
 
@@ -152,7 +154,7 @@ class UserRequest(val conn: Connection)
 
   }
 
-  def insertClient(user: NewUserParameters): Unit = {
+  def insertClient(user: NewUserParameters)(implicit au: InternalUser): Unit = {
     if (getRawUserFromEmail(user.loginParameters.email).nonEmpty) {
       throw new EmailAlreadyExistsException(user.loginParameters.email)
     }
@@ -171,11 +173,21 @@ class UserRequest(val conn: Connection)
 
     val salt = generateSalt()
     val hash = hashPassword(user.loginParameters.password, salt)
-    val iu = InternalUser(userId, user.loginParameters.email, user.name, salt, hash, false, getUUID(), false, false)
+    val iu = InternalUser(
+      userId,
+      user.loginParameters.email,
+      user.name,
+      salt,
+      hash,
+      false,
+      Some(getUUID()),
+      false,
+      false
+    )
     insertLoginInfoRecord(iu)
   }
 
-  def confirmEmail(email: String, confirmation: UUID): Boolean = {
+  def confirmEmail(email: String, confirmation: UUID)(implicit au: InternalUser): Boolean = {
     getRawUserFromEmail(email) match {
       case Some(user) if !user.confirmed && user.resetToken == confirmation =>
         insertLoginInfoRecord(user.copy(confirmed = true))
@@ -183,4 +195,7 @@ class UserRequest(val conn: Connection)
       case _ => false
     }
   }
+
+  def getAnonymousUser(): InternalUser = AnonymousUser
+
 }
