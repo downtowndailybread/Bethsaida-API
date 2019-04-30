@@ -1,7 +1,6 @@
 package org.downtowndailybread.request
 
 import java.sql.{Connection, ResultSet}
-import java.util.UUID
 
 import org.downtowndailybread.exception.clientattributetype._
 import org.downtowndailybread.model.{ClientAttributeType, ClientAttributeTypeAttribute}

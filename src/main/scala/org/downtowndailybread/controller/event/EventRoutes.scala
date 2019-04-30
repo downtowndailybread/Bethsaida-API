@@ -12,17 +12,9 @@ trait EventRoutes {
     pathPrefix("event") {
       path("") {
         get {
-//          complete(allEvents)
           complete(JsNumber(1))
         }
-      } /*~
-      path(LongNumber) { id =>
-        allEvents.find(_.metadata.id == id) match {
-          case Some(c) => complete(c)
-          case None =>
-            throw new NoSuchEventException(id)
-        }
-      }*/
+      }
     }
   }
 }

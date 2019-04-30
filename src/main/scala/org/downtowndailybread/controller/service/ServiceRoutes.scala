@@ -8,21 +8,13 @@ trait ServiceRoutes {
   this: JsonSupport =>
 
 
-  val serviceRoutes = {
+  val allServiceRoutes = {
     pathPrefix("service") {
       path("") {
         get {
-//          complete(allServices)
           complete(JsNumber(1))
         }
-      } /*~
-      path(LongNumber) {
-        eventId =>
-          allServices.find(_.id == eventId) match {
-            case Some(e) => complete(e)
-            case None => throw new NoSuchServiceException(eventId)
-          }
-      }*/
+      }
     }
   }
 }

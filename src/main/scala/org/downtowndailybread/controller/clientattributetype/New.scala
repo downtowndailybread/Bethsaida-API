@@ -6,14 +6,15 @@ import org.downtowndailybread.json.JsonSupport
 import org.downtowndailybread.model.ClientAttributeType
 import org.downtowndailybread.request.{ClientAttributeTypeRequest, DatabaseSource}
 
-class ClientAttributeTypeNew extends JsonSupport {
+trait New {
+  this: JsonSupport =>
 
-  def newClientAttributeTypeRoute() = {
+  val clientAttributeType_newRoute = {
     path("new") {
       post {
         entity(as[Seq[ClientAttributeType]]) {
           cats =>
-            val newAttribIds = cats.map { cat =>
+            cats.foreach { cat =>
               DatabaseSource.runSql(c =>
                 new ClientAttributeTypeRequest(c).insertClientAttributeType(cat))
             }

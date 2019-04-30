@@ -8,14 +8,20 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import com.typesafe.config.Config
 import org.downtowndailybread.auth.Authentication
-import org.downtowndailybread.controller.Routes
+import org.downtowndailybread.controller.ApplicationRoutes
 import org.downtowndailybread.exception._
 import org.downtowndailybread.json.JsonSupport
+import org.downtowndailybread.service.SecretProvider
 
+import scala.concurrent.Promise
 import scala.io.StdIn
 
-object ApiMain extends JsonSupport with Routes with ApiGlobalResources {
+object ApiMain extends JsonSupport with SecretProvider with ApplicationRoutes with ApiGlobalResources {
+
+  val secret = "changeme"
+  val config = Promise[Config]
 
   def main(args: Array[String]) {
     implicit val system = ActorSystem("ddb-api")
@@ -26,26 +32,39 @@ object ApiMain extends JsonSupport with Routes with ApiGlobalResources {
       ExceptionHandler {
         case r: NotFoundException =>
           extractUri {
-            uri => cors() { complete((NotFound, ddbExceptionFormat.write(r)))}
+            uri => cors() {
+              complete((NotFound, ddbExceptionFormat.write(r)))
+            }
+          }
+        case r: UnauthorizedException =>
+          extractUri {
+            uri => cors() {
+              complete((Unauthorized, ddbExceptionFormat.write(r)))
+            }
           }
         case r: DDBException =>
           extractUri {
-            uri => cors() {complete((BadRequest, ddbExceptionFormat.write(r)))}
+            uri => cors() {
+              complete((BadRequest, ddbExceptionFormat.write(r)))
+            }
           }
+
       }
 
 
-    implicit def rejectionHandler  = RejectionHandler.newBuilder.handle {
+    implicit def rejectionHandler = RejectionHandler.newBuilder.handle {
       case MalformedRequestContentRejection(msg, _) ⇒ {
         val rejectionMessage = "The request content was malformed: " + msg
-        cors() { complete(BadRequest, throw new MalformedJsonErrorException(rejectionMessage)) }
+        cors() {
+          complete(BadRequest, throw new MalformedJsonErrorException(rejectionMessage))
+        }
       }
       case AuthenticationFailedRejection(msg, _) => {
-        cors() { complete(Unauthorized, new UnauthorizedException())}
+        cors() {
+          complete(Unauthorized, new UnauthorizedException())
+        }
       }
     }.result
-
-
 
     val route = cors() {
       path("swagger") {
@@ -56,12 +75,7 @@ object ApiMain extends JsonSupport with Routes with ApiGlobalResources {
           path("") {
             complete(s"ddb api $version")
           } ~
-          authenticateOAuth2("ddb-api", Authentication.authenticate) {
-            user => {
-              routes
-            }
-          }
-
+            allRoutes
         }
     }
 

@@ -5,9 +5,10 @@ import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.json.JsonSupport
 import org.downtowndailybread.request.{ClientAttributeTypeRequest, DatabaseSource}
 
-class ClientAttributeTypeDelete extends JsonSupport {
+trait Delete {
+  this: JsonSupport =>
 
-  def deleteClientAttributeTypeRoute() = {
+  val clientAttributeType_deleteRoute = {
     path(Segment / "delete") {
       attribName =>
         post {

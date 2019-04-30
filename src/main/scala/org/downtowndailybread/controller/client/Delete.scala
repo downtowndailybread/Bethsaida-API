@@ -7,9 +7,10 @@ import org.downtowndailybread.json.JsonSupport
 import org.downtowndailybread.model.Success
 import org.downtowndailybread.request.{ClientRequest, DatabaseSource}
 
-class ClientDelete extends JsonSupport {
+trait Delete {
+  this: JsonSupport =>
 
-  val deleteClientRoute = path(Segment / "delete") {
+  val client_deleteRoute = path(Segment / "delete") {
     idStr =>
       val id = UUID.fromString(idStr)
       post {

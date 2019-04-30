@@ -63,8 +63,8 @@ trait ClientJson extends BaseSupport {
         case JsArray(arr) => arr.map {
           attrib =>
             attrib match {
-              case JsObject(m) => attTypes.find(_.id == m("clientAttributeTypeId").convertTo[String]) match {
-                case Some(tpe) => ClientAttribute(tpe, m("value").asJsObject)
+              case JsObject(m) => attTypes.find(_.id == m("id").convertTo[String]) match {
+                case Some(tpe) => ClientAttribute(tpe, m("value"))
               }
             }
         }
@@ -74,7 +74,7 @@ trait ClientJson extends BaseSupport {
     override def write(objSeq: Seq[ClientAttribute]): JsValue = {
       JsArray(objSeq.map(obj =>
         JsObject(
-          ("clientAttributeTypeId", JsString(obj.attributeType.id)),
+          ("id", JsString(obj.attributeType.id)),
           ("value", obj.attributeValue)
         )
       ).toVector
@@ -102,6 +102,7 @@ trait ClientJson extends BaseSupport {
 
     }
   }
+
   implicit val seqClientFormat = seqFormat[Client]
 }
 
