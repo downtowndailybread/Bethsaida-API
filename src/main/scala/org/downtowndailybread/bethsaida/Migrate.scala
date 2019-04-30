@@ -3,8 +3,7 @@ package org.downtowndailybread.bethsaida
 import org.downtowndailybread.bethsaida.request.{ClientAttributeTypeRequest, DatabaseSource}
 import org.flywaydb.core.Flyway
 import org.downtowndailybread.bethsaida.service.UUIDProvider
-import org.downtowndailybread.bethsaida.model.ClientAttributeType
-import org.downtowndailybread.bethsaida.model.ClientAttributeTypeAttribute
+import org.downtowndailybread.bethsaida.model.{AnonymousUser, ClientAttributeType, ClientAttributeTypeAttribute}
 
 object Migrate {
 
@@ -29,10 +28,11 @@ object GenerateFakeData {
     )
 
     val clientAttributeTypes = ClientAttributeTypeGenerator.run(attributes)
-    clientAttributeTypes.foreach({
+    clientAttributeTypes.foreach{
+      r =>
       DatabaseSource.runSql(c =>
-        new ClientAttributeTypeRequest(c).insertClientAttributeType(_))
-    })
+        new ClientAttributeTypeRequest(c).insertClientAttributeType(r)(AnonymousUser))
+    }
     clientAttributeTypes
   }
 
