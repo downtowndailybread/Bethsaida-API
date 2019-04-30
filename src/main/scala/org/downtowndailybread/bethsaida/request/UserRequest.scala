@@ -25,7 +25,7 @@ class UserRequest(val conn: Connection)
        |       access.user_lock,
        |       access.admin_lock,
        |       uam.is_valid as uam_valid
-       |  from b_user u
+       |  from user_account u
        |left join user_attribute ua on u.id = ua.user_id
        |left join metadata uam on ua.metadata_id = uam.rid
        |left join (
@@ -160,7 +160,7 @@ class UserRequest(val conn: Connection)
     val userId = getUUID()
     val createBaseRecordSql =
       s"""
-         |insert into b_user
+         |insert into user_account
          |(id, metadata_id)
          |values (cast(? as uuid), ?)
        """.stripMargin

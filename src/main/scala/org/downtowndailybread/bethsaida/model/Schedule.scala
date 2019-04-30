@@ -3,7 +3,7 @@ package org.downtowndailybread.bethsaida.model
 import java.time.LocalTime
 
 case class Schedule(
-                   rrlue: String,
+                   rrule: String,
                    startTime: LocalTime,
                    endTime: LocalTime
                    )
