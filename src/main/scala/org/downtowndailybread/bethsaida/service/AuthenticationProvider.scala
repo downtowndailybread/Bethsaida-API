@@ -2,6 +2,7 @@ package org.downtowndailybread.bethsaida.service
 
 import java.util.UUID
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive1, Route}
 import akka.http.scaladsl.server.directives.Credentials
@@ -13,17 +14,51 @@ import org.downtowndailybread.bethsaida.exception.auth.{InvalidTokenSignatureExc
 import org.downtowndailybread.bethsaida.model.{AnonymousUser, InternalUser}
 import org.downtowndailybread.bethsaida.request.{DatabaseSource, UserRequest}
 
+import scala.concurrent.Future
+
 trait AuthenticationProvider {
 
   this: UUIDProvider with SettingsProvider =>
 
-  private[this] lazy val issuer = "bethsaida"
+  val anonymousUser: InternalUser
+
+  val system = ActorSystem("auth")
+
+  def authorize(isUserAuthorized: => InternalUser => Boolean): Directive1[InternalUser] = {
+    extractRequestContext.flatMap {
+      rc =>
+        implicit val ec = rc.executionContext
+        authenticateOAuth2Async(realm, c => Future {
+          authenticateSignedToken(c)
+        }).flatMap(iu =>
+          onSuccess(Future {
+            isUserAuthorized(iu)
+          }).map {
+            authorized =>
+              if ((settings.allowAnonymousUser && iu == AnonymousUser) || authorized) {
+                iu
+              } else {
+                throw new UserNotAuthorizedException
+              }
+          }
+        )
+    }
+  }
+
+  def authorizeNotAnonymous = authorize(u => u != AnonymousUser)
+
+  def createSignedToken(userId: UUID): String = {
+    JWT.create()
+      .withIssuer(issuer)
+      .withSubject(userId.toString)
+      .sign(algorithm)
+  }
+
+  private[this] lazy val issuer = settings.provider
   private[this] lazy val algorithm = Algorithm.HMAC256(settings.secret)
   private[this] lazy val verifier = JWT.require(algorithm).withIssuer(issuer).build()
 
-  val anonymousUser: InternalUser
-
-  val realm = "bethsaida"
+  private[this] val realm = settings.provider
 
   private def authenticateSignedToken(credentials: Credentials): Option[InternalUser] = {
     credentials match {
@@ -39,27 +74,4 @@ trait AuthenticationProvider {
         }
     }
   }
-
-  def authorize(internalUser: InternalUser => Boolean): Directive1[InternalUser] = new Directive1[InternalUser] {
-    override def tapply(f: Tuple1[InternalUser] => Route): Route =
-      authenticateOAuth2(realm, authenticateSignedToken) {
-        iu =>
-          if ((settings.allowAnonymousUser && iu == AnonymousUser) || internalUser(iu)) {
-            f.apply(Tuple1(iu))
-          } else {
-            throw new UserNotAuthorizedException()
-          }
-      }
-  }
-
-  def authorizeNotAnonymous = authorize(u => u != AnonymousUser)
-
-
-  def createSignedToken(userId: UUID): String = {
-    JWT.create()
-      .withIssuer(issuer)
-      .withSubject(userId.toString)
-      .sign(algorithm)
-  }
-
 }

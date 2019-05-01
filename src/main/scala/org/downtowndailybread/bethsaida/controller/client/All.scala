@@ -4,6 +4,7 @@ import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.request.{ClientRequest, DatabaseSource}
 import org.downtowndailybread.bethsaida.service.AuthenticationProvider
+import org.downtowndailybread.bethsaida.controller.Directives._
 
 trait All {
   this: JsonSupport with AuthenticationProvider =>
@@ -12,9 +13,9 @@ trait All {
     authorizeNotAnonymous {
       implicit user =>
         get {
-          complete(DatabaseSource.runSql(c => new ClientRequest(c).getAllClients()))
+          futureComplete(DatabaseSource.runSql(c => new ClientRequest(c).getAllClients()))
         }
+
     }
   }
-
 }

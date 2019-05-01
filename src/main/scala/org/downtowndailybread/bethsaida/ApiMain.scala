@@ -30,10 +30,7 @@ class ApiMain(val settings: Settings)
   extends JsonSupport
     with ApplicationRoutes
     with AuthenticationProvider
-    with SettingsProvider
-    with ExecutionContextProvider {
-
-  val ec = scala.concurrent.ExecutionContext.Implicits.global
+    with SettingsProvider {
 
   val anonymousUser = DatabaseSource.runSql(conn => new UserRequest(conn).getAnonymousUser())
 
@@ -81,7 +78,7 @@ class ApiMain(val settings: Settings)
       }
     }.result
 
-    val route = cors() {
+    val routes = cors() {
       path("swagger") {
         getFromResource("swagger/index.html")
       } ~
@@ -94,7 +91,7 @@ class ApiMain(val settings: Settings)
         }
     }
 
-    val bindingFuture = Http().bindAndHandle(route, "localhost", settings.port)
+    val bindingFuture = Http().bindAndHandle(Route.handlerFlow(routes), "localhost", settings.port)
 
     println(s"Server online at http://localhost:${settings.port}/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return

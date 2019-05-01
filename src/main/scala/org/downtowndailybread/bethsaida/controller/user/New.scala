@@ -11,9 +11,7 @@ trait New {
   this: AuthenticationProvider with JsonSupport =>
 
   val user_newRoute = path("new") {
-    authorize {
-      c => println(c); true
-    } {
+    authorizeNotAnonymous {
       implicit authUser =>
         post {
           entity(as[NewUserParameters]) {
