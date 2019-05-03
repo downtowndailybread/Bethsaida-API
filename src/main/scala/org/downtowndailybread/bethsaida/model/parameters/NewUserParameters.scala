@@ -1,4 +1,4 @@
-package org.downtowndailybread.bethsaida.model
+package org.downtowndailybread.bethsaida.model.parameters
 
 case class NewUserParameters(
                                name: String,

@@ -2,7 +2,8 @@ package org.downtowndailybread.bethsaida.controller.clientattributetype
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import org.downtowndailybread.bethsaida.request.{ClientAttributeTypeRequest, DatabaseSource}
+import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
+import org.downtowndailybread.bethsaida.request.util.DatabaseSource
 
 trait All {
   this: JsonSupport =>

@@ -1,8 +1,8 @@
 package org.downtowndailybread.bethsaida.model
 
-import org.downtowndailybread.bethsaida.model.ServiceType.ServiceType
+import java.util.UUID
 
 case class Service(
-                    name: String,
-                    serviceType: ServiceType,
-                    schedule: Schedule)
+                    id: UUID,
+                    attribute: ServiceAttribute,
+                    schedules: Seq[Schedule])

@@ -4,7 +4,8 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.ClientAttributeType
-import org.downtowndailybread.bethsaida.request.{ClientAttributeTypeRequest, DatabaseSource}
+import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
+import org.downtowndailybread.bethsaida.request.util.DatabaseSource
 import org.downtowndailybread.bethsaida.service.AuthenticationProvider
 
 trait New {

@@ -4,7 +4,9 @@ import java.sql.{Connection, ResultSet}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.user.{EmailAlreadyExistsException, UserNotFoundException}
-import org.downtowndailybread.bethsaida.model.{AnonymousUser, InternalUser, NewUserParameters}
+import org.downtowndailybread.bethsaida.model.parameters.NewUserParameters
+import org.downtowndailybread.bethsaida.model.{AnonymousUser, InternalUser}
+import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 import org.downtowndailybread.bethsaida.service.{HashProvider, UUIDProvider}
 
 class UserRequest(val conn: Connection)

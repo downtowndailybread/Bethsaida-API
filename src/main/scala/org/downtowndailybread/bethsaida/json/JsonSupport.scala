@@ -10,7 +10,7 @@ trait JsonSupport
     with DefaultJsonProtocol
     with ClientJson
     with UserJson
-    //    with ServiceJson
+    with ServiceJson
     //    with EventJson
 {
 

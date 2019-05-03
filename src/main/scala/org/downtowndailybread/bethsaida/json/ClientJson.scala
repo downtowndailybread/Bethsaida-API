@@ -5,7 +5,8 @@ import spray.json._
 import DefaultJsonProtocol._
 import org.downtowndailybread.bethsaida.exception.MalformedJsonErrorException
 import org.downtowndailybread.bethsaida.exception.clientattributetype.ClientAttributeTypeNotFoundException
-import org.downtowndailybread.bethsaida.request.{ClientAttributeTypeRequest, DatabaseSource}
+import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
+import org.downtowndailybread.bethsaida.request.util.DatabaseSource
 
 
 trait ClientJson extends BaseSupport {

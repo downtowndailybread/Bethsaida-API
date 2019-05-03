@@ -1,16 +1,16 @@
 package org.downtowndailybread.bethsaida.json
 
-
 import spray.json._
 import DefaultJsonProtocol._
-import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser, LoginParameters, NewUserParameters}
+import org.downtowndailybread.bethsaida.model.parameters.{LoginParameters, NewUserParameters}
+import org.downtowndailybread.bethsaida.model.ConfirmEmail
 
 trait UserJson extends BaseSupport {
 
   implicit val loginParametersFormat = jsonFormat2(LoginParameters)
   implicit val userCreateParameters = new RootJsonFormat[NewUserParameters] {
     override def read(json: JsValue): NewUserParameters = {
-      json match {
+      (json: @unchecked) match {
         case JsObject(j) => NewUserParameters(
           j("name").convertTo[String],
           LoginParameters(
