@@ -21,4 +21,5 @@ class Settings(config: Config) {
   if (env != "dev" && secret == "changeme") {
     throw new Exception("CHANGE APPLICATION SECRET")
   }
+  val provider = getOrElse("provider", _.getString, "provider")
 }
