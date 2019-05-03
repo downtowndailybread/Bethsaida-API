@@ -2,9 +2,8 @@ package org.downtowndailybread.bethsaida.service
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{Directive1, Route}
+import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.directives.Credentials.{Missing, Provided}
 import com.auth0.jwt.JWT
@@ -21,8 +20,6 @@ trait AuthenticationProvider {
   this: UUIDProvider with SettingsProvider =>
 
   val anonymousUser: InternalUser
-
-  val system = ActorSystem("auth")
 
   def authorize(isUserAuthorized: => InternalUser => Boolean): Directive1[InternalUser] = {
     extractRequestContext.flatMap {
