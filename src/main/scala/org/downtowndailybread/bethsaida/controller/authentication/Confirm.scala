@@ -4,18 +4,22 @@ import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.ConfirmEmail
 import org.downtowndailybread.bethsaida.request.{AuthRequest, DatabaseSource}
+import org.downtowndailybread.bethsaida.service.{AuthenticationProvider, SettingsProvider}
 
 trait Confirm {
-  this: JsonSupport =>
+  this: AuthenticationProvider with JsonSupport with SettingsProvider =>
 
   val auth_confirmRoute = {
     path("confirm") {
-      post {
-        entity(as[ConfirmEmail]) {
-          conf =>
-            DatabaseSource.runSql(conn => new AuthRequest(conn).confirmUser(conf))
-            complete("user confirmed")
-        }
+      authorizeNotAnonymous {
+        implicit authUser =>
+          post {
+            entity(as[ConfirmEmail]) {
+              conf =>
+                DatabaseSource.runSql(conn => new AuthRequest(settings, conn).confirmUser(conf))
+                complete("user confirmed")
+            }
+          }
       }
     }
   }

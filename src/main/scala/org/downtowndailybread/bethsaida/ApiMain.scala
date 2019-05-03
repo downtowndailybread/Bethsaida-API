@@ -7,21 +7,37 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
-import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.downtowndailybread.bethsaida.controller.ApplicationRoutes
 import org.downtowndailybread.bethsaida.exception._
 import org.downtowndailybread.bethsaida.json._
-import org.downtowndailybread.bethsaida.service.SecretProvider
+import org.downtowndailybread.bethsaida.request.{DatabaseSource, UserRequest}
+import org.downtowndailybread.bethsaida.service._
 
-import scala.concurrent.Promise
 import scala.io.StdIn
 
-object ApiMain extends JsonSupport with SecretProvider with ApplicationRoutes with ApiGlobalResources {
+object ApiMain {
+  def main(args: Array[String]): Unit = {
+    val settings = new Settings(ConfigFactory.load())
 
-  val secret = "changeme"
-  val config = Promise[Config]
+    val server = new ApiMain(settings)
 
-  def main(args: Array[String]) {
+    server.run()
+  }
+}
+
+class ApiMain(val settings: Settings)
+  extends JsonSupport
+    with ApplicationRoutes
+    with AuthenticationProvider
+    with SettingsProvider
+    with ExecutionContextProvider {
+
+  val ec = scala.concurrent.ExecutionContext.Implicits.global
+
+  val anonymousUser = DatabaseSource.runSql(conn => new UserRequest(conn).getAnonymousUser())
+
+  def run() = {
     implicit val system = ActorSystem("ddb-api")
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
@@ -30,28 +46,29 @@ object ApiMain extends JsonSupport with SecretProvider with ApplicationRoutes wi
       ExceptionHandler {
         case r: NotFoundException =>
           extractUri {
-            uri => cors() {
-              complete((NotFound, ddbExceptionFormat.write(r)))
-            }
+            uri =>
+              cors() {
+                complete((NotFound, ddbExceptionFormat.write(r)))
+              }
           }
         case r: UnauthorizedException =>
           extractUri {
-            uri => cors() {
-              complete((Unauthorized, ddbExceptionFormat.write(r)))
-            }
+            uri =>
+              cors() {
+                complete((Unauthorized, ddbExceptionFormat.write(r)))
+              }
           }
         case r: DDBException =>
           extractUri {
-            uri => cors() {
-              complete((BadRequest, ddbExceptionFormat.write(r)))
-            }
+            uri =>
+              cors() {
+                complete((BadRequest, ddbExceptionFormat.write(r)))
+              }
           }
-
       }
 
-
     implicit def rejectionHandler = RejectionHandler.newBuilder.handle {
-      case MalformedRequestContentRejection(msg, _) ⇒ {
+      case MalformedRequestContentRejection(msg, e) ⇒ {
         val rejectionMessage = "The request content was malformed: " + msg
         cors() {
           complete(BadRequest, throw new MalformedJsonErrorException(rejectionMessage))
@@ -69,17 +86,17 @@ object ApiMain extends JsonSupport with SecretProvider with ApplicationRoutes wi
         getFromResource("swagger/index.html")
       } ~
         getFromResourceDirectory("swagger") ~
-        pathPrefix(apiPathPrefix) {
+        pathPrefix(settings.prefix / settings.version) {
           path("") {
-            complete(s"ddb api $version")
+            complete(s"ddb api ${settings.version}")
           } ~
             allRoutes
         }
     }
 
-    val bindingFuture = Http().bindAndHandle(route, "localhost", port)
+    val bindingFuture = Http().bindAndHandle(route, "localhost", settings.port)
 
-    println(s"Server online at http://localhost:$port/\nPress RETURN to stop...")
+    println(s"Server online at http://localhost:${settings.port}/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port

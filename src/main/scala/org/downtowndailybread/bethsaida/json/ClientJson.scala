@@ -4,6 +4,7 @@ import org.downtowndailybread.bethsaida.model._
 import spray.json._
 import DefaultJsonProtocol._
 import org.downtowndailybread.bethsaida.exception.MalformedJsonErrorException
+import org.downtowndailybread.bethsaida.exception.clientattributetype.ClientAttributeTypeNotFoundException
 import org.downtowndailybread.bethsaida.request.{ClientAttributeTypeRequest, DatabaseSource}
 
 
@@ -64,7 +65,8 @@ trait ClientJson extends BaseSupport {
           attrib =>
             (attrib: @unchecked) match {
               case JsObject(m) => attTypes.find(_.id == m("id")
-                .convertTo[String]).map(r => ClientAttribute(r, m("value"))).get
+                .convertTo[String]).map(r => ClientAttribute(r, m("value"))).getOrElse(
+                throw new ClientAttributeTypeNotFoundException(m("id").convertTo[String]))
             }
         }
       }

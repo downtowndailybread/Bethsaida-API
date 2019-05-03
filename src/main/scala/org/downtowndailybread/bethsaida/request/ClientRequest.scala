@@ -5,12 +5,13 @@ import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.client.{ClientInsertionErrorException, ClientNotFoundException, MissingRequiredClientAttributeException}
 import org.downtowndailybread.bethsaida.exception.clientattributetype.ClientAttributeTypeNotFoundException
-import org.downtowndailybread.bethsaida.model.{Client, ClientAttribute}
+import org.downtowndailybread.bethsaida.model.{Client, ClientAttribute, InternalUser}
 import org.downtowndailybread.bethsaida.service.UUIDProvider
 import spray.json._
 
 class ClientRequest(val conn: Connection)
-  extends DatabaseRequest
+  extends BaseRequest
+    with DatabaseRequest
     with UUIDProvider {
 
   val clientAttributeTypesRequester = new ClientAttributeTypeRequest(conn)
@@ -70,7 +71,7 @@ class ClientRequest(val conn: Connection)
   }
 
 
-  def insertClient(attribs: Seq[ClientAttribute]): UUID = {
+  def insertClient(attribs: Seq[ClientAttribute])(implicit au: InternalUser): UUID = {
     val clientMetadata = insertMetadataStatement(conn, true)
     val id = getUUID()
     val sql =
@@ -116,7 +117,7 @@ class ClientRequest(val conn: Connection)
   def updateClient(
                     id: UUID,
                     attribs: Seq[ClientAttribute]
-                  ): Unit = {
+                  )(implicit au: InternalUser): Unit = {
     val existingClient = getClientOptionById(id)
     val attributeType = new ClientAttributeTypeRequest(conn).getClientAttributeTypes()
     val newAttributes = attribs.map {

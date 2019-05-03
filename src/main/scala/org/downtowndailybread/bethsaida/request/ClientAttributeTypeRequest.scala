@@ -3,12 +3,13 @@ package org.downtowndailybread.bethsaida.request
 import java.sql.{Connection, ResultSet}
 
 import org.downtowndailybread.bethsaida.exception.clientattributetype._
-import org.downtowndailybread.bethsaida.model.{ClientAttributeType, ClientAttributeTypeAttribute}
+import org.downtowndailybread.bethsaida.model.{ClientAttributeType, ClientAttributeTypeAttribute, InternalUser}
 import org.downtowndailybread.bethsaida.service.UUIDProvider
 
 
 class ClientAttributeTypeRequest(val conn: Connection)
-  extends DatabaseRequest
+  extends BaseRequest
+    with DatabaseRequest
     with UUIDProvider {
 
   private def convertRs(res: ResultSet): ClientAttributeType = {
@@ -64,7 +65,7 @@ class ClientAttributeTypeRequest(val conn: Connection)
     }
   }
 
-  def insertClientAttributeType(cat: ClientAttributeType): Unit = {
+  def insertClientAttributeType(cat: ClientAttributeType)(implicit au: InternalUser): Unit = {
     getClientAttributeTypes(Some(cat.id)).toList match {
       case Nil =>
         val catSql =
@@ -93,12 +94,16 @@ class ClientAttributeTypeRequest(val conn: Connection)
     }
   }
 
-  def deleteClientAttributeType(attribName: String): Unit = {
+  def deleteClientAttributeType(attribName: String)(
+    implicit au: InternalUser
+  ): Unit = {
     updateClientAttributeType(getClientAttributeTypeByName(attribName), false)
   }
 
 
-  def updateClientAttributeType(cat: ClientAttributeType, isValid: Boolean = true): Unit = {
+  def updateClientAttributeType(cat: ClientAttributeType, isValid: Boolean = true)(
+    implicit au: InternalUser
+  ): Unit = {
 
     val cataSql =
       s"""
