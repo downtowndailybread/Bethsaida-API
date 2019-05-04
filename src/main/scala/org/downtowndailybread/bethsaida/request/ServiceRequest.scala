@@ -1,6 +1,7 @@
 package org.downtowndailybread.bethsaida.request
 
-import java.sql.{Connection, ResultSet}
+import java.sql.{Connection, ResultSet, Time}
+import java.time.LocalTime
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.service.{ScheduleNotFoundException, ServiceNotFoundException}
@@ -10,7 +11,18 @@ import org.downtowndailybread.bethsaida.service.UUIDProvider
 
 class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequest with UUIDProvider {
 
-  def rsConverter(rs: ResultSet): Service = {
+  implicit private def timeConverter(t: Time): LocalTime = t.toLocalTime
+
+  private def scheduleRsConverter(rs: ResultSet): ScheduleDetail = {
+    ScheduleDetail(
+      rs.getString("rrule"),
+      rs.getTime("start_time"),
+      rs.getTime("end_time"),
+      rs.getBoolean("enabled")
+    )
+  }
+
+  private def serviceRsConverter(rs: ResultSet): Service = {
     Service(
       parseUUID(rs.getString("id")),
       ServiceAttributes(
@@ -22,10 +34,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
       } else {
         Seq(Schedule(
           parseUUID(rs.getString("schedule_id")),
-          ScheduleDetail(
-            rs.getString("rrule"),
-            rs.getBoolean("enabled")
-          )
+          scheduleRsConverter(rs)
         ))
       }
     )
@@ -135,6 +144,8 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
         |select distinct on (details.schedule_id) sched.service_id,
         |                                             details.schedule_id,
         |                                             details.rrule,
+        |                                             details.start_time,
+        |                                             details.end_time,
         |                                             details.enabled,
         |                                             m.is_valid
         |    from service_schedule sched
@@ -149,7 +160,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     val rs = ps.executeQuery()
     createSeq(
       rs,
-      (rs) => ScheduleDetail(rs.getString("rrule"), rs.getBoolean("enabled"))
+      scheduleRsConverter
     ) match {
       case h :: Nil => h
       case _ => throw new ScheduleNotFoundException(scheduleId)
@@ -201,7 +212,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     ps.setString(2, id)
     val rs = ps.executeQuery()
 
-    createSeq(rs, rsConverter).groupBy(s => s.id).map {
+    createSeq(rs, serviceRsConverter).groupBy(s => s.id).map {
       case (id, service) => Service(id, service.head.attributes, service.flatMap(_.schedules))
     }.toSeq
   }

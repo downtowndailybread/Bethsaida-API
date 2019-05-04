@@ -61,6 +61,8 @@ create table bethsaida.service_schedule_details
             references bethsaida.service_schedule (id),
     rrule varchar(500) not null,
     enabled boolean not null,
+    start_time time not null,
+    end_time time not null,
     metadata_id integer not null
         constraint service_schedule_details_metadata_id_fkey
             references bethsaida.metadata
