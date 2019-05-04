@@ -14,7 +14,7 @@ class AuthRequest(settings: Settings, conn: Connection) extends BaseRequest with
 
   def getUser(userParameters: LoginParameters): InternalUser = {
     val userRequest = new UserRequest(conn)
-    val user = userRequest.getRawUserFromEmail(userParameters.email)
+    val user = userRequest.getRawUserFromEmailOptional(userParameters.email)
     user match {
       case Some(u) if u.hash != hashPassword(userParameters.password, u.salt) =>
         throw new PasswordDoesNotMatchException
@@ -25,17 +25,10 @@ class AuthRequest(settings: Settings, conn: Connection) extends BaseRequest with
       case Some(u) if u.adminLock =>
         throw new UserAccountLockedByAdminException
       case Some(u) => u
-      case None => throw new UserNotFoundException
     }
   }
 
   def confirmUser(emailConfirm: ConfirmEmail)(implicit au: InternalUser): Unit = {
-    val userRequest = new UserRequest(conn)
-    val user = userRequest.getRawUserFromEmail(emailConfirm.email) match {
-      case Some(u) => u
-      case None => throw new UserNotFoundException
-    }
-
-    userRequest.insertLoginInfoRecord(user.copy(confirmed = true, resetToken = Some(getUUID())))
+    new UserRequest(conn).confirmEmail(emailConfirm.email, emailConfirm.token)
   }
 }
