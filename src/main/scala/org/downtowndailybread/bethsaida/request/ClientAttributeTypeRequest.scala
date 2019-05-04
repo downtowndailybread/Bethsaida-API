@@ -4,6 +4,7 @@ import java.sql.{Connection, ResultSet}
 
 import org.downtowndailybread.bethsaida.exception.clientattributetype._
 import org.downtowndailybread.bethsaida.model.{ClientAttributeType, ClientAttributeTypeAttribute, InternalUser}
+import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 import org.downtowndailybread.bethsaida.service.UUIDProvider
 
 

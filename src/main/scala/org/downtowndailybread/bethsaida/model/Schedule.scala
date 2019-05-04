@@ -1,9 +1,8 @@
 package org.downtowndailybread.bethsaida.model
 
-import java.time.LocalTime
+import java.util.UUID
 
 case class Schedule(
-                   rrule: String,
-                   startTime: LocalTime,
-                   endTime: LocalTime
+                   id: UUID,
+                   detail: ScheduleDetail
                    )

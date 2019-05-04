@@ -5,7 +5,9 @@ import java.sql.Connection
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.auth.{PasswordDoesNotMatchException, UserAccountLockedByAdminException, UserAccountLockedException, UserAccountNotConfirmedException}
 import org.downtowndailybread.bethsaida.exception.user.UserNotFoundException
-import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser, LoginParameters}
+import org.downtowndailybread.bethsaida.model.parameters.LoginParameters
+import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser}
+import org.downtowndailybread.bethsaida.request.util.BaseRequest
 import org.downtowndailybread.bethsaida.service.{HashProvider, UUIDProvider}
 
 class AuthRequest(settings: Settings, conn: Connection) extends BaseRequest with HashProvider with UUIDProvider {

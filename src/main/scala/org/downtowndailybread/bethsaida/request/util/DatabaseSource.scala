@@ -1,4 +1,4 @@
-package org.downtowndailybread.bethsaida.request
+package org.downtowndailybread.bethsaida.request.util
 
 import java.sql.Connection
 import java.util.Properties

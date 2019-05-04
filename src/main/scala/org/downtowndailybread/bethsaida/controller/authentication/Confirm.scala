@@ -3,7 +3,8 @@ package org.downtowndailybread.bethsaida.controller.authentication
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.ConfirmEmail
-import org.downtowndailybread.bethsaida.request.{AuthRequest, DatabaseSource}
+import org.downtowndailybread.bethsaida.request.AuthRequest
+import org.downtowndailybread.bethsaida.request.util.DatabaseSource
 import org.downtowndailybread.bethsaida.service.{AuthenticationProvider, SettingsProvider}
 
 trait Confirm {

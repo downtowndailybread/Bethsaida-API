@@ -6,6 +6,7 @@ import java.util.UUID
 import org.downtowndailybread.bethsaida.exception.client.{ClientInsertionErrorException, ClientNotFoundException, MissingRequiredClientAttributeException}
 import org.downtowndailybread.bethsaida.exception.clientattributetype.ClientAttributeTypeNotFoundException
 import org.downtowndailybread.bethsaida.model.{Client, ClientAttribute, InternalUser}
+import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 import org.downtowndailybread.bethsaida.service.UUIDProvider
 import spray.json._
 

@@ -11,7 +11,8 @@ import com.typesafe.config.ConfigFactory
 import org.downtowndailybread.bethsaida.controller.ApplicationRoutes
 import org.downtowndailybread.bethsaida.exception._
 import org.downtowndailybread.bethsaida.json._
-import org.downtowndailybread.bethsaida.request.{DatabaseSource, UserRequest}
+import org.downtowndailybread.bethsaida.request.UserRequest
+import org.downtowndailybread.bethsaida.request.util.DatabaseSource
 import org.downtowndailybread.bethsaida.service._
 
 import scala.io.StdIn
