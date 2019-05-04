@@ -4,5 +4,5 @@ import java.util.UUID
 
 case class Service(
                     id: UUID,
-                    attribute: ServiceAttribute,
+                    attributes: ServiceAttributes,
                     schedules: Seq[Schedule])

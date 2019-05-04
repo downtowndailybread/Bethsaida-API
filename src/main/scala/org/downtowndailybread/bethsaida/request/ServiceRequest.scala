@@ -4,7 +4,7 @@ import java.sql.{Connection, ResultSet}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.service.{ScheduleNotFoundException, ServiceNotFoundException}
-import org.downtowndailybread.bethsaida.model.{InternalUser, Schedule, ScheduleDetail, Service, ServiceAttribute, ServiceType}
+import org.downtowndailybread.bethsaida.model.{InternalUser, Schedule, ScheduleDetail, Service, ServiceAttributes, ServiceType}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 import org.downtowndailybread.bethsaida.service.UUIDProvider
 
@@ -13,7 +13,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
   def rsConverter(rs: ResultSet): Service = {
     Service(
       parseUUID(rs.getString("id")),
-      ServiceAttribute(
+      ServiceAttributes(
         rs.getString("name"),
         ServiceType.withName(rs.getString("type"))
       ),
@@ -38,7 +38,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     case _ => throw new ServiceNotFoundException(id)
   }
 
-  def insertService(attributes: ServiceAttribute)(implicit iu: InternalUser): UUID = {
+  def insertService(attributes: ServiceAttributes)(implicit iu: InternalUser): UUID = {
     val metaId = insertMetadataStatement(conn, true)
     val id = getUUID()
     val sql =
@@ -55,7 +55,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     id
   }
 
-  def updateService(uuid: UUID, attribute: ServiceAttribute)(
+  def updateService(uuid: UUID, attribute: ServiceAttributes)(
     implicit iu: InternalUser
   ): Unit = {
     serviceSetter(uuid, attribute, true)
@@ -64,7 +64,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
   def deleteService(uuid: UUID)(
     implicit iu: InternalUser
   ): Unit = {
-    serviceSetter(uuid, getService(uuid).attribute, false)
+    serviceSetter(uuid, getService(uuid).attributes, false)
   }
 
   def insertSchedule(serviceId: UUID, schedule: ScheduleDetail)(implicit iu: InternalUser): UUID = {
@@ -93,7 +93,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     scheduleSetter(scheduleId, getScheduleDetail(scheduleId), false)
   }
 
-  private def serviceSetter(id: UUID, attribute: ServiceAttribute, enabled: Boolean)(
+  private def serviceSetter(id: UUID, attribute: ServiceAttributes, enabled: Boolean)(
     implicit iu: InternalUser
   ): Unit = {
     val metaId = insertMetadataStatement(conn, enabled)
@@ -202,7 +202,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     val rs = ps.executeQuery()
 
     createSeq(rs, rsConverter).groupBy(s => s.id).map {
-      case (id, service) => Service(id, service.head.attribute, service.flatMap(_.schedules))
+      case (id, service) => Service(id, service.head.attributes, service.flatMap(_.schedules))
     }.toSeq
   }
 }
