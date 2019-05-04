@@ -26,4 +26,10 @@ trait BaseSupport extends UUIDProvider {
     override def write(obj: Seq[T]): JsValue = JsArray(obj.map(format.write).toVector)
   }
 
+  implicit def seqWriter[T: JsonWriter](implicit format: JsonWriter[T]): JsonWriter[Seq[T]] = new JsonWriter[Seq[T]] {
+    override def write(obj: Seq[T]): JsValue = {
+      JsArray(obj.map(format.write).toVector)
+    }
+  }
+
 }

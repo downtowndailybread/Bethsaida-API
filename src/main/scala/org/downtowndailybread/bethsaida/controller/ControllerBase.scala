@@ -12,7 +12,8 @@ import spray.json.{JsObject, JsString}
 import scala.concurrent.Future
 
 
-object Directives extends JsonSupport {
+trait ControllerBase {
+  this: JsonSupport =>
 
   def futureComplete(m: => ToResponseMarshallable): Route =
     extractRequestContext{

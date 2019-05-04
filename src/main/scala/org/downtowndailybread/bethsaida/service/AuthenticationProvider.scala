@@ -63,7 +63,7 @@ trait AuthenticationProvider {
         try {
           val decoded = verifier.verify(str)
           val id = decoded.getSubject
-          DatabaseSource.runSql(conn => new UserRequest(conn).getRawUserFromUuid(parseUUID(id)))
+          Some(DatabaseSource.runSql(conn => new UserRequest(conn).getRawUserFromUuid(parseUUID(id))))
         }
         catch {
           case e: JWTVerificationException => throw new InvalidTokenSignatureException

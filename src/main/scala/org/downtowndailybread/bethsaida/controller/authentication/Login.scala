@@ -15,16 +15,13 @@ trait Login {
     with SettingsProvider =>
 
   val auth_loginRoute = path(PathEnd) {
-    authorizeNotAnonymous {
-      implicit authUser =>
-        post {
-          entity(as[LoginParameters]) {
-            params =>
-              val user = DatabaseSource.runSql(conn => new AuthRequest(settings, conn).getUser(params))
-              val authToken = createSignedToken(user.id)
-              complete(JsObject(Map(("auth_token", JsString(authToken)))))
-          }
-        }
+    post {
+      entity(as[LoginParameters]) {
+        params =>
+          val user = DatabaseSource.runSql(conn => new AuthRequest(settings, conn).getUser(params))
+          val authToken = createSignedToken(user.id)
+          complete(JsObject(Map(("auth_token", JsString(authToken)))))
+      }
     }
   }
 }
