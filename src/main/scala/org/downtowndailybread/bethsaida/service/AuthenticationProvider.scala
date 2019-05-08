@@ -46,7 +46,7 @@ trait AuthenticationProvider {
   def createSignedToken(userId: UUID): String = {
     JWT.create()
       .withIssuer(issuer)
-      .withSubject(userId.toString)
+      .withSubject(userId)
       .sign(algorithm)
   }
 
@@ -63,7 +63,7 @@ trait AuthenticationProvider {
         try {
           val decoded = verifier.verify(str)
           val id = decoded.getSubject
-          Some(DatabaseSource.runSql(conn => new UserRequest(conn).getRawUserFromUuid(parseUUID(id))))
+          Some(DatabaseSource.runSql(conn => new UserRequest(conn).getRawUserFromUuid(id)))
         }
         catch {
           case e: JWTVerificationException => throw new InvalidTokenSignatureException

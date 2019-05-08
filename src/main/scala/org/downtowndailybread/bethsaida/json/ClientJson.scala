@@ -88,7 +88,7 @@ trait ClientJson extends BaseSupport {
     override def read(json: JsValue): Client = {
       (json: @unchecked) match {
         case JsObject(obj) => Client(
-          parseUUID(obj("id").convertTo[String]),
+          obj("id").convertTo[String],
           (obj("attributes"): @unchecked) match {
             case s: JsObject => seqClientAttributeFormat.read(s)
           }
@@ -98,7 +98,7 @@ trait ClientJson extends BaseSupport {
 
     override def write(obj: Client): JsValue = {
       JsObject(
-        ("id", JsString(obj.id.toString)),
+        ("id", JsString(obj.id)),
         ("attributes", seqClientAttributeFormat.write(obj.attributes))
       )
 

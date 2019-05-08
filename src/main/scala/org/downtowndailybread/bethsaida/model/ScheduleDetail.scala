@@ -10,6 +10,7 @@ case class ScheduleDetail(
                            rrule: String,
                            beginTime: LocalTime,
                            endTime: LocalTime,
+                           scheduleCapacity: Option[Int],
                            enabled: Boolean
                          ) {
 
@@ -17,38 +18,42 @@ case class ScheduleDetail(
 
   private val endNextDay = !beginTime.isBefore(endTime)
 
-  def getNextNInstances(n: Int)(implicit now: LocalDateTime): Seq[HoursOfOperation] = {
+  def getSchedules(implicit now: ZonedDateTime): Stream[HoursOfOperation] = {
     if (enabled) {
       val tz = TimeZone.getDefault
       val localDateTime = {
-        val tmp = LocalDateTime.of(now.toLocalDate, beginTime)
+        val tmp = ZonedDateTime.of(LocalDateTime.of(now.toLocalDate, beginTime), tz.toZoneId)
         if (tmp.isBefore(now)) {
           tmp.plusDays(1)
         } else {
           tmp
         }
-      }.atZone(tz.toZoneId)
+      }
 
       val timeIter = rule.iterator(new DateTime(tz, localDateTime.toEpochSecond * 1000))
 
-      val iter = new Iterator[DateTime] {
+      val stream = new Iterator[DateTime] {
         override def hasNext: Boolean = timeIter.hasNext
 
         override def next(): DateTime = timeIter.nextDateTime()
-      }
-      iter.take(n).map(r =>
+      }.toStream
+
+      stream.map(r =>
         LocalDateTime.of(
           r.getYear, r.getMonth + 1, r.getDayOfMonth, r.getHours, r.getMinutes, r.getSeconds
         ).atZone(tz.toZoneId)
-      ).toStream.map {
+      ).map {
         dt => HoursOfOperation(dt, LocalDateTime.of(dt.toLocalDate.plusDays(if (endNextDay) 1 else 0), LocalTime.of(
           endTime.getHour, endTime.getMinute, endTime.getSecond
         )).atZone(tz.toZoneId))
-      }.take(n).toVector
+      }
     }
     else {
-      Seq()
+      Stream()
     }
   }
 
+  def getNextNInstances(n: Int)(implicit now: ZonedDateTime): Seq[HoursOfOperation] = {
+    getSchedules.take(n).toList
+  }
 }

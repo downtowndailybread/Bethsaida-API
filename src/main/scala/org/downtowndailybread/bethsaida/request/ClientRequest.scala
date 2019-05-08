@@ -51,7 +51,7 @@ class ClientRequest(val conn: Connection)
     val clientAttributeTypes = (new ClientAttributeTypeRequest(conn)).getClientAttributeTypes()
 
     createSeq(result, r => {
-      Client(parseUUID(r.getString("userId")),
+      Client(r.getString("userId"),
         clientAttributeTypes.find(_.id == r.getString("attribName")) match {
           case Some(e) => Seq(ClientAttribute(e, r.getString("value").parseJson))
           case None => Seq()
@@ -88,7 +88,7 @@ class ClientRequest(val conn: Connection)
       """.stripMargin
 
     val clientPs = conn.prepareStatement(sql)
-    clientPs.setString(1, id.toString)
+    clientPs.setString(1, id)
     clientPs.setInt(2, clientMetadata)
 
     clientPs.executeUpdate()
@@ -108,7 +108,7 @@ class ClientRequest(val conn: Connection)
         """
 
         val ps = conn.prepareStatement(sql)
-        ps.setString(1, id.toString)
+        ps.setString(1, id)
         ps.executeUpdate()
       case None => throw new ClientNotFoundException(id)
     }
@@ -144,7 +144,7 @@ class ClientRequest(val conn: Connection)
     val deltas = newAttributes.map(r => (r, true)) ++ deletedAttributes.map(r => (r, false))
 
     if (deltas.nonEmpty) {
-      val clientAttributeTypes = new ClientAttributeTypeRequest(conn).getClientAttributeTypes(None)
+      val clientAttributeTypes = new ClientAttributeTypeRequest(conn).getClientAttributeTypes()
 
       val attribSql =
         s"""
@@ -161,7 +161,7 @@ class ClientRequest(val conn: Connection)
       } yield {
         val metaId = insertMetadataStatement(conn, include)
 
-        aPs.setString(1, id.toString)
+        aPs.setString(1, id)
         aPs.setString(2, clientAttribute.attributeType.id)
         aPs.setInt(3, metaId)
         aPs.setString(4, clientAttribute.attributeValue.toString)

@@ -2,10 +2,12 @@ package org.downtowndailybread.bethsaida.model
 
 import org.scalatest.FlatSpec
 import java.time.{LocalDateTime, LocalTime}
+import java.util.TimeZone
 
 class ScheduleDetailTest extends FlatSpec {
 
   implicit val time = LocalDateTime.of(2020, 1, 5, 5, 0, 0)
+    .atZone(TimeZone.getDefault.toZoneId)
   val startTime = LocalTime.of(11, 0, 0)
   val endTime = LocalTime.of(13, 0, 0)
 
@@ -14,6 +16,7 @@ class ScheduleDetailTest extends FlatSpec {
       "RRULE:FREQ=DAILY",
       startTime,
       endTime,
+      None,
       true
     )
 
@@ -28,6 +31,7 @@ class ScheduleDetailTest extends FlatSpec {
       "RRULE:FREQ=DAILY",
       startTime,
       endTime,
+      None,
       true
     )
 
@@ -43,6 +47,7 @@ class ScheduleDetailTest extends FlatSpec {
       "RRULE:FREQ=DAILY",
       startTime,
       endTime.plusHours(12),
+      None,
       true
     )
 
@@ -57,6 +62,7 @@ class ScheduleDetailTest extends FlatSpec {
       "RRULE:FREQ=DAILY",
       startTime.minusHours(8),
       endTime,
+      None,
       true
     )
 

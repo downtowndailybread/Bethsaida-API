@@ -13,7 +13,8 @@ trait ServiceJson extends BaseSupport {
       (json: @unchecked) match {
         case JsObject(o) => ServiceAttributes(
           o("name").convertTo[String],
-          ServiceType.withName(o("type").convertTo[String])
+          ServiceType.withName(o("type").convertTo[String]),
+          o.get("defaultCapacity").map(r => r.convertTo[Int])
         )
       }
     }
@@ -21,7 +22,11 @@ trait ServiceJson extends BaseSupport {
     override def write(sa: ServiceAttributes): JsValue = {
       JsObject(
         ("name", JsString(sa.name)),
-        ("type", JsString(sa.serviceType.toString))
+        ("type", JsString(sa.serviceType.toString)),
+        ("defaultCapacity", sa.defaultCapacity match {
+          case Some(cap) => JsNumber(cap)
+          case None => JsNull
+        })
       )
     }
   }
@@ -32,6 +37,10 @@ trait ServiceJson extends BaseSupport {
         ("rrule", obj.rrule),
         ("beginTime", localTimeFormat.write(obj.beginTime)),
         ("endTime", localTimeFormat.write(obj.endTime)),
+        ("capacity", obj.scheduleCapacity match {
+          case Some(cap) => JsNumber(cap)
+          case None => JsNull
+        }),
         ("enabled", JsBoolean(obj.enabled))
       )
     }
@@ -43,6 +52,7 @@ trait ServiceJson extends BaseSupport {
             ob("rrule").convertTo[String],
             ob("beginTime").convertTo[LocalTime],
             ob("endTime").convertTo[LocalTime],
+            ob.get("capacity").map(_.convertTo[Int]),
             ob("enabled").convertTo[Boolean]
           )
       }

@@ -44,7 +44,7 @@ class UserRequest(val conn: Connection)
     val sql = rawUserSql + "\n and u.id = cast(? as uuid)"
 
     val ps = conn.prepareStatement(sql)
-    ps.setString(1, uuid.toString)
+    ps.setString(1, uuid)
 
     extractSingleUserFromRs(ps.executeQuery())
   }
@@ -89,7 +89,7 @@ class UserRequest(val conn: Connection)
          |values (cast(? as uuid), ?)
        """.stripMargin
     val ps = conn.prepareStatement(createBaseRecordSql)
-    ps.setString(1, userId.toString)
+    ps.setString(1, userId)
     ps.setInt(2, baseMetaId)
     ps.executeUpdate()
 
@@ -124,13 +124,13 @@ class UserRequest(val conn: Connection)
 
   private def extractUserFromRs(resultSet: ResultSet): InternalUser = {
     InternalUser(
-      parseUUID(resultSet.getString("id")),
+      resultSet.getString("id"),
       resultSet.getString("email"),
       resultSet.getString("name"),
       resultSet.getString("salt"),
       resultSet.getString("hash"),
       resultSet.getBoolean("confirmed"),
-      Some(parseUUID(resultSet.getString("reset_token"))),
+      Some(resultSet.getString("reset_token")),
       resultSet.getBoolean("user_lock"),
       resultSet.getBoolean("admin_lock")
     )
@@ -169,13 +169,13 @@ class UserRequest(val conn: Connection)
          |           ) or (er.user_id is null);
        """.stripMargin
     val psAccess = conn.prepareStatement(createAccessSql)
-    psAccess.setString(1, t.id.toString)
+    psAccess.setString(1, t.id)
     psAccess.setString(2, t.salt)
     psAccess.setString(3, t.hash)
     psAccess.setBoolean(4, t.confirmed)
     psAccess.setBoolean(5, t.adminLock)
     psAccess.setBoolean(6, t.userLock)
-    psAccess.setString(7, t.resetToken.map(_.toString).orNull)
+    psAccess.setNullableString(7, t.resetToken.map(_.toString))
     psAccess.setInt(8, mId)
     psAccess.executeUpdate()
   }
@@ -199,7 +199,7 @@ class UserRequest(val conn: Connection)
         |   or (er.user_id is null);
       """.stripMargin
     val psAttribute = conn.prepareStatement(psAttributeSql)
-    psAttribute.setString(1, t.id.toString)
+    psAttribute.setString(1, t.id)
     psAttribute.setString(2, t.email)
     psAttribute.setString(3, t.name)
     psAttribute.setInt(4, m2id)
