@@ -6,7 +6,7 @@ import java.util.UUID
 import org.downtowndailybread.bethsaida.exception.MalformedJsonErrorException
 import spray.json._
 import DefaultJsonProtocol._
-import org.downtowndailybread.bethsaida.service.UUIDProvider
+import org.downtowndailybread.bethsaida.providers.UUIDProvider
 
 trait BaseSupport extends UUIDProvider {
 

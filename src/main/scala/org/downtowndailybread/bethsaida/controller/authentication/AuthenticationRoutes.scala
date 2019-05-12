@@ -2,7 +2,7 @@ package org.downtowndailybread.bethsaida.controller.authentication
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import org.downtowndailybread.bethsaida.service.{AuthenticationProvider, SettingsProvider}
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, SettingsProvider}
 
 trait AuthenticationRoutes extends Confirm with Login {
   this: AuthenticationProvider with JsonSupport with SettingsProvider =>

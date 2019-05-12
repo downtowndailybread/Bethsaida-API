@@ -7,7 +7,7 @@ import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.Success
 import org.downtowndailybread.bethsaida.request.ClientRequest
 import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.service.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
 
 trait Delete {
   this: JsonSupport with AuthenticationProvider =>

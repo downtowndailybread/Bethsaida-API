@@ -16,10 +16,15 @@ import scala.concurrent.duration.Duration
 
 class EventScheduler(settings: Settings) extends Actor {
 
-  override def preStart(): Unit = {
-    self ! CheckUpcomingEvents
-  }
+  implicit val ec = context.dispatcher
 
+  override def preStart(): Unit = {
+    context.system.getScheduler.schedule(
+      Duration(0, TimeUnit.SECONDS),
+      Duration(10, TimeUnit.MINUTES),
+      self,
+      CheckUpcomingEvents)
+  }
 
   override def receive: Receive = {
 
@@ -33,9 +38,6 @@ class EventScheduler(settings: Settings) extends Actor {
 
   }
 
-  implicit val ec = context.dispatcher
-
-
   def checkUpcomingEvents(implicit localDateTime: ZonedDateTime): Unit = {
     val services = DatabaseSource.runSql(conn => new ServiceRequest(conn).getAllServices())
     val serviceOpenings = services.map(r =>
@@ -43,13 +45,12 @@ class EventScheduler(settings: Settings) extends Actor {
         r.schedules.flatMap(r =>
           r.detail
             .getSchedules
-            .takeWhile(r => r.start.isAfter(localDateTime.minusHours(1)))
+            .takeWhile(r => r.start.isAfter(localDateTime.minusHours(2)))
             .map(s => (r, s))
             .sortBy(_._2.start.toEpochSecond)
         )
       )
-    )
-      .filter(_._2.nonEmpty)
+    ).filter(_._2.nonEmpty)
 
     serviceOpenings.foreach {
       case (service, openingList) => openingList.foreach {
@@ -57,14 +58,12 @@ class EventScheduler(settings: Settings) extends Actor {
           val scheduleEvent = ScheduleEvent(service.id, service.attributes, opening, schedule.id)
           if(!scheduledEvents.contains(scheduleEvent)) {
             context.system.getScheduler.scheduleOnce(Duration(
-              localDateTime.toEpochSecond - opening.start.toEpochSecond, TimeUnit.SECONDS
+              localDateTime.toEpochSecond - opening.start.minusHours(1).toEpochSecond, TimeUnit.SECONDS
             ), self, scheduleEvent)
             scheduledEvents.add(scheduleEvent)
           }
       }
     }
-
-
   }
 
   private val scheduledEvents = mutable.Set[ScheduleEvent]()
