@@ -4,19 +4,18 @@ import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.request.UserRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait Find extends ControllerBase {
-  this: AuthenticationProvider with JsonSupport =>
+  this: AuthenticationProvider with JsonSupport with DatabaseConnectionProvider with SettingsProvider =>
 
   val user_findRoute = path(JavaUUID) {
     uid =>
       authorizeNotAnonymous {
         implicit authUser =>
           get {
-            futureComplete(DatabaseSource.runSql(conn =>
-              new UserRequest(conn, settings).getRawUserFromUuid(uid)))
+            futureComplete(runSql(c =>
+              new UserRequest(settings, c).getRawUserFromUuid(uid)))
           }
       }
   }

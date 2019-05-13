@@ -5,13 +5,12 @@ import spray.json._
 import DefaultJsonProtocol._
 import org.downtowndailybread.bethsaida.exception.MalformedJsonErrorException
 import org.downtowndailybread.bethsaida.exception.clientattributetype.ClientAttributeTypeNotFoundException
-import org.downtowndailybread.bethsaida.providers.SettingsProvider
+import org.downtowndailybread.bethsaida.providers.{DatabaseConnectionProvider, SettingsProvider}
 import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
 
 
 trait ClientJson extends BaseSupport {
-  this: SettingsProvider =>
+  this: DatabaseConnectionProvider with SettingsProvider =>
 
   implicit val clientAttributeTypeAttribFormat = new RootJsonFormat[ClientAttributeTypeAttribute] {
     override def read(json: JsValue): ClientAttributeTypeAttribute = {
@@ -62,7 +61,8 @@ trait ClientJson extends BaseSupport {
   implicit val seqClientAttributeFormat = new RootJsonFormat[Seq[ClientAttribute]] {
 
     override def read(json: JsValue): Seq[ClientAttribute] = {
-      val attTypes = DatabaseSource.runSql(c => new ClientAttributeTypeRequest(c, settings).getClientAttributeTypes())
+      val attTypes = runSql(c => new ClientAttributeTypeRequest(settings, settings.ds.getConnection)
+         .getClientAttributeTypes())
       (json: @unchecked) match {
         case JsArray(arr) => arr.map {
           attrib =>

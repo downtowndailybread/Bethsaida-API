@@ -12,18 +12,17 @@ import org.downtowndailybread.bethsaida.providers.{HashProvider, SettingsProvide
 
 import scala.util.Try
 
-class UserRequest(val conn: Connection, val settings: Settings)
+class UserRequest(val settings: Settings, val conn: Connection)
   extends BaseRequest
     with DatabaseRequest
     with UUIDProvider
-    with HashProvider
-    with SettingsProvider {
+    with HashProvider {
 
   def getAnonymousUser(): InternalUser = AnonymousUser
 
   def emailAndTokenMatch(email: String, confirmation: UUID): Option[InternalUser] = {
     getRawUserFromEmailOptional(email) match {
-      case Some(user) if !user.confirmed && user.resetToken.contains(confirmation) =>
+      case Some(user) if user.resetToken.contains(confirmation) =>
         Some(user)
       case _ => None
     }
@@ -32,7 +31,7 @@ class UserRequest(val conn: Connection, val settings: Settings)
   def confirmEmail(email: String, confirmation: UUID)(implicit au: InternalUser): Unit = {
     emailAndTokenMatch(email, confirmation) match {
       case Some(user) => updateUserRecords(user.copy(confirmed = true, resetToken = None), true)
-      case None =>
+      case None => throw new UserNotFoundException
     }
   }
 
@@ -64,8 +63,18 @@ class UserRequest(val conn: Connection, val settings: Settings)
     Try(getRawUserFromEmail(email)).toOption
   }
 
-  def updateUser(user: UserParameters)(implicit iu: InternalUser): UUID = {
-    val ur = getRawUserFromEmail(user.loginParameters.email)
+  def updateUserFromReset(user: UserParameters)(implicit iu: InternalUser): UUID = {
+    val ur  = getRawUserFromEmail(user.loginParameters.email)
+    updateUserRecords(ur.copy(
+      email = user.loginParameters.email,
+      hash = hashPassword(user.loginParameters.password, ur.salt),
+      name = user.name,
+      resetToken = None
+    ), true)
+  }
+
+  def updateUser(user: UserParameters, userId: UUID)(implicit iu: InternalUser): UUID = {
+    val ur = getRawUserFromUuid(userId)
     updateUserRecords(ur.copy(
       email = user.loginParameters.email,
       hash = hashPassword(user.loginParameters.password, ur.salt),
@@ -79,7 +88,7 @@ class UserRequest(val conn: Connection, val settings: Settings)
   }
 
   def insertUser(user: UserParameters)(implicit au: InternalUser): UUID = {
-    if (getRawUserFromEmailOptional(user.loginParameters.email).isEmpty) {
+    if (getRawUserFromEmailOptional(user.loginParameters.email).nonEmpty) {
       throw new EmailAlreadyExistsException(user.loginParameters.email)
     }
     val baseMetaId = insertMetadataStatement(conn, true)
@@ -111,6 +120,11 @@ class UserRequest(val conn: Connection, val settings: Settings)
     updateUserRecords(iu, true)
   }
 
+  def intiatePasswordReset(email: String)(implicit iu: InternalUser): Unit = {
+    val user = getRawUserFromEmail(email)
+    updateUserRecords(user.copy(resetToken = Some(getUUID())), true)
+  }
+
   private def updateUserRecords(t: InternalUser, isValid: Boolean)(implicit iu: InternalUser): UUID = {
     insertUserAccessData(t, isValid)
     insertUserAttribute(t, isValid)
@@ -132,7 +146,7 @@ class UserRequest(val conn: Connection, val settings: Settings)
       resultSet.getString("salt"),
       resultSet.getString("hash"),
       resultSet.getBoolean("confirmed"),
-      Some(resultSet.getString("reset_token")),
+      resultSet.getOptionalUUID("reset_token"),
       resultSet.getBoolean("user_lock"),
       resultSet.getBoolean("admin_lock")
     )
@@ -160,14 +174,14 @@ class UserRequest(val conn: Connection, val settings: Settings)
          |                                     ua.admin_lock,
          |                                     ua.user_lock,
          |                                     ua.reset_token,
-         |                                     mua.is_valid
+         |                                     md.is_valid
          |                  from user_access ua
-         |                  left join metadata mua on ua.metadata_id = mua.rid
-         |                  order by ua.user_id, ua.rid desc) er on nr.user_id = er.user_id and is_valid
+         |                  left join metadata md on ua.metadata_id = md.rid
+         |                  order by ua.user_id, ua.rid desc) er on nr.user_id = er.user_id
          |where not (nr.salt = er.salt and nr.hash = er.hash and nr.confirmed = er.confirmed and
          |           nr.admin_lock = er.admin_lock and
-         |           nr.user_lock = er.user_lock and nr.reset_token = er.reset_token
-         |           and mua.is_valid = $isValid
+         |           nr.user_lock = er.user_lock and nr.reset_token is not distinct from er.reset_token
+         |           and er.is_valid = $isValid
          |           ) or (er.user_id is null);
        """.stripMargin
     val psAccess = conn.prepareStatement(createAccessSql)
@@ -177,9 +191,10 @@ class UserRequest(val conn: Connection, val settings: Settings)
     psAccess.setBoolean(4, t.confirmed)
     psAccess.setBoolean(5, t.adminLock)
     psAccess.setBoolean(6, t.userLock)
-    psAccess.setNullableString(7, t.resetToken.map(_.toString))
+    psAccess.setNullableUUID(7, t.resetToken)
     psAccess.setInt(8, mId)
-    psAccess.executeUpdate()
+    val r = psAccess.executeUpdate()
+    r
   }
 
   private def insertUserAttribute(t: InternalUser, isValid: Boolean)(implicit iu: InternalUser): Unit = {
@@ -197,7 +212,7 @@ class UserRequest(val conn: Connection, val settings: Settings)
          |                  from user_attribute ua
          |                         left join metadata mua on ua.metadata_id = mua.rid
          |                  order by ua.user_id, ua.rid desc) er on nr.user_id = er.user_id and is_valid
-         |where not (nr.email = er.email and nr.name = er.name and mua.is_valid = $isValid)
+         |where not (nr.email = er.email and nr.name = er.name and er.is_valid = $isValid)
          |   or (er.user_id is null);
       """.stripMargin
     val psAttribute = conn.prepareStatement(psAttributeSql)

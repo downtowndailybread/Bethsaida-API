@@ -5,11 +5,10 @@ import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.EventAttribute
 import org.downtowndailybread.bethsaida.request.EventRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, SettingsProvider}
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait New extends ControllerBase {
-  this: JsonSupport with SettingsProvider with AuthenticationProvider =>
+  this: JsonSupport with DatabaseConnectionProvider with SettingsProvider with AuthenticationProvider =>
 
   val event_newRoute = path(JavaUUID / "event" / "new") {
     (serviceId) =>
@@ -19,8 +18,8 @@ trait New extends ControllerBase {
             entity(as[EventAttribute]) {
               ea =>
                 futureComplete {
-                  DatabaseSource.runSql(conn =>
-                    new EventRequest(conn, settings).createEvent(serviceId, ea))
+                  runSql(c =>
+                    new EventRequest(settings, c).createEvent(serviceId, ea))
                 }
             }
           }

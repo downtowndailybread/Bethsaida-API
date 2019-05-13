@@ -4,6 +4,8 @@ import org.scalatest.FlatSpec
 import java.time.{LocalDateTime, LocalTime}
 import java.util.TimeZone
 
+import org.downtowndailybread.bethsaida.tag.UnitTest
+
 class ScheduleDetailTest extends FlatSpec {
 
   implicit val time = LocalDateTime.of(2020, 1, 5, 5, 0, 0)
@@ -26,7 +28,7 @@ class ScheduleDetailTest extends FlatSpec {
     assert(nextScheduled.end.toLocalDateTime == LocalDateTime.of(2020, 1, 5, 13, 0, 0))
   }
 
-  "a simple schedule" should "return valid ranges" in {
+  "a simple schedule" should "return valid ranges" taggedAs UnitTest in {
     val schedule = ScheduleDetail(
       "RRULE:FREQ=DAILY",
       startTime,
@@ -41,7 +43,7 @@ class ScheduleDetailTest extends FlatSpec {
     assert(nextScheduled.end.toLocalDateTime == LocalDateTime.of(2020, 1, 5, 13, 0, 0))
   }
 
-  "a schedule that passes the midnight boundary" should "return the correct range" in {
+  "a schedule that passes the midnight boundary" should "return the correct range" taggedAs UnitTest in {
     assert(true)
     val schedule = ScheduleDetail(
       "RRULE:FREQ=DAILY",
@@ -56,7 +58,7 @@ class ScheduleDetailTest extends FlatSpec {
     assert(nextScheduled.end.toLocalDateTime == LocalDateTime.of(2020, 1, 6, 1, 0, 0))
   }
 
-  "a schedule that has a start time before the current time" should "start tomorrow" in {
+  "a schedule that has a start time before the current time" should "start tomorrow" taggedAs UnitTest in {
     assert(true)
     val schedule = ScheduleDetail(
       "RRULE:FREQ=DAILY",

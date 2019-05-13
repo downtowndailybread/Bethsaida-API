@@ -5,11 +5,10 @@ import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.exception.service.ScheduleNotFoundException
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.request.ServiceRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait Delete extends ControllerBase {
-  this: JsonSupport with AuthenticationProvider =>
+  this: JsonSupport with AuthenticationProvider with DatabaseConnectionProvider with SettingsProvider =>
 
   val schedule_deleteRoute = path(JavaUUID / "schedule" / JavaUUID / "delete") {
     (serviceId, scheduleId) =>
@@ -17,11 +16,11 @@ trait Delete extends ControllerBase {
         implicit user =>
           futureComplete({
             val scheduleIds =
-              DatabaseSource.runSql(c => new ServiceRequest(c, settings).getService(serviceId)).schedules.map(_.id)
+              runSql(c => new ServiceRequest(settings, c).getService(serviceId)).schedules.map(_.id)
             if (!scheduleIds.contains(scheduleId)) {
               throw new ScheduleNotFoundException(scheduleId)
             }
-            DatabaseSource.runSql(c => new ServiceRequest(c, settings).deleteSchedule(scheduleId))
+            runSql(c => new ServiceRequest(settings, c).deleteSchedule(scheduleId))
             "schedule deleted"
           })
       }

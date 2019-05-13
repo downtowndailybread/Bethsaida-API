@@ -7,11 +7,10 @@ import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.Success
 import org.downtowndailybread.bethsaida.request.ClientRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers._
 
 trait Delete extends ControllerBase {
-  this: JsonSupport with AuthenticationProvider =>
+  this: JsonSupport with AuthenticationProvider with SettingsProvider with DatabaseConnectionProvider =>
 
   val client_deleteRoute = path(Segment / "delete") {
     idStr =>
@@ -19,7 +18,7 @@ trait Delete extends ControllerBase {
       post {
         authorizeNotAnonymous {
           implicit authUser =>
-            DatabaseSource.runSql(c => new ClientRequest(c, settings).deleteClient(id))
+            runSql(c => new ClientRequest(settings, c).deleteClient(id))
             complete(Success(s"client id $id successfully deleted"))
         }
       }

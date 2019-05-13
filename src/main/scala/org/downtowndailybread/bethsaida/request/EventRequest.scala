@@ -9,11 +9,10 @@ import org.downtowndailybread.bethsaida.model.{Event, EventAttribute, HoursOfOpe
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 
-class EventRequest(val conn: Connection, val settings: Settings)
+class EventRequest(val settings: Settings, val conn: Connection)
   extends BaseRequest
     with DatabaseRequest
-    with UUIDProvider
-    with SettingsProvider {
+    with UUIDProvider {
 
   def getAllServiceEvents(serviceId: UUID): Seq[Event] = {
     getAllEventsInternal(Some(serviceId), None)

@@ -2,7 +2,7 @@ package org.downtowndailybread.bethsaida.json
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.downtowndailybread.bethsaida.model._
-import org.downtowndailybread.bethsaida.providers.SettingsProvider
+import org.downtowndailybread.bethsaida.providers.{DatabaseConnectionProvider, SettingsProvider}
 import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, RootJsonWriter}
 
 trait JsonSupport
@@ -13,7 +13,8 @@ trait JsonSupport
     with ServiceJson
     with EventJson
     with SettingsProvider
-    with ExceptionJson {
+    with ExceptionJson
+    with DatabaseConnectionProvider {
 
 
   implicit val metadataFormat = jsonFormat1(Metadata)

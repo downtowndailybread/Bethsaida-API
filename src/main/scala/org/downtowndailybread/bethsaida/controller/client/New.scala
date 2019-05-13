@@ -5,13 +5,14 @@ import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.ClientAttribute
 import org.downtowndailybread.bethsaida.request.ClientRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 
 trait New extends ControllerBase {
   this: JsonSupport
-    with AuthenticationProvider =>
+    with AuthenticationProvider
+    with SettingsProvider
+    with DatabaseConnectionProvider =>
 
   val client_newRoute =
     path("new") {
@@ -20,7 +21,7 @@ trait New extends ControllerBase {
           implicit user =>
             entity(as[Seq[ClientAttribute]]) {
               attribs =>
-                futureCompleteCreated(DatabaseSource.runSql(c => new ClientRequest(c, settings).insertClient(attribs)))
+                futureCompleteCreated(runSql(c => new ClientRequest(settings, c).insertClient(attribs)))
             }
         }
       }

@@ -1,23 +1,29 @@
 package org.downtowndailybread.bethsaida
 
 import com.typesafe.config.ConfigFactory
+import com.zaxxer.hikari.HikariDataSource
 import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
 import org.flywaydb.core.Flyway
-import org.downtowndailybread.bethsaida.providers.UUIDProvider
+import org.downtowndailybread.bethsaida.providers.{DatabaseConnectionProvider, SettingsProvider, UUIDProvider}
 import org.downtowndailybread.bethsaida.model.{AnonymousUser, ClientAttributeType, ClientAttributeTypeAttribute}
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
 
 object Migrate {
 
   def main(args: Array[String]): Unit = {
-    val flyway = Flyway.configure.dataSource(DatabaseSource.ds).load()
+    val settings = new Settings(ConfigFactory.load())
+    migrate(settings.ds)
+  }
+
+  def migrate(ds: HikariDataSource): Unit = {
+    val flyway = Flyway.configure.dataSource(ds).load()
     flyway.migrate()
   }
 }
 
 
-object GenerateFakeData {
-  val connection = DatabaseSource.ds.getConnection()
+object GenerateFakeData extends DatabaseConnectionProvider with SettingsProvider {
+  val settings = new Settings(ConfigFactory.load())
+  val connection = settings.ds.getConnection()
 
   def createClientAttributeTypes(settings: Settings): Seq[ClientAttributeType] = {
     import ClientAttributeTypeGenerator.AttributeParameters
@@ -30,10 +36,10 @@ object GenerateFakeData {
     )
 
     val clientAttributeTypes = ClientAttributeTypeGenerator.run(attributes)
-    clientAttributeTypes.foreach{
+    clientAttributeTypes.foreach {
       r =>
-      DatabaseSource.runSql(c =>
-        new ClientAttributeTypeRequest(c, settings).insertClientAttributeType(r)(AnonymousUser))
+        runSql(c =>
+          new ClientAttributeTypeRequest(settings, connection).insertClientAttributeType(r)(AnonymousUser))
     }
     clientAttributeTypes
   }
@@ -49,17 +55,18 @@ object ClientAttributeTypeGenerator {
   val defaultName = "Cattribute"
 
   case class AttributeParameters(
-    dataType: String,
-    required: Boolean,
-    displayName: Option[String] = None
-  )
+                                  dataType: String,
+                                  required: Boolean,
+                                  displayName: Option[String] = None
+                                )
+
   private val uuidProvider = new UUIDProvider {}
 
   def createClientAttributeType(
-      name: Option[String],
-      dataType: String,
-      required: Boolean,
-      ordering: Int): ClientAttributeType = {
+                                 name: Option[String],
+                                 dataType: String,
+                                 required: Boolean,
+                                 ordering: Int): ClientAttributeType = {
     ClientAttributeType(
       id = name.getOrElse(s"${defaultName}_${ordering}").toLowerCase(),
       clientAttributeTypeAttribute = ClientAttributeTypeAttribute(
@@ -72,12 +79,12 @@ object ClientAttributeTypeGenerator {
     )
   }
 
- def run(attributeParameters: Seq[AttributeParameters]): Seq[ClientAttributeType] = {
-   attributeParameters.zipWithIndex.map(x => {
-     createClientAttributeType(
-       x._1.displayName, x._1.dataType, x._1.required, x._2
-     )
-   })
- }
+  def run(attributeParameters: Seq[AttributeParameters]): Seq[ClientAttributeType] = {
+    attributeParameters.zipWithIndex.map(x => {
+      createClientAttributeType(
+        x._1.displayName, x._1.dataType, x._1.required, x._2
+      )
+    })
+  }
 
 }

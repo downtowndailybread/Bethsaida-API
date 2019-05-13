@@ -1,7 +1,6 @@
 package org.downtowndailybread.bethsaida.request
 
 import java.sql.{Connection, ResultSet}
-import java.time.LocalTime
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
@@ -9,7 +8,7 @@ import org.downtowndailybread.bethsaida.model.{Attendance, AttendanceAttribute, 
 import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 
-class AttendanceRequest(val settings: Settings, val conn: Connection)
+class InviteeRequest(val settings: Settings, val conn: Connection)
   extends BaseRequest
     with DatabaseRequest
     with UUIDProvider {

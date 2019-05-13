@@ -4,11 +4,10 @@ import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.{AnonymousUser, ConfirmEmail}
 import org.downtowndailybread.bethsaida.request.AuthRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, SettingsProvider}
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait Confirm {
-  this: AuthenticationProvider with JsonSupport with SettingsProvider =>
+  this: AuthenticationProvider with JsonSupport with SettingsProvider with DatabaseConnectionProvider =>
 
   val auth_confirmRoute = {
     authorize(_ == AnonymousUser) {
@@ -17,7 +16,7 @@ trait Confirm {
           post {
             entity(as[ConfirmEmail]) {
               conf =>
-                DatabaseSource.runSql(conn => new AuthRequest(conn, settings).confirmUser(conf))
+                runSql(conn => new AuthRequest(settings, conn).confirmUser(conf))
                 complete("user confirmed")
             }
           }

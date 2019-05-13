@@ -10,7 +10,7 @@ import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser}
 import org.downtowndailybread.bethsaida.request.util.BaseRequest
 import org.downtowndailybread.bethsaida.providers.{HashProvider, UUIDProvider}
 
-class AuthRequest(conn: Connection, settings: Settings)
+class AuthRequest(val settings: Settings, val conn: Connection)
   extends BaseRequest
     with HashProvider
     with UUIDProvider {
@@ -23,7 +23,7 @@ class AuthRequest(conn: Connection, settings: Settings)
     * @return the user if the parameters correctly match to a user in the database, or throws an exception.
     */
   def getUser(loginParameters: LoginParameters): InternalUser = {
-    val userRequest = new UserRequest(conn, settings)
+    val userRequest = new UserRequest(settings, conn)
     val user = userRequest.getRawUserFromEmailOptional(loginParameters.email)
     user match {
       case Some(u) if u.hash != hashPassword(loginParameters.password, u.salt) =>
@@ -46,6 +46,6 @@ class AuthRequest(conn: Connection, settings: Settings)
     * @param au           the internal user making the request.
     */
   def confirmUser(emailConfirm: ConfirmEmail)(implicit au: InternalUser): Unit = {
-    new UserRequest(conn, settings).confirmEmail(emailConfirm.email, emailConfirm.token)
+    new UserRequest(settings, conn).confirmEmail(emailConfirm.email, emailConfirm.token)
   }
 }

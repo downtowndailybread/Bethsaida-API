@@ -63,6 +63,14 @@ trait DatabaseRequest {
       val r = rs.getObject(col, classOf[OffsetDateTime])
       r.atZoneSameInstant(settings.timezone.toZoneId)
     }
+
+    def getOptionalString(col: String): Option[String] = {
+      Option(rs.getString(col))
+    }
+
+    def getOptionalUUID(col: String): Option[UUID] = {
+      getOptionalString(col).map(parseUUID)
+    }
   }
 
   implicit def toEnhancedResultSet(rs: ResultSet): EnhancedResultSet =

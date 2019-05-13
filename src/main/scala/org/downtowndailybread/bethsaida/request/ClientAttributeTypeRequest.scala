@@ -9,11 +9,10 @@ import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseReque
 import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 
 
-class ClientAttributeTypeRequest(val conn: Connection, val settings: Settings)
+class ClientAttributeTypeRequest(val settings: Settings, val conn: Connection)
   extends BaseRequest
     with DatabaseRequest
-    with UUIDProvider
-    with SettingsProvider {
+    with UUIDProvider {
 
   /**
     * Returns all client attribute types

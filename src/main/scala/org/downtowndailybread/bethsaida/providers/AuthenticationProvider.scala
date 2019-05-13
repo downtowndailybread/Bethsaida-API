@@ -12,13 +12,12 @@ import com.auth0.jwt.exceptions.JWTVerificationException
 import org.downtowndailybread.bethsaida.exception.auth.{InvalidTokenSignatureException, UserNotAuthorizedException}
 import org.downtowndailybread.bethsaida.model.{AnonymousUser, InternalUser}
 import org.downtowndailybread.bethsaida.request.UserRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
 
 import scala.concurrent.Future
 
 trait AuthenticationProvider {
 
-  this: UUIDProvider with SettingsProvider =>
+  this: UUIDProvider with DatabaseConnectionProvider with SettingsProvider =>
 
   def authorize(isUserAuthorized: => InternalUser => Boolean): Directive1[InternalUser] = {
     extractRequestContext.flatMap {
@@ -63,7 +62,7 @@ trait AuthenticationProvider {
         try {
           val decoded = verifier.verify(str)
           val id = decoded.getSubject
-          Some(DatabaseSource.runSql(c => new UserRequest(c, settings).getRawUserFromUuid(id)))
+          Some(runSql(c => new UserRequest(settings, c).getRawUserFromUuid(id)))
         }
         catch {
           case e: JWTVerificationException => throw new InvalidTokenSignatureException

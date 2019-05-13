@@ -5,11 +5,10 @@ import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.ServiceAttributes
 import org.downtowndailybread.bethsaida.request.ServiceRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait New extends ControllerBase {
-  this: JsonSupport with AuthenticationProvider =>
+  this: JsonSupport with AuthenticationProvider with DatabaseConnectionProvider with SettingsProvider =>
 
   val service_newRoute = path("new") {
     authorizeNotAnonymous {
@@ -17,7 +16,7 @@ trait New extends ControllerBase {
         post {
           entity(as[ServiceAttributes]) {
             attrib =>
-              futureComplete(DatabaseSource.runSql(c => new ServiceRequest(c, settings).insertService(attrib)))
+              futureComplete(runSql(c => new ServiceRequest(settings, c).insertService(attrib)))
           }
         }
     }
