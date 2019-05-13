@@ -33,7 +33,7 @@ class ApiMain(val settings: Settings)
     with AuthenticationProvider
     with SettingsProvider {
 
-  val anonymousUser = DatabaseSource.runSql(conn => new UserRequest(conn).getAnonymousUser())
+  val anonymousUser = DatabaseSource.runSql(c => new UserRequest(c, settings).getAnonymousUser())
 
   def run() = {
     implicit val system = ActorSystem("bethsaida-api")

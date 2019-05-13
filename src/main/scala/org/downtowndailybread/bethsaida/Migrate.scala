@@ -1,5 +1,6 @@
 package org.downtowndailybread.bethsaida
 
+import com.typesafe.config.ConfigFactory
 import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
 import org.flywaydb.core.Flyway
 import org.downtowndailybread.bethsaida.providers.UUIDProvider
@@ -18,7 +19,7 @@ object Migrate {
 object GenerateFakeData {
   val connection = DatabaseSource.ds.getConnection()
 
-  def createClientAttributeTypes(): Seq[ClientAttributeType] = {
+  def createClientAttributeTypes(settings: Settings): Seq[ClientAttributeType] = {
     import ClientAttributeTypeGenerator.AttributeParameters
     val attributes = Seq(
       AttributeParameters("string", true, Some("name")),
@@ -32,13 +33,13 @@ object GenerateFakeData {
     clientAttributeTypes.foreach{
       r =>
       DatabaseSource.runSql(c =>
-        new ClientAttributeTypeRequest(c).insertClientAttributeType(r)(AnonymousUser))
+        new ClientAttributeTypeRequest(c, settings).insertClientAttributeType(r)(AnonymousUser))
     }
     clientAttributeTypes
   }
 
   def main(args: Array[String]): Unit = {
-    createClientAttributeTypes()
+    createClientAttributeTypes(new Settings(ConfigFactory.load()))
   }
 }
 

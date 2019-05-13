@@ -19,7 +19,7 @@ trait Update extends ControllerBase {
             entity(as[ServiceAttributes]) {
               sa =>
                 futureComplete({
-                  DatabaseSource.runSql(c => new ServiceRequest(c).updateService(id, sa))
+                  DatabaseSource.runSql(c => new ServiceRequest(c, settings).updateService(id, sa))
                   "service updated"
                 })
             }

@@ -14,7 +14,7 @@ trait All extends ControllerBase {
     authorizeNotAnonymous {
       implicit user =>
         get {
-          futureComplete(DatabaseSource.runSql(c => new ServiceRequest(c).getAllServices()))
+          futureComplete(DatabaseSource.runSql(c => new ServiceRequest(c, settings).getAllServices()))
         }
     }
   }

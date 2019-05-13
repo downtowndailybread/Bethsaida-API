@@ -20,8 +20,8 @@ trait ResetPassword extends ControllerBase {
           params =>
             futureComplete(
               DatabaseSource.runSql {
-                conn =>
-                  val userRequest = new UserRequest(conn)
+                c =>
+                  val userRequest = new UserRequest(c, settings)
                   userRequest.emailAndTokenMatch(params.email, params.token) match {
                     case Some(user) => userRequest.updateUser(user.getUserParameters(params.password))
                     case None => throw new ResetTokenInvalidException()

@@ -3,19 +3,21 @@ package org.downtowndailybread.bethsaida.request
 import java.sql.{Connection, ResultSet}
 import java.util.UUID
 
+import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.user.{EmailAlreadyExistsException, UserNotFoundException}
 import org.downtowndailybread.bethsaida.model.parameters.UserParameters
 import org.downtowndailybread.bethsaida.model.{AnonymousUser, InternalUser}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.downtowndailybread.bethsaida.providers.{HashProvider, UUIDProvider}
+import org.downtowndailybread.bethsaida.providers.{HashProvider, SettingsProvider, UUIDProvider}
 
 import scala.util.Try
 
-class UserRequest(val conn: Connection)
+class UserRequest(val conn: Connection, val settings: Settings)
   extends BaseRequest
     with DatabaseRequest
     with UUIDProvider
-    with HashProvider {
+    with HashProvider
+    with SettingsProvider {
 
   def getAnonymousUser(): InternalUser = AnonymousUser
 
@@ -184,19 +186,19 @@ class UserRequest(val conn: Connection)
     val m2id = insertMetadataStatement(conn, true)
     val psAttributeSql =
       s"""
-        |with new_record (user_id,
-        |       email,
-        |       name,
-        |       metadata_id) as (values (cast(? as uuid), ?, ?, ?))
-        |insert into user_attribute (user_id, email, name, metadata_id)
-        |select nr.user_id, nr.email, nr.name, nr.metadata_id
-        |from new_record nr
-        |       left join (select distinct on (ua.user_id) ua.user_id, ua.email, ua.name, mua.is_valid
-        |                  from user_attribute ua
-        |                         left join metadata mua on ua.metadata_id = mua.rid
-        |                  order by ua.user_id, ua.rid desc) er on nr.user_id = er.user_id and is_valid
-        |where not (nr.email = er.email and nr.name = er.name and mua.is_valid = $isValid)
-        |   or (er.user_id is null);
+         |with new_record (user_id,
+         |       email,
+         |       name,
+         |       metadata_id) as (values (cast(? as uuid), ?, ?, ?))
+         |insert into user_attribute (user_id, email, name, metadata_id)
+         |select nr.user_id, nr.email, nr.name, nr.metadata_id
+         |from new_record nr
+         |       left join (select distinct on (ua.user_id) ua.user_id, ua.email, ua.name, mua.is_valid
+         |                  from user_attribute ua
+         |                         left join metadata mua on ua.metadata_id = mua.rid
+         |                  order by ua.user_id, ua.rid desc) er on nr.user_id = er.user_id and is_valid
+         |where not (nr.email = er.email and nr.name = er.name and mua.is_valid = $isValid)
+         |   or (er.user_id is null);
       """.stripMargin
     val psAttribute = conn.prepareStatement(psAttributeSql)
     psAttribute.setString(1, t.id)

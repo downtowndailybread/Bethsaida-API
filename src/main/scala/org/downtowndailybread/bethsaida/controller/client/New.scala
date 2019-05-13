@@ -10,7 +10,8 @@ import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
 
 
 trait New extends ControllerBase {
-  this: JsonSupport with AuthenticationProvider =>
+  this: JsonSupport
+    with AuthenticationProvider =>
 
   val client_newRoute =
     path("new") {
@@ -19,7 +20,7 @@ trait New extends ControllerBase {
           implicit user =>
             entity(as[Seq[ClientAttribute]]) {
               attribs =>
-                futureCompleteCreated(DatabaseSource.runSql(c => new ClientRequest(c).insertClient(attribs)))
+                futureCompleteCreated(DatabaseSource.runSql(c => new ClientRequest(c, settings).insertClient(attribs)))
             }
         }
       }

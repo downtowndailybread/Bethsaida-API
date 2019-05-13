@@ -39,7 +39,7 @@ class EventScheduler(settings: Settings) extends Actor {
   }
 
   def checkUpcomingEvents(implicit localDateTime: ZonedDateTime): Unit = {
-    val services = DatabaseSource.runSql(conn => new ServiceRequest(conn).getAllServices())
+    val services = DatabaseSource.runSql(c => new ServiceRequest(c, settings).getAllServices())
     val serviceOpenings = services.map(r =>
       (r,
         r.schedules.flatMap(r =>

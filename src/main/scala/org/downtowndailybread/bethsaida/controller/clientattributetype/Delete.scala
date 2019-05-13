@@ -18,8 +18,8 @@ trait Delete extends ControllerBase {
           implicit authUser =>
             post {
               futureComplete {
-                DatabaseSource.runSql(conn =>
-                  new ClientAttributeTypeRequest(conn).deleteClientAttributeType(attribName: String))
+                DatabaseSource.runSql(c =>
+                  new ClientAttributeTypeRequest(c, settings).deleteClientAttributeType(attribName: String))
                 StatusCodes.OK
               }
             }

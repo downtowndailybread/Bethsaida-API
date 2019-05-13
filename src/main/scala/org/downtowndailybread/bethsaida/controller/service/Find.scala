@@ -16,7 +16,7 @@ trait Find extends ControllerBase {
       authorizeNotAnonymous {
         implicit user =>
           get {
-            futureComplete(DatabaseSource.runSql(c => new ServiceRequest(c).getService(id)))
+            futureComplete(DatabaseSource.runSql(c => new ServiceRequest(c, settings).getService(id)))
           }
       }
   }

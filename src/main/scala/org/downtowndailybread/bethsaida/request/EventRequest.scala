@@ -1,17 +1,19 @@
 package org.downtowndailybread.bethsaida.request
 
 import java.sql.{Connection, ResultSet}
-import java.time.{OffsetDateTime, ZonedDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.event.EventNotFoundException
 import org.downtowndailybread.bethsaida.model.{Event, EventAttribute, HoursOfOperation, InternalUser}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.downtowndailybread.bethsaida.providers.UUIDProvider
+import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 
-class EventRequest(conn: Connection, settings: Settings) extends BaseRequest
-  with DatabaseRequest with UUIDProvider {
+class EventRequest(val conn: Connection, val settings: Settings)
+  extends BaseRequest
+    with DatabaseRequest
+    with UUIDProvider
+    with SettingsProvider {
 
   def getAllServiceEvents(serviceId: UUID): Seq[Event] = {
     getAllEventsInternal(Some(serviceId), None)
@@ -109,17 +111,12 @@ class EventRequest(conn: Connection, settings: Settings) extends BaseRequest
 
     val ps = conn.prepareStatement(sql)
     ps.setString(1, eventId)
-    ps.setObject(2, event.hours.start.toOffsetDateTime)
-    ps.setObject(3, event.hours.end.toOffsetDateTime)
+    ps.setZonedDateTime(2, event.hours.start)
+    ps.setZonedDateTime(3, event.hours.end)
     ps.setNullableInt(4, event.capacity)
     ps.setNullableUUID(5, event.scheduleCreatorId)
     ps.setNullableUUID(6, event.userCreatorId)
     ps.setInt(7, metaId)
-  }
-
-  private def getZoneDateTime(rs: ResultSet, col: String): ZonedDateTime = {
-    val r = rs.getObject(col, classOf[OffsetDateTime])
-    r.atZoneSameInstant(settings.timezone.toZoneId)
   }
 
 
@@ -129,8 +126,8 @@ class EventRequest(conn: Connection, settings: Settings) extends BaseRequest
       rs.getString("service_id"),
       EventAttribute(
         HoursOfOperation(
-          getZoneDateTime(rs, "start_time"),
-          getZoneDateTime(rs, "end_time")
+          rs.getZoneDateTime("start_time"),
+          rs.getZoneDateTime("end_time")
         ),
         Option(rs.getInt("capacity")),
         Option[UUID](rs.getString("user_creator")),

@@ -15,8 +15,8 @@ trait ValidateToken extends ControllerBase {
     post {
       entity(as[ConfirmEmail]) {
         conf =>
-          futureComplete(JsBoolean(DatabaseSource.runSql(conn =>
-            new UserRequest(conn).emailAndTokenMatch(conf.email, conf.token).isDefined)))
+          futureComplete(JsBoolean(DatabaseSource.runSql(c =>
+            new UserRequest(c, settings).emailAndTokenMatch(conf.email, conf.token).isDefined)))
       }
     }
   }

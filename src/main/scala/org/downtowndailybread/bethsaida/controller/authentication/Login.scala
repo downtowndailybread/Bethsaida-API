@@ -18,7 +18,7 @@ trait Login {
     post {
       entity(as[LoginParameters]) {
         params =>
-          val user = DatabaseSource.runSql(conn => new AuthRequest(settings, conn).getUser(params))
+          val user = DatabaseSource.runSql(conn => new AuthRequest(conn, settings).getUser(params))
           val authToken = createSignedToken(user.id)
           complete(JsObject(Map(("auth_token", JsString(authToken)))))
       }

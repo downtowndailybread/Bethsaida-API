@@ -2,19 +2,22 @@ package org.downtowndailybread.bethsaida.request
 
 import java.sql.{Connection, ResultSet}
 
+import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.clientattributetype._
 import org.downtowndailybread.bethsaida.model.{ClientAttributeType, ClientAttributeTypeAttribute, InternalUser}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.downtowndailybread.bethsaida.providers.UUIDProvider
+import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 
 
-class ClientAttributeTypeRequest(val conn: Connection)
+class ClientAttributeTypeRequest(val conn: Connection, val settings: Settings)
   extends BaseRequest
     with DatabaseRequest
-    with UUIDProvider {
+    with UUIDProvider
+    with SettingsProvider {
 
   /**
     * Returns all client attribute types
+    *
     * @return all client attribute types
     */
   def getClientAttributeTypes(): Seq[ClientAttributeType] = {
@@ -23,6 +26,7 @@ class ClientAttributeTypeRequest(val conn: Connection)
 
   /**
     * Gets the specific client attribute type based on its name
+    *
     * @param attribName the name of the attribute type to fetch
     * @return the client attribute type of the name given
     */
@@ -35,8 +39,9 @@ class ClientAttributeTypeRequest(val conn: Connection)
 
   /**
     * Inserts a client attribute type to the database
+    *
     * @param cat the client attribute type
-    * @param au the user inserting the client attribute type
+    * @param au  the user inserting the client attribute type
     */
   def insertClientAttributeType(cat: ClientAttributeType)(implicit au: InternalUser): Unit = {
     getClientAttributeTypesInternal(Some(cat.id)).toList match {
@@ -118,6 +123,7 @@ class ClientAttributeTypeRequest(val conn: Connection)
   /**
     * Gets client attribute types. If the attributeName is set to None, then this returns all attributetypes, otherwise
     * it returns the one corresponding to the name given in the Option.
+    *
     * @param attributeName the optional name of the attribute
     * @return a sequence of matching ClientAttributeTypes
     */

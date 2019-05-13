@@ -18,7 +18,8 @@ trait Update extends ControllerBase {
           post {
             entity(as[UserParameters]) {
               u =>
-                futureComplete(DatabaseSource.runSql(conn => new UserRequest(conn).updateUser(u)))
+                futureComplete(DatabaseSource.runSql(conn =>
+                  new UserRequest(conn, settings).updateUser(u)))
             }
           }
       }

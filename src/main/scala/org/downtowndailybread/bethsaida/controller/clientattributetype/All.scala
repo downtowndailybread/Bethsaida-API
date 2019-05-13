@@ -13,7 +13,7 @@ trait All extends ControllerBase {
     path(PathEnd) {
       get {
         futureComplete(DatabaseSource.runSql(c =>
-          new ClientAttributeTypeRequest(c).getClientAttributeTypes())
+          new ClientAttributeTypeRequest(c, settings).getClientAttributeTypes())
         )
       }
     }

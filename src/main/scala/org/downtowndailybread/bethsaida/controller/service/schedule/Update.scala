@@ -21,11 +21,12 @@ trait Update extends ControllerBase {
               detail =>
                 futureComplete({
                   val scheduleIds =
-                    DatabaseSource.runSql(c => new ServiceRequest(c).getService(serviceId)).schedules.map(_.id)
+                    DatabaseSource.runSql(c =>
+                      new ServiceRequest(c, settings).getService(serviceId)).schedules.map(_.id)
                   if(!scheduleIds.contains(scheduleId)) {
                     throw new ScheduleNotFoundException(scheduleId)
                   }
-                  DatabaseSource.runSql(c => new ServiceRequest(c).updateSchedule(scheduleId, detail))
+                  DatabaseSource.runSql(c => new ServiceRequest(c, settings).updateSchedule(scheduleId, detail))
                   "schedule updated"
                 })
             }

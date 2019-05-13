@@ -18,7 +18,8 @@ trait Delete extends ControllerBase {
           post {
             entity(as[UserParameters]) {
               u =>
-                futureComplete(DatabaseSource.runSql(conn => new UserRequest(conn).deleteUser(u)))
+                futureComplete(DatabaseSource.runSql(conn =>
+                  new UserRequest(conn, settings).deleteUser(u)))
             }
           }
       }

@@ -22,7 +22,7 @@ trait New extends ControllerBase {
                 futureComplete{
                   cats.foreach { cat =>
                     DatabaseSource.runSql(c =>
-                      new ClientAttributeTypeRequest(c).insertClientAttributeType(cat))
+                      new ClientAttributeTypeRequest(c, settings).insertClientAttributeType(cat))
                   }
                   StatusCodes.Created
                 }

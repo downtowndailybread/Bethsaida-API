@@ -14,7 +14,8 @@ trait All extends ControllerBase {
     authorizeNotAnonymous {
       implicit authUser =>
         get {
-          futureComplete(DatabaseSource.runSql(conn => userSeqFormat.write(new UserRequest(conn).getAllUsers)))
+          futureComplete(DatabaseSource.runSql(conn =>
+            userSeqFormat.write(new UserRequest(conn, settings).getAllUsers)))
         }
     }
   }

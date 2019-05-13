@@ -21,7 +21,7 @@ trait Update extends ControllerBase {
                 cat =>
                   futureComplete {
                     DatabaseSource.runSql { c =>
-                      new ClientAttributeTypeRequest(c)
+                      new ClientAttributeTypeRequest(c, settings)
                         .updateClientAttributeType(ClientAttributeType(attribName, cat), true)
                     }
                     "client updated"

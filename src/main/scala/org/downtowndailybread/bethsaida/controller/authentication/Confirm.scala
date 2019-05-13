@@ -17,7 +17,7 @@ trait Confirm {
           post {
             entity(as[ConfirmEmail]) {
               conf =>
-                DatabaseSource.runSql(conn => new AuthRequest(settings, conn).confirmUser(conf))
+                DatabaseSource.runSql(conn => new AuthRequest(conn, settings).confirmUser(conf))
                 complete("user confirmed")
             }
           }

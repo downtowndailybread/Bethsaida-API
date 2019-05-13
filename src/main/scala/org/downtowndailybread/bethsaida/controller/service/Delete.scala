@@ -16,7 +16,7 @@ trait Delete extends ControllerBase {
         implicit user =>
           post {
             futureComplete({
-              DatabaseSource.runSql(c => new ServiceRequest(c).deleteService(id))
+              DatabaseSource.runSql(c => new ServiceRequest(c, settings).deleteService(id))
               "service has been deleted"
             })
           }

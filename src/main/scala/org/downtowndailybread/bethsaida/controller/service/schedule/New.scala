@@ -18,7 +18,8 @@ trait New extends ControllerBase {
           post {
             entity(as[ScheduleDetail]) {
               detail =>
-                futureComplete(DatabaseSource.runSql(c => new ServiceRequest(c).insertSchedule(serviceId, detail)))
+                futureComplete(DatabaseSource.runSql(c =>
+                  new ServiceRequest(c, settings).insertSchedule(serviceId, detail)))
             }
           }
       }
