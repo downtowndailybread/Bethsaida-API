@@ -26,6 +26,8 @@ libraryDependencies += "com.auth0" % "java-jwt" % "3.8.0"
 
 libraryDependencies += "commons-codec" % "commons-codec" % "1.12"
 
+libraryDependencies += "org.dmfs" % "lib-recur" % "0.11.2"
+
 libraryDependencies += "org.scalamock" %% "scalamock" % "4.1.0" % Test
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test

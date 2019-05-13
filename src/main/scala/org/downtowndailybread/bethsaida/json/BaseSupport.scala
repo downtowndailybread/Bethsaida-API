@@ -1,12 +1,19 @@
 package org.downtowndailybread.bethsaida.json
 
+import java.time.LocalTime
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.MalformedJsonErrorException
 import spray.json._
+import DefaultJsonProtocol._
 import org.downtowndailybread.bethsaida.service.UUIDProvider
 
 trait BaseSupport extends UUIDProvider {
+
+  implicit def intConverter(i: Int): JsValue = JsNumber(i)
+  implicit def stringConverter(s: String): JsValue = JsString(s)
+  implicit def boolConverter(b: Boolean): JsValue = JsBoolean(b)
+
   implicit val uuidFormat = new RootJsonFormat[UUID] {
     override def read(json: JsValue): UUID = json match {
       case JsString(s) => parseUUID(s)
@@ -32,4 +39,23 @@ trait BaseSupport extends UUIDProvider {
     }
   }
 
+  implicit val localTimeFormat = new RootJsonFormat[LocalTime] {
+    override def write(obj: LocalTime): JsValue = {
+      JsObject(
+        ("hour", obj.getHour),
+        ("minute", obj.getMinute),
+        ("second", obj.getSecond)
+      )
+    }
+
+    override def read(json: JsValue): LocalTime = {
+      (json: @unchecked) match {
+        case JsObject(o) => LocalTime.of(
+          o("hour").convertTo[Int],
+          o("minute").convertTo[Int],
+          o("second").convertTo[Int]
+        )
+      }
+    }
+  }
 }
