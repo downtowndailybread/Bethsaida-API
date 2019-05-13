@@ -101,7 +101,7 @@ class EventRequest(conn: Connection, settings: Settings) extends BaseRequest
     val metaId = insertMetadataStatement(conn, true)
     val sql =
       s"""
-         |insert into event
+         |insert into event_attribute
          |    (event_id, start_time, end_time, capacity, schedule_creator, user_creator, metadata_id)
          |values
          |    (cast(? as uuid), ?, ?, ?, cast(? as uuid), cast(? as uuid), ?)
