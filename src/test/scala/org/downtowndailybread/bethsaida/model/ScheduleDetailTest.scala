@@ -11,7 +11,7 @@ class ScheduleDetailTest extends FlatSpec {
   val startTime = LocalTime.of(11, 0, 0)
   val endTime = LocalTime.of(13, 0, 0)
 
-  "a scheudle that includes the RRULE: prefix" should "work" in {
+  "a schedule that includes the RRULE: prefix" should "work" in {
     val schedule = ScheduleDetail(
       "RRULE:FREQ=DAILY",
       startTime,
