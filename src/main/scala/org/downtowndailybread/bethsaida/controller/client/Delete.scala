@@ -3,14 +3,14 @@ package org.downtowndailybread.bethsaida.controller.client
 import java.util.UUID
 
 import akka.http.scaladsl.server.Directives._
+import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.Success
 import org.downtowndailybread.bethsaida.request.ClientRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers._
 
-trait Delete {
-  this: JsonSupport with AuthenticationProvider =>
+trait Delete extends ControllerBase {
+  this: JsonSupport with AuthenticationProvider with SettingsProvider with DatabaseConnectionProvider =>
 
   val client_deleteRoute = path(Segment / "delete") {
     idStr =>
@@ -18,7 +18,7 @@ trait Delete {
       post {
         authorizeNotAnonymous {
           implicit authUser =>
-            DatabaseSource.runSql(c => new ClientRequest(c).deleteClient(id))
+            runSql(c => new ClientRequest(settings, c).deleteClient(id))
             complete(Success(s"client id $id successfully deleted"))
         }
       }

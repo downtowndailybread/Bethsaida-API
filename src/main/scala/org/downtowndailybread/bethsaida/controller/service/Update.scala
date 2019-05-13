@@ -5,11 +5,10 @@ import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.ServiceAttributes
 import org.downtowndailybread.bethsaida.request.ServiceRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait Update extends ControllerBase {
-  this: JsonSupport with AuthenticationProvider =>
+  this: JsonSupport with AuthenticationProvider with DatabaseConnectionProvider with SettingsProvider =>
 
   val service_updateRoute = path(JavaUUID / "update") {
     id =>
@@ -19,7 +18,7 @@ trait Update extends ControllerBase {
             entity(as[ServiceAttributes]) {
               sa =>
                 futureComplete({
-                  DatabaseSource.runSql(c => new ServiceRequest(c).updateService(id, sa))
+                  runSql(c => new ServiceRequest(settings, c).updateService(id, sa))
                   "service updated"
                 })
             }

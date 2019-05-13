@@ -2,7 +2,7 @@ package org.downtowndailybread.bethsaida.controller.service
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, SettingsProvider}
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait ServiceRoutes
   extends All
@@ -12,7 +12,7 @@ trait ServiceRoutes
     with Delete
     with schedule.ScheduleRoutes
     with event.EventRoutes {
-  this: JsonSupport with AuthenticationProvider with SettingsProvider =>
+  this: JsonSupport with AuthenticationProvider with SettingsProvider with DatabaseConnectionProvider =>
 
   val allServiceRoutes = {
     pathPrefix("service") {

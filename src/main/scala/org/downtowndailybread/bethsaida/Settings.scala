@@ -1,8 +1,9 @@
 package org.downtowndailybread.bethsaida
 
-import java.util.TimeZone
+import java.util.{Properties, TimeZone}
 
 import com.typesafe.config.Config
+import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 
 class Settings(config: Config) {
 
@@ -21,8 +22,26 @@ class Settings(config: Config) {
   val prefix = getOrElse("prefix", _.getString, "api")
   val allowAnonymousUser = getOrElse("allow_anonymous_user", _.getBoolean, false)
   val timezone = TimeZone.getDefault
+  val db = getOrElse("database", _.getString, "ddb")
   if (env != "dev" && secret == "changeme") {
     throw new Exception("CHANGE APPLICATION SECRET")
   }
   val provider = getOrElse("provider", _.getString, "provider")
+
+  val ds = {
+    val internalConfig = {
+      import java.io.PrintWriter
+      val props = new Properties()
+      props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource")
+      props.setProperty("dataSource.user", "postgres")
+      props.setProperty("dataSource.password", "docker")
+      props.setProperty("dataSource.databaseName", db)
+      props.put("dataSource.logWriter", new PrintWriter(System.out))
+      val config = new HikariConfig(props)
+      config.setSchema("bethsaida")
+      config
+    }
+
+    new HikariDataSource(internalConfig)
+  }
 }

@@ -1,16 +1,29 @@
-package org.downtowndailybread.bethsaida.request.util
+package org.downtowndailybread.integration.base
 
 import java.sql.Connection
 import java.util.Properties
 
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 
-object DatabaseSource {
+object TestDatabaseSource {
 
-  lazy val ds = new HikariDataSource(config)
+  lazy val ds = new HikariDataSource({
+    config.setSchema("bethsaida")
+    config
+  })
+
+  def dropAndAddSchema() = {
+    val conn = new HikariDataSource(config).getConnection
+    val ps1 = conn.prepareStatement("SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'bethsaida'")
+    val rs = ps1.executeQuery()
+    if(rs != null && rs.next()) {
+      conn.prepareStatement("drop schema bethsaida cascade;").execute()
+    }
+    conn.prepareStatement("create schema bethsaida;").execute()
+  }
 
   def runSql[T](funct: (Connection) => T): T = {
-    val connection = DatabaseSource.ds.getConnection()
+    val connection = TestDatabaseSource.ds.getConnection()
     connection.setAutoCommit(false)
     try {
       val result = funct(connection)
@@ -34,10 +47,8 @@ object DatabaseSource {
     props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource")
     props.setProperty("dataSource.user", "postgres")
     props.setProperty("dataSource.password", "docker")
-    props.setProperty("dataSource.databaseName", "ddb")
+    props.setProperty("dataSource.databaseName", "ddb_test")
     props.put("dataSource.logWriter", new PrintWriter(System.out))
-    val config = new HikariConfig(props)
-    config.setSchema("bethsaida")
-    config
+    new HikariConfig(props)
   }
 }

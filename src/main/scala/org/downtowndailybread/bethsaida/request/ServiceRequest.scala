@@ -4,12 +4,16 @@ import java.sql.{Connection, ResultSet, Time}
 import java.time.LocalTime
 import java.util.UUID
 
+import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.service.{ScheduleNotFoundException, ServiceNotFoundException}
 import org.downtowndailybread.bethsaida.model.{InternalUser, Schedule, ScheduleDetail, Service, ServiceAttributes, ServiceType}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.downtowndailybread.bethsaida.providers.UUIDProvider
+import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 
-class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequest with UUIDProvider {
+class ServiceRequest(val settings: Settings, val conn: Connection)
+  extends BaseRequest
+    with DatabaseRequest
+    with UUIDProvider {
 
   implicit private def timeConverter(t: Time): LocalTime = t.toLocalTime
 
@@ -54,7 +58,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     val id = getUUID()
     val sql =
       s"""
-         |insert into schedule
+         |insert into event_schedule
          |    (id, service_id, metadata_id)
          |VALUES (cast(? as uuid), cast(? as uuid), ?)
        """.stripMargin
@@ -100,7 +104,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     val metaId = insertMetadataStatement(conn, enabled)
     val sql =
       s"""
-         |insert into schedule_attribute
+         |insert into event_schedule_attribute
          |    (schedule_id, rrule, enabled, metadata_id)
          |values (cast(? as uuid), ?, ?, ?)
        """.stripMargin
@@ -115,19 +119,19 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
   private def getScheduleDetail(scheduleId: UUID): ScheduleDetail = {
     val sql =
       s"""
-        |select distinct on (details.schedule_id) sched.service_id,
-        |                                             details.schedule_id,
-        |                                             details.rrule,
-        |                                             details.start_time,
-        |                                             details.end_time,
-        |                                             details.enabled,
-        |                                             m.is_valid
-        |    from schedule sched
-        |             left join schedule_attribute details
-        |                       on sched.id = details.schedule_id
-        |             left join metadata m on details.metadata_id = m.rid
-        |    where sched.id = cast(? as uuid)
-        |    order by details.schedule_id, details.rid desc
+         |select distinct on (details.schedule_id) sched.service_id,
+         |                                             details.schedule_id,
+         |                                             details.rrule,
+         |                                             details.start_time,
+         |                                             details.end_time,
+         |                                             details.enabled,
+         |                                             m.is_valid
+         |    from event_schedule sched
+         |             left join event_schedule_attribute details
+         |                       on sched.id = details.schedule_id
+         |             left join metadata m on details.metadata_id = m.rid
+         |    where sched.id = cast(? as uuid)
+         |    order by details.schedule_id, details.rid desc
       """.stripMargin
     val ps = conn.prepareStatement(sql)
     ps.setString(1, scheduleId)
@@ -168,8 +172,8 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
          |                                             details.rrule,
          |                                             details.enabled,
          |                                             m.is_valid
-         |    from schedule sched
-         |             left join schedule_attribute details
+         |    from event_schedule sched
+         |             left join event_schedule_attribute details
          |                       on sched.id = details.schedule_id
          |             left join metadata m on details.metadata_id = m.rid
          |    where $schedFilter
@@ -209,7 +213,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
         ServiceType.withName(rs.getString("type")),
         Option(rs.getInt("defaut_capacity"))
       ),
-      if(rs.getString("schedule_id") == null) {
+      if (rs.getString("schedule_id") == null) {
         Seq()
       } else {
         Seq(Schedule(
