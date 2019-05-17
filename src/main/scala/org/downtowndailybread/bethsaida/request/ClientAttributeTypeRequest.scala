@@ -13,61 +13,33 @@ class ClientAttributeTypeRequest(val conn: Connection)
     with DatabaseRequest
     with UUIDProvider {
 
-  private def convertRs(res: ResultSet): ClientAttributeType = {
-    ClientAttributeType(
-      res.getString("name"),
-      ClientAttributeTypeAttribute(
-        res.getString("display_name"),
-        res.getString("type"),
-        res.getBoolean("required"),
-        res.getBoolean("required_for_onboarding"),
-        res.getInt("ordering")
-      )
-    )
+  /**
+    * Returns all client attribute types
+    * @return all client attribute types
+    */
+  def getClientAttributeTypes(): Seq[ClientAttributeType] = {
+    getClientAttributeTypesInternal(None)
   }
 
-
-  def getClientAttributeTypes(attributeName: Option[String] = None): Seq[ClientAttributeType] = {
-    val filter = attributeName match {
-      case Some(attribName) => s"cat.name = '$attribName'"
-      case None => "1=1"
-    }
-    val sql =
-      s"""
-         |select *
-         |from (select distinct on (cat.id) cat.name,
-         |                         cata.display_name,
-         |                         cata.required,
-         |                         cata.required_for_onboarding,
-         |                         cata.type,
-         |                         cata.ordering,
-         |                         meta.is_valid
-         |      from client_attribute_type cat
-         |             left join client_attribute_type_attrib cata on cat.id = cata.client_attribute_type_id
-         |             left join metadata meta on cata.metadata_id = meta.rid
-         |      where 1=1
-         |             and $filter
-         |      order by cat.id, cata.rid desc) attribs
-         |where attribs.is_valid
-      """.stripMargin
-    createSeq(
-      {
-        val ps = conn.prepareStatement(sql)
-        ps.executeQuery()
-      },
-      convertRs
-    ).sortBy(r => (r.clientAttributeTypeAttribute.ordering, r.id)).toList
-  }
-
+  /**
+    * Gets the specific client attribute type based on its name
+    * @param attribName the name of the attribute type to fetch
+    * @return the client attribute type of the name given
+    */
   def getClientAttributeTypeByName(attribName: String): ClientAttributeType = {
-    getClientAttributeTypes(Some(attribName)).toList match {
+    getClientAttributeTypesInternal(Some(attribName)).toList match {
       case cat :: Nil => cat
       case _ => throw new ClientAttributeTypeNotFoundException(attribName)
     }
   }
 
+  /**
+    * Inserts a client attribute type to the database
+    * @param cat the client attribute type
+    * @param au the user inserting the client attribute type
+    */
   def insertClientAttributeType(cat: ClientAttributeType)(implicit au: InternalUser): Unit = {
-    getClientAttributeTypes(Some(cat.id)).toList match {
+    getClientAttributeTypesInternal(Some(cat.id)).toList match {
       case Nil =>
         val catSql =
           s"""
@@ -76,7 +48,7 @@ class ClientAttributeTypeRequest(val conn: Connection)
              |""".stripMargin
 
         val catPs = conn.prepareStatement(catSql)
-        catPs.setString(1, getUUID().toString)
+        catPs.setString(1, getUUID())
         catPs.setString(2, cat.id)
         catPs.setInt(3, insertMetadataStatement(conn, true))
 
@@ -95,6 +67,11 @@ class ClientAttributeTypeRequest(val conn: Connection)
     }
   }
 
+  /**
+    *
+    * @param attribName
+    * @param au
+    */
   def deleteClientAttributeType(attribName: String)(
     implicit au: InternalUser
   ): Unit = {
@@ -136,5 +113,57 @@ class ClientAttributeTypeRequest(val conn: Connection)
     catch {
       case e: Exception => throw new ClientAttributeTypeInsertionErrorException(e)
     }
+  }
+
+  /**
+    * Gets client attribute types. If the attributeName is set to None, then this returns all attributetypes, otherwise
+    * it returns the one corresponding to the name given in the Option.
+    * @param attributeName the optional name of the attribute
+    * @return a sequence of matching ClientAttributeTypes
+    */
+  private def getClientAttributeTypesInternal(attributeName: Option[String] = None): Seq[ClientAttributeType] = {
+    val filter = attributeName match {
+      case Some(attribName) => s"cat.name = '$attribName'"
+      case None => "1=1"
+    }
+    val sql =
+      s"""
+         |select *
+         |from (select distinct on (cat.id) cat.name,
+         |                         cata.display_name,
+         |                         cata.required,
+         |                         cata.required_for_onboarding,
+         |                         cata.type,
+         |                         cata.ordering,
+         |                         meta.is_valid
+         |      from client_attribute_type cat
+         |             left join client_attribute_type_attrib cata on cat.id = cata.client_attribute_type_id
+         |             left join metadata meta on cata.metadata_id = meta.rid
+         |      where 1=1
+         |             and $filter
+         |      order by cat.id, cata.rid desc) attribs
+         |where attribs.is_valid
+      """.stripMargin
+    createSeq(
+      {
+        val ps = conn.prepareStatement(sql)
+        ps.executeQuery()
+      },
+      convertRs
+    ).sortBy(r => (r.clientAttributeTypeAttribute.ordering, r.id)).toList
+  }
+
+
+  private def convertRs(res: ResultSet): ClientAttributeType = {
+    ClientAttributeType(
+      res.getString("name"),
+      ClientAttributeTypeAttribute(
+        res.getString("display_name"),
+        res.getString("type"),
+        res.getBoolean("required"),
+        res.getBoolean("required_for_onboarding"),
+        res.getInt("ordering")
+      )
+    )
   }
 }

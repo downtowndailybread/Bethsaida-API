@@ -12,11 +12,17 @@ import org.downtowndailybread.bethsaida.service.{HashProvider, UUIDProvider}
 
 class AuthRequest(settings: Settings, conn: Connection) extends BaseRequest with HashProvider with UUIDProvider {
 
-  def getUser(userParameters: LoginParameters): InternalUser = {
+  /**
+    * Finds a user in the database based on the login parameters given. This method does all of the validation of
+    * password, active checks, and locked checks.
+    * @param loginParameters The login parameters
+    * @return the user if the parameters correctly match to a user in the database, or throws an exception.
+    */
+  def getUser(loginParameters: LoginParameters): InternalUser = {
     val userRequest = new UserRequest(conn)
-    val user = userRequest.getRawUserFromEmailOptional(userParameters.email)
+    val user = userRequest.getRawUserFromEmailOptional(loginParameters.email)
     user match {
-      case Some(u) if u.hash != hashPassword(userParameters.password, u.salt) =>
+      case Some(u) if u.hash != hashPassword(loginParameters.password, u.salt) =>
         throw new PasswordDoesNotMatchException
       case Some(u) if !u.confirmed =>
         throw new UserAccountNotConfirmedException
@@ -28,6 +34,12 @@ class AuthRequest(settings: Settings, conn: Connection) extends BaseRequest with
     }
   }
 
+  /**
+    * This action "confirms" the user, meaning the email address is associated with the user because they clicked on a
+    * link in the email.
+    * @param emailConfirm the object associating an email and a token.
+    * @param au the internal user making the request.
+    */
   def confirmUser(emailConfirm: ConfirmEmail)(implicit au: InternalUser): Unit = {
     new UserRequest(conn).confirmEmail(emailConfirm.email, emailConfirm.token)
   }

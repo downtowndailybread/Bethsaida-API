@@ -5,4 +5,5 @@ import org.downtowndailybread.bethsaida.model.ServiceType.ServiceType
 case class ServiceAttributes(
                              name: String,
                              serviceType: ServiceType,
+                             defaultCapacity: Option[Int]
                            )

@@ -13,33 +13,6 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
 
   implicit private def timeConverter(t: Time): LocalTime = t.toLocalTime
 
-  private def scheduleRsConverter(rs: ResultSet): ScheduleDetail = {
-    ScheduleDetail(
-      rs.getString("rrule"),
-      rs.getTime("start_time"),
-      rs.getTime("end_time"),
-      rs.getBoolean("enabled")
-    )
-  }
-
-  private def serviceRsConverter(rs: ResultSet): Service = {
-    Service(
-      parseUUID(rs.getString("id")),
-      ServiceAttributes(
-        rs.getString("name"),
-        ServiceType.withName(rs.getString("type"))
-      ),
-      if(rs.getString("schedule_id") == null) {
-        Seq()
-      } else {
-        Seq(Schedule(
-          parseUUID(rs.getString("schedule_id")),
-          scheduleRsConverter(rs)
-        ))
-      }
-    )
-  }
-
   def getAllServices(): Seq[Service] = serviceGetter(None)
 
   def getService(id: UUID): Service = serviceGetter(Some(id)).toList match {
@@ -81,7 +54,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     val id = getUUID()
     val sql =
       s"""
-         |insert into service_schedule
+         |insert into schedule
          |    (id, service_id, metadata_id)
          |VALUES (cast(? as uuid), cast(? as uuid), ?)
        """.stripMargin
@@ -109,7 +82,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     val sql =
       s"""
          |insert into service_attribute
-         |    (service_id, name, type, metadata_id)
+         |    (service_id, name, type, metadata_id, default_capacity)
          |values (cast(? as uuid), ?, ?, ?)
        """.stripMargin
     val ps = conn.prepareStatement(sql)
@@ -117,6 +90,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     ps.setString(2, attribute.name)
     ps.setString(3, attribute.serviceType.toString)
     ps.setInt(4, metaId)
+    ps.setNullableInt(5, attribute.defaultCapacity)
     ps.executeUpdate()
   }
 
@@ -126,7 +100,7 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     val metaId = insertMetadataStatement(conn, enabled)
     val sql =
       s"""
-         |insert into service_schedule_details
+         |insert into schedule_attribute
          |    (schedule_id, rrule, enabled, metadata_id)
          |values (cast(? as uuid), ?, ?, ?)
        """.stripMargin
@@ -148,8 +122,8 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
         |                                             details.end_time,
         |                                             details.enabled,
         |                                             m.is_valid
-        |    from service_schedule sched
-        |             left join service_schedule_details details
+        |    from schedule sched
+        |             left join schedule_attribute details
         |                       on sched.id = details.schedule_id
         |             left join metadata m on details.metadata_id = m.rid
         |    where sched.id = cast(? as uuid)
@@ -161,15 +135,15 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     createSeq(
       rs,
       scheduleRsConverter
-    ) match {
+    ).toList match {
       case h :: Nil => h
       case _ => throw new ScheduleNotFoundException(scheduleId)
     }
   }
 
   private def serviceGetter(idInput: Option[UUID]): Seq[Service] = {
-    val (serviceFilter, schedFilter, id) = idInput match {
-      case Some(i) => ("a.service_id = cast(? as uuid)", "sched.service_id = cast(? as uuid)", i.toString)
+    val (serviceFilter, schedFilter, id: String) = idInput match {
+      case Some(i) => ("a.service_id = cast(? as uuid)", "sched.service_id = cast(? as uuid)", i)
       case None => ("(1 = 1 or '' = ?)", "(1 = 1 or '' = ?)", "")
     }
     val sql =
@@ -194,8 +168,8 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
          |                                             details.rrule,
          |                                             details.enabled,
          |                                             m.is_valid
-         |    from service_schedule sched
-         |             left join service_schedule_details details
+         |    from schedule sched
+         |             left join schedule_attribute details
          |                       on sched.id = details.schedule_id
          |             left join metadata m on details.metadata_id = m.rid
          |    where $schedFilter
@@ -215,5 +189,34 @@ class ServiceRequest(val conn: Connection) extends BaseRequest with DatabaseRequ
     createSeq(rs, serviceRsConverter).groupBy(s => s.id).map {
       case (id, service) => Service(id, service.head.attributes, service.flatMap(_.schedules))
     }.toSeq
+  }
+
+  private def scheduleRsConverter(rs: ResultSet): ScheduleDetail = {
+    ScheduleDetail(
+      rs.getString("rrule"),
+      rs.getTime("start_time"),
+      rs.getTime("end_time"),
+      Option(rs.getInt("capacity")),
+      rs.getBoolean("enabled")
+    )
+  }
+
+  private def serviceRsConverter(rs: ResultSet): Service = {
+    Service(
+      rs.getString("id"),
+      ServiceAttributes(
+        rs.getString("name"),
+        ServiceType.withName(rs.getString("type")),
+        Option(rs.getInt("defaut_capacity"))
+      ),
+      if(rs.getString("schedule_id") == null) {
+        Seq()
+      } else {
+        Seq(Schedule(
+          rs.getString("schedule_id"),
+          scheduleRsConverter(rs)
+        ))
+      }
+    )
   }
 }

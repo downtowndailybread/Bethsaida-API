@@ -11,7 +11,7 @@ trait JsonSupport
     with ClientJson
     with UserJson
     with ServiceJson
-    //    with EventJson
+    with EventJson
 {
 
 

@@ -1,9 +1,14 @@
 package org.downtowndailybread.bethsaida.json
 
-import org.downtowndailybread.bethsaida.model.Event
-import spray.json.{JsArray, JsNumber, JsObject, JsString, JsValue, RootJsonWriter}
+import spray.json._
+import DefaultJsonProtocol._
+import org.downtowndailybread.bethsaida.model.{Event, EventAttribute, HoursOfOperation}
 
-trait EventJson {
+trait EventJson extends BaseSupport {
 
+  implicit val hoursOfOperationFormat = jsonFormat2(HoursOfOperation)
+  implicit val eventAttributeFormat = jsonFormat4(EventAttribute)
+  implicit val eventFormat = jsonFormat3(Event)
 
+  implicit val seqEventFormat = seqFormat[Event]
 }
