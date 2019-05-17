@@ -6,7 +6,7 @@ import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
 import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.service.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
 
 trait Delete extends ControllerBase {
   this: AuthenticationProvider with JsonSupport =>

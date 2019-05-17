@@ -2,7 +2,7 @@ package org.downtowndailybread.bethsaida
 
 import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
 import org.flywaydb.core.Flyway
-import org.downtowndailybread.bethsaida.service.UUIDProvider
+import org.downtowndailybread.bethsaida.providers.UUIDProvider
 import org.downtowndailybread.bethsaida.model.{AnonymousUser, ClientAttributeType, ClientAttributeTypeAttribute}
 import org.downtowndailybread.bethsaida.request.util.DatabaseSource
 

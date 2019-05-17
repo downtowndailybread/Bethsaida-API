@@ -8,7 +8,7 @@ import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.event.EventNotFoundException
 import org.downtowndailybread.bethsaida.model.{Event, EventAttribute, HoursOfOperation, InternalUser}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.downtowndailybread.bethsaida.service.UUIDProvider
+import org.downtowndailybread.bethsaida.providers.UUIDProvider
 
 class EventRequest(conn: Connection, settings: Settings) extends BaseRequest
   with DatabaseRequest with UUIDProvider {

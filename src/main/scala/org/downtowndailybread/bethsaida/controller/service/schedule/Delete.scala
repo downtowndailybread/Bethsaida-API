@@ -6,7 +6,7 @@ import org.downtowndailybread.bethsaida.exception.service.ScheduleNotFoundExcept
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.request.ServiceRequest
 import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.service.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
 
 trait Delete extends ControllerBase {
   this: JsonSupport with AuthenticationProvider =>

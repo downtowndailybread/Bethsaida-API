@@ -4,7 +4,7 @@ import java.sql.{Connection, PreparedStatement, ResultSet}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.model.{AnonymousUser, InternalUser}
-import org.downtowndailybread.bethsaida.service.UUIDProvider
+import org.downtowndailybread.bethsaida.providers.UUIDProvider
 
 trait DatabaseRequest {
 

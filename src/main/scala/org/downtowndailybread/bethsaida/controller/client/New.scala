@@ -6,7 +6,7 @@ import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.ClientAttribute
 import org.downtowndailybread.bethsaida.request.ClientRequest
 import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.service.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
 
 
 trait New extends ControllerBase {

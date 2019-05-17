@@ -1,4 +1,4 @@
-package org.downtowndailybread.bethsaida.service
+package org.downtowndailybread.bethsaida.providers
 
 import org.downtowndailybread.bethsaida.Settings
 

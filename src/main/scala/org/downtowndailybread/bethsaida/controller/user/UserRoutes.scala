@@ -2,7 +2,7 @@ package org.downtowndailybread.bethsaida.controller.user
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import org.downtowndailybread.bethsaida.service.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
 
 trait UserRoutes extends New with All with Delete with Find with Update{
   this: AuthenticationProvider with JsonSupport =>

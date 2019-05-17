@@ -7,7 +7,7 @@ import org.downtowndailybread.bethsaida.exception.client.{ClientInsertionErrorEx
 import org.downtowndailybread.bethsaida.exception.clientattributetype.ClientAttributeTypeNotFoundException
 import org.downtowndailybread.bethsaida.model.{Client, ClientAttribute, InternalUser}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.downtowndailybread.bethsaida.service.UUIDProvider
+import org.downtowndailybread.bethsaida.providers.UUIDProvider
 import spray.json._
 
 class ClientRequest(val conn: Connection)

@@ -7,7 +7,7 @@ import org.downtowndailybread.bethsaida.exception.user.{EmailAlreadyExistsExcept
 import org.downtowndailybread.bethsaida.model.parameters.UserParameters
 import org.downtowndailybread.bethsaida.model.{AnonymousUser, InternalUser}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.downtowndailybread.bethsaida.service.{HashProvider, UUIDProvider}
+import org.downtowndailybread.bethsaida.providers.{HashProvider, UUIDProvider}
 
 import scala.util.Try
 
