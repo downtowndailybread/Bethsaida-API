@@ -20,13 +20,13 @@ trait BethsaidaSupport
     with JsonSupport
     with SettingsProvider
     with DatabaseConnectionProvider {
-  val settings = new Settings(ConfigFactory.load("integration_test"))
+  lazy val settings = new Settings(ConfigFactory.load("integration_test"))
 
-  val apiMain = new ApiMain(settings)
+  lazy val apiMain = new ApiMain(settings)
 
-  val routes = apiMain.routes
+  lazy val routes = apiMain.routes
 
-  val apiBaseUrl = "/api/v1"
+  lazy val apiBaseUrl = "/api/v1"
 
   implicit val r = apiMain.rejectionHandler
   implicit val d = apiMain.exceptionHandler
