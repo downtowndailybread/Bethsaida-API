@@ -4,4 +4,4 @@ scala:
 jdk:
   - openjdk12
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION "scalatest/testOnly -- -l IntegrationTest"
+  - sbt ++$TRAVIS_SCALA_VERSION "testOnly -- -l IntegrationTest"
