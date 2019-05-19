@@ -6,6 +6,7 @@ import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
 import org.downtowndailybread.bethsaida.model.InternalUser
 import org.downtowndailybread.bethsaida.model.parameters.{LoginParameters, UserParameters}
 import org.downtowndailybread.bethsaida.request.UserRequest
+import org.downtowndailybread.bethsaida.tag.IntegrationTest
 import org.downtowndailybread.integration.base.BethsaidaSupport
 import spray.json.JsObject
 
@@ -31,13 +32,13 @@ trait UserTest extends BethsaidaSupport {
     userParams.loginParameters.email
   )
 
-  "all user routes" should "fail without authentication" in {
+  "all user routes" should "fail without authentication" taggedAs IntegrationTest in {
     Get(apiBaseUrl + "/user") ~> routes ~> check {
       assert(status == StatusCodes.Unauthorized)
     }
   }
 
-  "a user" should "be able to get the list of users" in {
+  "a user" should "be able to get the list of users" taggedAs IntegrationTest in {
     val a = Get(apiBaseUrl + "/user")
     Get(apiBaseUrl + "/user").authenticate() ~> routes ~> check {
       assert(status == StatusCodes.OK)
@@ -46,7 +47,7 @@ trait UserTest extends BethsaidaSupport {
     }
   }
 
-  "a user" should "be able to create a new user" in {
+  "a user" should "be able to create a new user" taggedAs IntegrationTest in {
     Post(apiBaseUrl + "/user/new").authenticate().withEntity(ContentTypes.`application/json`, JsObject(
       ("email", otherUserParameters.loginParameters.email),
       ("name", otherUserParameters.name),
@@ -70,19 +71,19 @@ trait UserTest extends BethsaidaSupport {
 //    }
 //  }
 
-  "a user" should "be able to view the profile of another user" in {
+  "a user" should "be able to view the profile of another user" taggedAs IntegrationTest in {
     Get(apiBaseUrl + s"/user/${otherUser.id}").authenticate() ~> routes ~> check {
       assert(status == StatusCodes.OK)
     }
   }
 
-  "a non-user" should "not be able to view the profile of another user" in {
+  "a non-user" should "not be able to view the profile of another user" taggedAs IntegrationTest in {
     Get(apiBaseUrl + s"/user/${otherUser.id}") ~> routes ~> check {
       assert(status == StatusCodes.Unauthorized)
     }
   }
 
-  "a user" should "be able to update their profile" in {
+  "a user" should "be able to update their profile" taggedAs IntegrationTest in {
     Post(apiBaseUrl + s"/user/${loggedInUser.id}/update").authenticate().withEntity(ContentTypes.`application/json`,
       JsObject(
         ("name", "Andy Guenin II"),
@@ -103,7 +104,7 @@ trait UserTest extends BethsaidaSupport {
     }
   }
 
-  "a user" should "not be able to update another profile" in {
+  "a user" should "not be able to update another profile" taggedAs IntegrationTest in {
     Post(apiBaseUrl + s"/user/${otherUser.id}/update").authenticate().withEntity(ContentTypes.`application/json`,
       JsObject(
         ("name", "Andy Guenin II"),
