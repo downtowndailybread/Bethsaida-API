@@ -3,3 +3,5 @@ scala:
   - 2.12.8
 jdk:
   - openjdk12
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION "testOnly -- -l IntegrationTest"

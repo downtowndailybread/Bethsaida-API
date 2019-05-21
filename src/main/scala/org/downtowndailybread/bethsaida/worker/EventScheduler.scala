@@ -7,30 +7,30 @@ import java.util.concurrent.TimeUnit
 import akka.actor.Actor
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.model.{AnonymousUser, EventAttribute, HoursOfOperation, Service, ServiceAttributes}
+import org.downtowndailybread.bethsaida.providers.{DatabaseConnectionProvider, SettingsProvider}
 import org.downtowndailybread.bethsaida.request.{EventRequest, ServiceRequest}
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
 import org.downtowndailybread.bethsaida.worker.EventScheduler.{CheckUpcomingEvents, ScheduleEvent}
 
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 
-class EventScheduler(settings: Settings) extends Actor {
+class EventScheduler(val settings: Settings) extends Actor with DatabaseConnectionProvider with SettingsProvider {
 
   implicit val ec = context.dispatcher
 
   override def preStart(): Unit = {
-    context.system.getScheduler.schedule(
-      Duration(0, TimeUnit.SECONDS),
-      Duration(10, TimeUnit.MINUTES),
-      self,
-      CheckUpcomingEvents)
+//    context.system.getScheduler.schedule(
+//      Duration(0, TimeUnit.SECONDS),
+//      Duration(10, TimeUnit.MINUTES),
+//      self,
+//      CheckUpcomingEvents)
   }
 
   override def receive: Receive = {
 
     case CheckUpcomingEvents => checkUpcomingEvents(ZonedDateTime.now(settings.timezone.toZoneId))
     case s@ScheduleEvent(serviceId, attributes, opening, scheduleId) =>
-      DatabaseSource.runSql(conn => new EventRequest(conn, settings).createEvent(
+      runSql(conn => new EventRequest(settings, conn).createEvent(
         serviceId,
         EventAttribute(opening, attributes.defaultCapacity, None, Some(scheduleId))
       )(AnonymousUser))
@@ -39,7 +39,7 @@ class EventScheduler(settings: Settings) extends Actor {
   }
 
   def checkUpcomingEvents(implicit localDateTime: ZonedDateTime): Unit = {
-    val services = DatabaseSource.runSql(conn => new ServiceRequest(conn).getAllServices())
+    val services = runSql(c => new ServiceRequest(settings, settings.ds.getConnection).getAllServices())
     val serviceOpenings = services.map(r =>
       (r,
         r.schedules.flatMap(r =>

@@ -10,7 +10,6 @@ import com.typesafe.config.ConfigFactory
 import org.downtowndailybread.bethsaida.controller.ApplicationRoutes
 import org.downtowndailybread.bethsaida.json._
 import org.downtowndailybread.bethsaida.request.UserRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
 import org.downtowndailybread.bethsaida.providers._
 import org.downtowndailybread.bethsaida.service.{ExceptionHandlers, RejectionHandlers}
 import org.downtowndailybread.bethsaida.worker.EventScheduler
@@ -31,9 +30,25 @@ class ApiMain(val settings: Settings)
   extends JsonSupport
     with ApplicationRoutes
     with AuthenticationProvider
-    with SettingsProvider {
+    with SettingsProvider
+    with DatabaseConnectionProvider {
 
-  val anonymousUser = DatabaseSource.runSql(conn => new UserRequest(conn).getAnonymousUser())
+  val anonymousUser = runSql(c => new UserRequest(settings, settings.ds.getConnection).getAnonymousUser())
+
+  val routes = {
+    cors() {
+      pathPrefix(settings.prefix / settings.version) {
+        path("") {
+          complete(s"ddb api ${settings.version}")
+        } ~
+          allRoutes
+      }
+    }
+  }
+
+  implicit def exceptionHandler: ExceptionHandler = ExceptionHandlers.exceptionHandlers
+
+  implicit def rejectionHandler: RejectionHandler = RejectionHandler.newBuilder.handle(RejectionHandlers.rejectionHanders).result
 
   def run() = {
     implicit val system = ActorSystem("bethsaida-api")
@@ -43,18 +58,6 @@ class ApiMain(val settings: Settings)
     val workerSystem = ActorSystem("worker-api")
     workerSystem.actorOf(Props(classOf[EventScheduler], settings), "event-scheduler")
 
-    implicit def exceptionHandler: ExceptionHandler = ExceptionHandlers.exceptionHandlers
-
-    implicit def rejectionHandler = RejectionHandler.newBuilder.handle(RejectionHandlers.rejectionHanders).result
-
-    val routes = cors() {
-        pathPrefix(settings.prefix / settings.version) {
-          path("") {
-            complete(s"ddb api ${settings.version}")
-          } ~
-            allRoutes
-        }
-    }
 
     val bindingFuture = Http().bindAndHandle(Route.handlerFlow(routes), "localhost", settings.port)
 

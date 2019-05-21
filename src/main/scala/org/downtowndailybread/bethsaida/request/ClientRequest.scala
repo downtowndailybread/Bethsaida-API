@@ -3,19 +3,20 @@ package org.downtowndailybread.bethsaida.request
 import java.sql.Connection
 import java.util.UUID
 
+import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.client.{ClientInsertionErrorException, ClientNotFoundException, MissingRequiredClientAttributeException}
 import org.downtowndailybread.bethsaida.exception.clientattributetype.ClientAttributeTypeNotFoundException
 import org.downtowndailybread.bethsaida.model.{Client, ClientAttribute, InternalUser}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.downtowndailybread.bethsaida.providers.UUIDProvider
+import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 import spray.json._
 
-class ClientRequest(val conn: Connection)
+class ClientRequest(val settings: Settings, val conn: Connection)
   extends BaseRequest
     with DatabaseRequest
     with UUIDProvider {
 
-  val clientAttributeTypesRequester = new ClientAttributeTypeRequest(conn)
+  val clientAttributeTypesRequester = new ClientAttributeTypeRequest(settings, conn)
 
   def getAllClients(uuid: Option[UUID] = None): Seq[Client] = {
     val filter = uuid match {
@@ -48,7 +49,7 @@ class ClientRequest(val conn: Connection)
 
     val result = statement.executeQuery()
 
-    val clientAttributeTypes = (new ClientAttributeTypeRequest(conn)).getClientAttributeTypes()
+    val clientAttributeTypes = (new ClientAttributeTypeRequest(settings, conn)).getClientAttributeTypes()
 
     createSeq(result, r => {
       Client(r.getString("userId"),
@@ -120,7 +121,7 @@ class ClientRequest(val conn: Connection)
                     attribs: Seq[ClientAttribute]
                   )(implicit au: InternalUser): Unit = {
     val existingClient = getClientOptionById(id)
-    val attributeType = new ClientAttributeTypeRequest(conn).getClientAttributeTypes()
+    val attributeType = new ClientAttributeTypeRequest(settings, conn).getClientAttributeTypes()
     val newAttributes = attribs.map {
       case ClientAttribute(tpe, value) =>
         attributeType.find(_.id == tpe.id) match {
@@ -144,7 +145,7 @@ class ClientRequest(val conn: Connection)
     val deltas = newAttributes.map(r => (r, true)) ++ deletedAttributes.map(r => (r, false))
 
     if (deltas.nonEmpty) {
-      val clientAttributeTypes = new ClientAttributeTypeRequest(conn).getClientAttributeTypes()
+      val clientAttributeTypes = new ClientAttributeTypeRequest(settings, conn).getClientAttributeTypes()
 
       val attribSql =
         s"""

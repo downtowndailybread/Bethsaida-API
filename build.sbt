@@ -27,3 +27,11 @@ libraryDependencies += "org.dmfs" % "lib-recur" % "0.11.2"
 libraryDependencies += "org.scalamock" %% "scalamock" % "4.1.0" % Test
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test
+
+libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "2.4.1" % Test
+
+libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % "2.5.19" % Test
+
+libraryDependencies += "com.typesafe.akka" %% "akka-http-testkit" % "10.1.8" % Test
+
+testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-n", "org.downtowndailybread.bethsaida.tag.UnitTest", "-oD")

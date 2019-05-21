@@ -5,11 +5,10 @@ import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
-import org.downtowndailybread.bethsaida.request.util.DatabaseSource
-import org.downtowndailybread.bethsaida.providers.AuthenticationProvider
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait Delete extends ControllerBase {
-  this: AuthenticationProvider with JsonSupport =>
+  this: AuthenticationProvider with JsonSupport with SettingsProvider with DatabaseConnectionProvider =>
 
   val clientAttributeType_deleteRoute = {
     path(Segment / "delete") {
@@ -18,8 +17,8 @@ trait Delete extends ControllerBase {
           implicit authUser =>
             post {
               futureComplete {
-                DatabaseSource.runSql(conn =>
-                  new ClientAttributeTypeRequest(conn).deleteClientAttributeType(attribName: String))
+                runSql(c =>
+                  new ClientAttributeTypeRequest(settings, c).deleteClientAttributeType(attribName: String))
                 StatusCodes.OK
               }
             }

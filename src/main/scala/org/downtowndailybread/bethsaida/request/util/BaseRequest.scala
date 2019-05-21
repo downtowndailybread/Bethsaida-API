@@ -1,5 +1,5 @@
 package org.downtowndailybread.bethsaida.request.util
 
-trait BaseRequest {
+import org.downtowndailybread.bethsaida.providers.SettingsProvider
 
-}
+trait BaseRequest extends SettingsProvider

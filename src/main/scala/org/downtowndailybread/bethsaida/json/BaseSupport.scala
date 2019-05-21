@@ -12,6 +12,10 @@ trait BaseSupport extends UUIDProvider {
 
   implicit def intConverter(i: Int): JsValue = JsNumber(i)
   implicit def stringConverter(s: String): JsValue = JsString(s)
+  implicit def stringOptionConverter(s: Option[String]): JsValue = s match {
+    case Some(s) => JsString(s)
+    case None => JsNull
+  }
   implicit def boolConverter(b: Boolean): JsValue = JsBoolean(b)
 
   implicit val uuidFormat = new RootJsonFormat[UUID] {
