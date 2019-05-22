@@ -28,7 +28,7 @@ class Settings(config: Config) {
   }
   val provider = getOrElse("provider", _.getString, "provider")
 
-  val ds = {
+  lazy val ds = {
     val internalConfig = {
       import java.io.PrintWriter
       val props = new Properties()

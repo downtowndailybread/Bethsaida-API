@@ -9,7 +9,7 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 import com.typesafe.config.ConfigFactory
 import org.downtowndailybread.bethsaida.controller.ApplicationRoutes
 import org.downtowndailybread.bethsaida.json._
-import org.downtowndailybread.bethsaida.request.UserRequest
+import org.downtowndailybread.bethsaida.model.AnonymousUser
 import org.downtowndailybread.bethsaida.providers._
 import org.downtowndailybread.bethsaida.service.{ExceptionHandlers, RejectionHandlers}
 import org.downtowndailybread.bethsaida.worker.EventScheduler
@@ -33,7 +33,7 @@ class ApiMain(val settings: Settings)
     with SettingsProvider
     with DatabaseConnectionProvider {
 
-  val anonymousUser = runSql(c => new UserRequest(settings, settings.ds.getConnection).getAnonymousUser())
+  val anonymousUser = AnonymousUser
 
   val routes = {
     cors() {
