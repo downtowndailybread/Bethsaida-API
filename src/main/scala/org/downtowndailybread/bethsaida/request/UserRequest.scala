@@ -18,8 +18,6 @@ class UserRequest(val settings: Settings, val conn: Connection)
     with UUIDProvider
     with HashProvider {
 
-  def getAnonymousUser(): InternalUser = AnonymousUser
-
   def emailAndTokenMatch(email: String, confirmation: UUID): Option[InternalUser] = {
     getRawUserFromEmailOptional(email) match {
       case Some(user) if user.resetToken.contains(confirmation) =>
