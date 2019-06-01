@@ -16,7 +16,7 @@ trait ClientJson extends BaseSupport {
     override def read(json: JsValue): ClientAttributeTypeAttribute = {
       json match {
         case JsObject(fields) =>
-          if(fields.get("id").isDefined) {
+          if (fields.get("id").isDefined) {
             throw new MalformedJsonErrorException("id cannot be updated")
           }
           ClientAttributeTypeAttribute(
@@ -65,14 +65,16 @@ trait ClientJson extends BaseSupport {
 
     override def read(json: JsValue): Seq[ClientAttribute] = {
       val attTypes = runSql(c => new ClientAttributeTypeRequest(settings, settings.ds.getConnection)
-         .getClientAttributeTypes())
+        .getClientAttributeTypes()).map(c => (c.id, c)).toMap
       (json: @unchecked) match {
         case JsArray(arr) => arr.map {
           attrib =>
+
             (attrib: @unchecked) match {
-              case JsObject(m) => attTypes.find(_.id == m("id")
-                .convertTo[String]).map(r => ClientAttribute(r, m("value"))).getOrElse(
-                throw new ClientAttributeTypeNotFoundException(m("id").convertTo[String]))
+              case JsObject(m) =>
+                val lookup = m("id").convertTo[String]
+                attTypes.get(lookup).map(r => ClientAttribute(r, m("value"))).getOrElse(
+                throw new ClientAttributeTypeNotFoundException(lookup))
             }
         }
       }
@@ -95,7 +97,7 @@ trait ClientJson extends BaseSupport {
         case JsObject(obj) => Client(
           obj("id").convertTo[String],
           (obj("attributes"): @unchecked) match {
-            case s: JsObject => seqClientAttributeFormat.read(s)
+            case a: JsArray => seqClientAttributeFormat.read(a)
           }
         )
       }
