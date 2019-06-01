@@ -4,8 +4,10 @@ import org.downtowndailybread.bethsaida.Migrate
 import org.downtowndailybread.integration.base.{BethsaidaSupport, TestDatabaseSource}
 import org.scalatest.BeforeAndAfterAll
 
-class IntegrationMain extends BethsaidaSupport with BeforeAndAfterAll
+class IntegrationMain extends BethsaidaSupport
+  with BeforeAndAfterAll
   with AuthenticationTest
+  with ClientAttributeTypeTest
   with ClientTest
   with UserTest {
 

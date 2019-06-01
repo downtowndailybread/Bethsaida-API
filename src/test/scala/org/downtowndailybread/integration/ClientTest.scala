@@ -4,24 +4,37 @@ package org.downtowndailybread.integration
 import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
 import org.downtowndailybread.bethsaida.tag.IntegrationTest
 import org.downtowndailybread.integration.base.BethsaidaSupport
-import spray.json._
+import spray.json.JsArray
 
-import scala.concurrent.{Await, Promise}
-import scala.concurrent.duration._
+trait ClientTest {
 
-trait ClientTest extends BethsaidaSupport {
+  this: BethsaidaSupport =>
+
+  "all clients" should "return nothing for an authenticated user" taggedAs IntegrationTest in {
+    Get(apiBaseUrl + "/client").authenticate() ~> routes ~> check {
+      assert(status == StatusCodes.OK)
+      val r = responseAs[JsArray]
+      assert(r.elements.isEmpty)
+    }
+  }
+
+  "all clients" should "return error for an unauthenticated user" taggedAs IntegrationTest in {
+    Get(apiBaseUrl + "/client") ~> routes ~> check {
+      assert(status == StatusCodes.Unauthorized)
+    }
+  }
+
+//    "a client" should "be able to be inserted by an authenticated user" taggedAs IntegrationTest in {
+//      Post(apiBaseUrl + "/client/new").withEntity(ContentTypes.`application/json`,
+//        JsObject(
+//
+//        ).toString
+//      )
+//    }
 
   "a client" should "be able to be fetched" taggedAs IntegrationTest in {
-    Post(apiBaseUrl + "/authenticate").withEntity(ContentTypes.`application/json`,
-      JsObject(
-        ("email", JsString(userParams.loginParameters.email)),
-        ("password", JsString(userParams.loginParameters.password))
-      ).toString()
-    ) ~> routes ~> check {
+    Get(apiBaseUrl + "/client").authenticate() ~> routes ~> check {
       assert(status == StatusCodes.OK)
-      val r = responseAs[JsObject].fields("auth_token").convertTo[String]
-      println(r)
-      authTokenPromise.success(r)
     }
   }
 }

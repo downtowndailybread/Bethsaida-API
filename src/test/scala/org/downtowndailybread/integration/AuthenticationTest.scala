@@ -4,6 +4,7 @@ import java.util.UUID
 
 import spray.json._
 import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
+import akka.http.scaladsl.server.Route
 import org.downtowndailybread.bethsaida.request.UserRequest
 import org.downtowndailybread.bethsaida.tag.IntegrationTest
 import org.downtowndailybread.integration.base.BethsaidaSupport
@@ -11,7 +12,9 @@ import org.downtowndailybread.integration.base.BethsaidaSupport
 import scala.concurrent._
 import duration._
 
-trait AuthenticationTest extends BethsaidaSupport {
+trait AuthenticationTest {
+
+  this: BethsaidaSupport =>
 
   private val resetToken = Promise[UUID]()
 
@@ -184,6 +187,8 @@ trait AuthenticationTest extends BethsaidaSupport {
       ).toString()
     ) ~> routes ~> check {
       assert(status == StatusCodes.OK)
+
+      authTokenPromise.success(responseAs[JsObject].fields("auth_token").convertTo[String])
     }
   }
 
