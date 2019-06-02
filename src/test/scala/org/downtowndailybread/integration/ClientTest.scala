@@ -54,8 +54,7 @@ trait ClientTest {
     }
     Get(apiBaseUrl + "/client").authenticate() ~> routes ~> check {
       assert(status == StatusCodes.OK)
-      println(response)
-      println(response)
+      println(responseAs[String])
       assert(responseAs[Seq[Client]].size == 1)
     }
   }

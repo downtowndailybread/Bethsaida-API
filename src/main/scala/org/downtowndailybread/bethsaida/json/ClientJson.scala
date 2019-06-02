@@ -43,6 +43,7 @@ trait ClientJson extends BaseSupport {
 
   implicit val clientAttributeTypeFormat = new RootJsonFormat[ClientAttributeType] {
     override def read(json: JsValue): ClientAttributeType = {
+//      val allAttribs = new ClientAttributeTypeRequest(settings, settings.ds.getConnection).getClientAttributeTypes()
       json match {
         case JsObject(fields) => ClientAttributeType(
           fields("id").convertTo[String],
@@ -64,17 +65,13 @@ trait ClientJson extends BaseSupport {
   implicit val seqClientAttributeFormat = new RootJsonFormat[Seq[ClientAttribute]] {
 
     override def read(json: JsValue): Seq[ClientAttribute] = {
-      val attTypes = runSql(c => new ClientAttributeTypeRequest(settings, settings.ds.getConnection)
-        .getClientAttributeTypes()).map(c => (c.id, c)).toMap
       (json: @unchecked) match {
         case JsArray(arr) => arr.map {
           attrib =>
-
             (attrib: @unchecked) match {
               case JsObject(m) =>
                 val lookup = m("id").convertTo[String]
-                attTypes.get(lookup).map(r => ClientAttribute(r, m("value"))).getOrElse(
-                throw new ClientAttributeTypeNotFoundException(lookup))
+                ClientAttribute(lookup, m("value"))
             }
         }
       }
@@ -83,7 +80,7 @@ trait ClientJson extends BaseSupport {
     override def write(objSeq: Seq[ClientAttribute]): JsValue = {
       JsArray(objSeq.map(obj =>
         JsObject(
-          ("id", JsString(obj.attributeType.id)),
+          ("id", JsString(obj.attributeName)),
           ("value", obj.attributeValue)
         )
       ).toVector

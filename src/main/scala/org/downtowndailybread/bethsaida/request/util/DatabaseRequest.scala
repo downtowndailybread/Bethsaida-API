@@ -71,6 +71,10 @@ trait DatabaseRequest {
     def getOptionalUUID(col: String): Option[UUID] = {
       getOptionalString(col).map(parseUUID)
     }
+
+    def getUUID(col: String): UUID = {
+      parseUUID(rs.getString(col))
+    }
   }
 
   implicit def toEnhancedResultSet(rs: ResultSet): EnhancedResultSet =

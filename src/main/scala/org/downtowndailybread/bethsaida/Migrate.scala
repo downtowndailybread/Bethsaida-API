@@ -1,5 +1,7 @@
 package org.downtowndailybread.bethsaida
 
+import java.util.UUID
+
 import com.typesafe.config.ConfigFactory
 import com.zaxxer.hikari.HikariDataSource
 import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest

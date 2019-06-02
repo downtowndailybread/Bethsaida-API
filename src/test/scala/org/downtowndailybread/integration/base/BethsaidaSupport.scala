@@ -34,7 +34,9 @@ trait BethsaidaSupport
 
   protected val authTokenPromise = Promise[String]()
 
-  lazy val authToken = Await.result(authTokenPromise.future, 1.second)
+  lazy val authToken = Await.result(authTokenPromise.future, 50.milli)
+
+  lazy val authHeader = new Authorization(OAuth2BearerToken(authToken))
 
   lazy val userParams = UserParameters(
     "Andy Guenin",
@@ -45,13 +47,7 @@ trait BethsaidaSupport
   )
 
   class EnhancedHttpRequest(val httpRequest: HttpRequest) {
-    def authenticate(): HttpRequest = {
-      httpRequest.withHeaders(
-        new Authorization(
-          OAuth2BearerToken(authToken)
-        )
-      )
-    }
+    def authenticate(): HttpRequest = httpRequest.withHeaders(authHeader)
   }
 
   implicit def httpRequestToEnhanced(httpRequest: HttpRequest): EnhancedHttpRequest = {
