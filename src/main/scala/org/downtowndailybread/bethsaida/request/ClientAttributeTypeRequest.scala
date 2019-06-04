@@ -115,7 +115,9 @@ class ClientAttributeTypeRequest(val settings: Settings, val conn: Connection)
       }
     }
     catch {
-      case e: Exception => throw new ClientAttributeTypeInsertionErrorException(e)
+      case e: Exception => {
+        throw new ClientAttributeTypeInsertionErrorException(e)
+      }
     }
   }
 

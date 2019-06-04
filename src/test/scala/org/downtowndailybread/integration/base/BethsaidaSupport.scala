@@ -2,6 +2,7 @@ package org.downtowndailybread.integration.base
 
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
+import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.typesafe.config.ConfigFactory
 import org.downtowndailybread.bethsaida.json.JsonSupport
@@ -24,12 +25,12 @@ trait BethsaidaSupport
 
   lazy val apiMain = new ApiMain(settings)
 
-  lazy val routes = apiMain.routes
-
   lazy val apiBaseUrl = "/api/v1"
 
-  implicit val r = apiMain.rejectionHandler
   implicit val d = apiMain.exceptionHandler
+  implicit val r = apiMain.rejectionHandler
+
+  lazy val routes = Route.seal(apiMain.routes)
 
   protected val authTokenPromise = Promise[String]()
 

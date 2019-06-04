@@ -13,7 +13,8 @@ import spray.json.JsObject
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Promise}
 
-trait UserTest extends BethsaidaSupport {
+trait UserTest {
+  this: BethsaidaSupport =>
 
   private val otherUserParameters = UserParameters(
     "a b",

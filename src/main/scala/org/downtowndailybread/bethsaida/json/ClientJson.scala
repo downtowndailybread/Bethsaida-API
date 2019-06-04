@@ -3,7 +3,7 @@ package org.downtowndailybread.bethsaida.json
 import org.downtowndailybread.bethsaida.model._
 import spray.json._
 import DefaultJsonProtocol._
-import org.downtowndailybread.bethsaida.exception.MalformedJsonErrorException
+import org.downtowndailybread.bethsaida.exception.{DDBException, MalformedJsonErrorException}
 import org.downtowndailybread.bethsaida.exception.clientattributetype.ClientAttributeTypeNotFoundException
 import org.downtowndailybread.bethsaida.providers.{DatabaseConnectionProvider, SettingsProvider}
 import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
@@ -16,6 +16,9 @@ trait ClientJson extends BaseSupport {
     override def read(json: JsValue): ClientAttributeTypeAttribute = {
       json match {
         case JsObject(fields) =>
+          if(fields.get("id").isDefined) {
+            throw new MalformedJsonErrorException("id cannot be updated")
+          }
           ClientAttributeTypeAttribute(
             fields("name").convertTo[String],
             fields("datatype").convertTo[String],
@@ -43,7 +46,7 @@ trait ClientJson extends BaseSupport {
       json match {
         case JsObject(fields) => ClientAttributeType(
           fields("id").convertTo[String],
-          clientAttributeTypeAttribFormat.read(json)
+          clientAttributeTypeAttribFormat.read(JsObject(fields - "id"))
         )
         case _ => throw new MalformedJsonErrorException("could not parse client attribute type")
       }
