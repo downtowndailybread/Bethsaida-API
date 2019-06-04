@@ -15,7 +15,7 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
     with UUIDProvider {
 
   def getAttendanceById(attendanceId: UUID): Attendance = {
-    val sql = getAttendanceSql("a.id = ?")
+    val sql = getAttendanceSql("id = ?")
     val ps = conn.prepareStatement(sql)
     ps.setString(1, attendanceId)
 
@@ -23,7 +23,7 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
   }
 
   def getAttendanceByClientId(clientId: UUID): Seq[Attendance] = {
-    val sql = getAttendanceSql("a.client_id = ?")
+    val sql = getAttendanceSql("client_id = ?")
     val ps = conn.prepareStatement(sql)
     ps.setString(1, clientId)
 
@@ -31,24 +31,46 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
   }
 
   def getAttendanceByEventId(eventId: UUID): Seq[Attendance] = {
-    val sql = getAttendanceSql("a.event_id = ?")
+    val sql = getAttendanceSql("event_id = ?")
     val ps = conn.prepareStatement(sql)
     ps.setString(1, eventId)
 
     createSeq(ps.executeQuery(), createRs)
   }
 
-  def updateAttendance(attendanceId: UUID, attrib: AttendanceAttribute)(
+  def updateAttendance(attendanceId: UUID, attendance: Attendance)(
     implicit user: InternalUser
   ): Unit = {
-    insertAttendanceAttributeInternal(attendanceId, attrib, true)
+    val sql =
+      s"""
+         |update attendance
+         |set check_in_time  = ?,
+         |    check_out_time = ?,
+         |    event_id       = cast(? as uuid),
+         |    client_id      = cast(? as uuid)
+         |from attendance
+         |where id = cast(? as uuid)
+       """.stripMargin
+    val ps = conn.prepareStatement(sql)
+    ps.setZonedDateTime(1, attendance.attribute.checkInTime)
+    ps.setZonedDateTime(2, attendance.attribute.checkInTime)
+    ps.setString(3, attendance.eventId)
+    ps.setString(4, attendance.clientId)
+    ps.setString(1, attendanceId)
+    ps.executeUpdate()
   }
 
   def deleteAttendance(attendanceId: UUID)(
     implicit user: InternalUser
   ): Unit = {
-    val attrib = getAttendanceById(attendanceId).attribute
-    insertAttendanceAttributeInternal(attendanceId, attrib, false)
+    val sql =
+      s"""
+         |delete attendance
+         |where id = cast(? as uuid)
+       """.stripMargin
+    val ps = conn.prepareStatement(sql)
+    ps.setString(1, attendanceId)
+    ps.executeUpdate()
   }
 
   def createAttendance(eventId: UUID, clientId: UUID, attrib: AttendanceAttribute)(
@@ -58,18 +80,19 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
     val attendanceId = getUUID()
     val sql =
       s"""
-         |insert into event_attendance
-         |    (id, event_id, client_id, metadata_id)
-         |VALUES (cast(? as uuid), cast(? as uuid), cast(? as uuid), ?)
+         |insert into attendance
+         |    (id, check_in_time, check_out_time, event_id, client_id, metadata_id)
+         |VALUES (cast(? as uuid), ?, ?, cast(? as uuid), cast(? as uuid), ?)
        """.stripMargin
     val ps = conn.prepareStatement(sql)
     ps.setString(1, attendanceId)
-    ps.setString(2, eventId)
-    ps.setString(3, clientId)
-    ps.setInt(4, metaId)
+    ps.setZonedDateTime(2, attrib.checkInTime)
+    ps.setZonedDateTime(3, attrib.checkOutTime)
+    ps.setString(4, eventId)
+    ps.setString(5, clientId)
+    ps.setInt(6, metaId)
     ps.executeUpdate()
 
-    insertAttendanceAttributeInternal(attendanceId, attrib, true)
 
     attendanceId
   }
@@ -77,51 +100,24 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
   private def createRs(rs: ResultSet): Attendance = {
     Attendance(
       rs.getString("id"),
+      rs.getUUID("event_id"),
+      rs.getUUID("client_id"),
       AttendanceAttribute(
-        rs.getZoneDateTime("check_in_time")
+        rs.getZoneDateTime("check_in_time"),
+        rs.getZoneDateTime("check_out_time")
       )
     )
   }
 
-  private def insertAttendanceAttributeInternal(
-                                                 id: UUID,
-                                                 attrib: AttendanceAttribute,
-                                                 isValid: Boolean)(
-                                                      implicit iu: InternalUser
-                                                    ): Unit = {
-    val metaId = insertMetadataStatement(conn, isValid)
-    val sql =
-      s"""
-         |insert into event_attendance_attribute (event_attendance_id, check_in_time, metadata_id)
-         |VALUES
-         |(cast(? as uuid), ?, ?)
-       """.stripMargin
-
-    val ps = conn.prepareStatement(sql)
-    ps.setString(1, id)
-    ps.setZonedDateTime(2, attrib.checkInTime)
-    ps.setInt(3, metaId)
-  }
-
   private def getAttendanceSql(filter: String): String = {
     s"""
-       |select *
-       |from (
-       |         select distinct on (a.id) a.id,
-       |                                   a.event_id,
-       |                                   a.client_id,
-       |                                   ea.check_in_time,
-       |                                   ea_meta.is_valid
-       |         from event_attendance a
-       |                  left join event_attendance_attribute ea on a.id = ea.event_attendance_id
-       |                  left join event e on e.id = a.event_id
-       |                  left join service c on c.id = e.service_id
-       |                  left join metadata ea_meta on ea.metadata_id = ea_meta.rid
-       |         where 1 = 1
-       |         and $filter
-       |         order by a.id, ea.rid desc, e.rid desc, c.rid desc
-       |     ) attendance
-       |where attendance.is_valid
+       |select id,
+       |       check_in_time,
+       |       check_out_time,
+       |       event_id,
+       |       client_id
+       |from attendance
+       |where $filter
        """.stripMargin
   }
 }

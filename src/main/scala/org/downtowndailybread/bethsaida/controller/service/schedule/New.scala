@@ -4,7 +4,7 @@ import akka.http.scaladsl.server.Directives.{JavaUUID, as, entity, path, post}
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.ScheduleDetail
-import org.downtowndailybread.bethsaida.request.ServiceRequest
+import org.downtowndailybread.bethsaida.request.{ScheduleRequest, ServiceRequest}
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait New extends ControllerBase {
@@ -18,7 +18,7 @@ trait New extends ControllerBase {
             entity(as[ScheduleDetail]) {
               detail =>
                 futureComplete(runSql(c =>
-                  new ServiceRequest(settings, c).insertSchedule(serviceId, detail)))
+                  new ScheduleRequest(settings, c).insertSchedule(serviceId, detail)))
             }
           }
       }

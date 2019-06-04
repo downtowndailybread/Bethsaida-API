@@ -5,7 +5,6 @@ import java.sql.Connection
 trait DatabaseConnectionProvider {
   this: SettingsProvider =>
 
-
   def runSql[T](funct: (Connection) => T): T = {
     val connection = settings.ds.getConnection()
     connection.setAutoCommit(false)

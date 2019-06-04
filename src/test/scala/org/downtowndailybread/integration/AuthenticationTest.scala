@@ -4,7 +4,6 @@ import java.util.UUID
 
 import spray.json._
 import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
-import akka.http.scaladsl.server.Route
 import org.downtowndailybread.bethsaida.request.UserRequest
 import org.downtowndailybread.bethsaida.tag.IntegrationTest
 import org.downtowndailybread.integration.base.BethsaidaSupport

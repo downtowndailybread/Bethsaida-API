@@ -5,7 +5,7 @@ import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.exception.service.ScheduleNotFoundException
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.ScheduleDetail
-import org.downtowndailybread.bethsaida.request.ServiceRequest
+import org.downtowndailybread.bethsaida.request.{ScheduleRequest, ServiceRequest}
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait Update extends ControllerBase {
@@ -25,7 +25,7 @@ trait Update extends ControllerBase {
                   if(!scheduleIds.contains(scheduleId)) {
                     throw new ScheduleNotFoundException(scheduleId)
                   }
-                  runSql(c => new ServiceRequest(settings, c).updateSchedule(scheduleId, detail))
+                  runSql(c => new ScheduleRequest(settings, c).updateSchedule(scheduleId, detail))
                   "schedule updated"
                 })
             }

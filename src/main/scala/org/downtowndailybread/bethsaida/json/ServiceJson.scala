@@ -35,7 +35,7 @@ trait ServiceJson extends BaseSupport {
     override def write(obj: ScheduleDetail): JsValue = {
       JsObject(
         ("rrule", obj.rrule),
-        ("beginTime", localTimeFormat.write(obj.beginTime)),
+        ("beginTime", localTimeFormat.write(obj.startTime)),
         ("endTime", localTimeFormat.write(obj.endTime)),
         ("capacity", obj.scheduleCapacity match {
           case Some(cap) => JsNumber(cap)
@@ -59,7 +59,7 @@ trait ServiceJson extends BaseSupport {
     }
   }
 
-  implicit val scheduleFormat = jsonFormat2(Schedule)
+  implicit val scheduleFormat = jsonFormat3(Schedule)
 
   implicit val serviceFormat = jsonFormat3(Service)
 

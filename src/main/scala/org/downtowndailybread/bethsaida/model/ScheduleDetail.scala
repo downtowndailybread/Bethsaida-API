@@ -8,7 +8,7 @@ import org.dmfs.rfc5545.recur.RecurrenceRule
 
 case class ScheduleDetail(
                            rrule: String,
-                           beginTime: LocalTime,
+                           startTime: LocalTime,
                            endTime: LocalTime,
                            scheduleCapacity: Option[Int],
                            enabled: Boolean
@@ -16,13 +16,13 @@ case class ScheduleDetail(
 
   private val rule = new RecurrenceRule(if(rrule.startsWith("RRULE:")) rrule.substring("RRULE:".size) else rrule)
 
-  private val endNextDay = !beginTime.isBefore(endTime)
+  private val endNextDay = !startTime.isBefore(endTime)
 
   def getSchedules(implicit now: ZonedDateTime): Stream[HoursOfOperation] = {
     if (enabled) {
       val tz = TimeZone.getDefault
       val localDateTime = {
-        val tmp = ZonedDateTime.of(LocalDateTime.of(now.toLocalDate, beginTime), tz.toZoneId)
+        val tmp = ZonedDateTime.of(LocalDateTime.of(now.toLocalDate, startTime), tz.toZoneId)
         if (tmp.isBefore(now)) {
           tmp.plusDays(1)
         } else {

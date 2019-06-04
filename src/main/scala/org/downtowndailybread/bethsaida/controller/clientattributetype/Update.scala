@@ -2,6 +2,7 @@ package org.downtowndailybread.bethsaida.controller.clientattributetype
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.controller.ControllerBase
+import org.downtowndailybread.bethsaida.exception.clientattributetype.ClientAttributeTypeNotFoundException
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.{ClientAttributeType, ClientAttributeTypeAttribute}
 import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
@@ -20,8 +21,13 @@ trait Update extends ControllerBase {
                 cat =>
                   futureComplete {
                     runSql { c =>
-                      new ClientAttributeTypeRequest(settings, c)
-                        .updateClientAttributeType(ClientAttributeType(attribName, cat), true)
+                      val req = new ClientAttributeTypeRequest(settings, c)
+                      req.getClientAttributeTypes().find(_.id == attribName) match {
+                        case Some(attrib) => req.updateClientAttributeType(
+                          attrib.copy(clientAttributeTypeAttribute = cat)
+                        )
+                        case None => throw new ClientAttributeTypeNotFoundException(attribName)
+                      }
                     }
                     "client updated"
                   }

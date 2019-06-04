@@ -4,7 +4,7 @@ import akka.http.scaladsl.server.Directives.{JavaUUID, path}
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.exception.service.ScheduleNotFoundException
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import org.downtowndailybread.bethsaida.request.ServiceRequest
+import org.downtowndailybread.bethsaida.request.{ScheduleRequest, ServiceRequest}
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait Delete extends ControllerBase {
@@ -20,7 +20,7 @@ trait Delete extends ControllerBase {
             if (!scheduleIds.contains(scheduleId)) {
               throw new ScheduleNotFoundException(scheduleId)
             }
-            runSql(c => new ServiceRequest(settings, c).deleteSchedule(scheduleId))
+            runSql(c => new ScheduleRequest(settings, c).deleteSchedule(scheduleId))
             "schedule deleted"
           })
       }

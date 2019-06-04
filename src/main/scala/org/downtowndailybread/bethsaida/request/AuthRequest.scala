@@ -35,6 +35,7 @@ class AuthRequest(val settings: Settings, val conn: Connection)
       case Some(u) if u.adminLock =>
         throw new UserAccountLockedByAdminException
       case Some(u) => u
+      case None => throw new UserNotFoundException
     }
   }
 

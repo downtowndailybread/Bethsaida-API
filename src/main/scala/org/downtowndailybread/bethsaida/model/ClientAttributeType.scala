@@ -1,5 +1,7 @@
 package org.downtowndailybread.bethsaida.model
 
+import java.util.UUID
+
 import org.downtowndailybread.bethsaida.exception.clientattributetype.ClientAttributeTypeInvalidIdException
 
 case class ClientAttributeType(

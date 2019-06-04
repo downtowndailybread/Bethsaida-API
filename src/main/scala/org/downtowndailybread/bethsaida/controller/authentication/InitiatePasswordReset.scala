@@ -18,7 +18,7 @@ trait InitiatePasswordReset extends ControllerBase {
           entity(as[InitiatePasswordResetParameters]) {
             conf =>
               futureComplete(runSql { c =>
-                new UserRequest(settings, c).intiatePasswordReset(conf.email)
+                new UserRequest(settings, c).initiatePasswordReset(conf.email)
                 "password reset started"
               })
           }

@@ -3,6 +3,7 @@ package org.downtowndailybread.integration
 import java.util.UUID
 
 import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
+import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.downtowndailybread.bethsaida.model.InternalUser
 import org.downtowndailybread.bethsaida.model.parameters.{LoginParameters, UserParameters}
 import org.downtowndailybread.bethsaida.request.UserRequest
@@ -62,15 +63,15 @@ trait UserTest {
   }
 
   // Eventually, we will want only site admins to be able to create users. Not for now though.
-//  "a nonuser" should "not be able to create a user" in {
-//    Post(apiBaseUrl + "/user/new").withEntity(ContentTypes.`application/json`, JsObject(
-//      ("email", "nobody2@nobody.com"),
-//      ("name", "a b"),
-//      ("password", "initialpassword")
-//    ).toString) ~> routes ~> check {
-//      assert(status == StatusCodes.Unauthorized)
-//    }
-//  }
+  //  "a nonuser" should "not be able to create a user" in {
+  //    Post(apiBaseUrl + "/user/new").withEntity(ContentTypes.`application/json`, JsObject(
+  //      ("email", "nobody2@nobody.com"),
+  //      ("name", "a b"),
+  //      ("password", "initialpassword")
+  //    ).toString) ~> routes ~> check {
+  //      assert(status == StatusCodes.Unauthorized)
+  //    }
+  //  }
 
   "a user" should "be able to view the profile of another user" taggedAs IntegrationTest in {
     Get(apiBaseUrl + s"/user/${otherUser.id}").authenticate() ~> routes ~> check {
@@ -84,29 +85,33 @@ trait UserTest {
     }
   }
 
+  //  implicit val timeout = RouteTestTimeout(5.seconds)
+
   "a user" should "be able to update their profile" taggedAs IntegrationTest in {
-    Post(apiBaseUrl + s"/user/${loggedInUser.id}/update").authenticate().withEntity(ContentTypes.`application/json`,
-      JsObject(
-        ("name", "Andy Guenin II"),
-        ("email", "newemail@andy.com"),
-        ("password", "mynewpassword"),
-      ).toString()
-    ) ~> routes ~> check {
+    Post(apiBaseUrl + s"/user/${loggedInUser.id}/update").authenticate()
+      .withEntity(ContentTypes.`application/json`,
+        JsObject(
+          ("name", "Andy Guenin II"),
+          ("email", "newemail@andy.com"),
+          ("password", "mynewpassword"),
+        ).toString()
+      ) ~>
+      routes ~> check {
       assert(status == StatusCodes.OK)
     }
-    Post(apiBaseUrl + s"/user/${loggedInUser.id}/update").authenticate().withEntity(ContentTypes.`application/json`,
+    Post(apiBaseUrl + s"/user/${loggedInUser.id}/update").withEntity(ContentTypes.`application/json`,
       JsObject(
         ("name", userParams.name),
         ("email", userParams.loginParameters.email),
         ("password", userParams.loginParameters.password),
       ).toString()
-    ) ~> routes ~> check {
+    ).authenticate() ~> routes ~> check {
       assert(status == StatusCodes.OK)
     }
   }
 
   "a user" should "not be able to update another profile" taggedAs IntegrationTest in {
-    Post(apiBaseUrl + s"/user/${otherUser.id}/update").authenticate().withEntity(ContentTypes.`application/json`,
+    Post(apiBaseUrl + s"/user/${otherUser.id}/update").withEntity(ContentTypes.`application/json`,
       JsObject(
         ("name", "Andy Guenin II"),
         ("email", "newemail@andy.com"),
@@ -116,7 +121,6 @@ trait UserTest {
       assert(status == StatusCodes.Unauthorized)
     }
   }
-
 
 
 }

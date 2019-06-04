@@ -7,9 +7,10 @@ import org.scalatest.BeforeAndAfterAll
 class IntegrationMain extends BethsaidaSupport
   with BeforeAndAfterAll
   with AuthenticationTest
+  with UserTest
   with ClientAttributeTypeTest
   with ClientTest
-  with UserTest {
+   {
 
   override def beforeAll() = {
     TestDatabaseSource.dropAndAddSchema()

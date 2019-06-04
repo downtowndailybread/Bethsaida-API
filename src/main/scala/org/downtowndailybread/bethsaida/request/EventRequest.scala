@@ -29,29 +29,60 @@ class EventRequest(val settings: Settings, val conn: Connection)
     val eventId = getUUID()
     val sql =
       s"""
-         |insert into event (id, service_id, metadata_id)
-         |values (cast(? as uuid), cast(? as uuid), ?)
+         |insert into event (id, start_time, end_time, capacity, service_id, schedule_creator, user_creator, name, metadata_id)
+         |values (cast(? as uuid), ?, ?, ?, cast(? as uuid), cast(? as uuid), cast(? as uuid), ?, ?)
        """.stripMargin
 
     val ps = conn.prepareStatement(sql)
     ps.setString(1, eventId)
-    ps.setString(2, serviceId)
-    ps.setInt(3, insertMetadataStatement(conn, true))
-    insertEventAttributeInternal(eventId, event, true)
+    ps.setZonedDateTime(2, event.hours.start)
+    ps.setZonedDateTime(3, event.hours.end)
+    ps.setNullableInt(4, event.capacity)
+    ps.setString(5, serviceId)
+    ps.setNullableUUID(6, event.scheduleCreatorId)
+    ps.setNullableUUID(7, event.userCreatorId)
+    ps.setNullableString(8, None)
+    ps.setInt(9, insertMetadataStatement(conn, true))
+
+    ps.executeUpdate()
     eventId
   }
 
   def updateEvent(serviceId: UUID, eventId: UUID, event: EventAttribute)(implicit iu: InternalUser): Unit = {
-    getEvent(serviceId, eventId)
-    insertEventAttributeInternal(eventId, event, true)
+    val sql =
+      s"""
+         |update event
+         |    set start_time = ?,
+         |        end_time = ?,
+         |        capacity = ?,
+         |        service_id = cast(? as uuid),
+         |        schedule_creator = cast(? as uuid),
+         |        user_creator = cast(? as uuid)
+         |where id = cast(? as uuid)
+       """.stripMargin
+    val ps = conn.prepareStatement(sql)
+    ps.setZonedDateTime(1, event.hours.start)
+    ps.setZonedDateTime(2, event.hours.end)
+    ps.setNullableInt(3, event.capacity)
+    ps.setString(4, serviceId)
+    ps.setNullableUUID(5, event.scheduleCreatorId)
+    ps.setNullableUUID(6, event.userCreatorId)
+    ps.setString(7, eventId)
+
+    ps.executeUpdate()
   }
 
   def deleteEvent(serviceId: UUID, eventId: UUID)(implicit iu: InternalUser): Unit = {
-    val event = getAllEventsInternal(Some(serviceId), Some(eventId)).toList match {
-      case e :: Nil => e
-      case _ => throw new EventNotFoundException
-    }
-    insertEventAttributeInternal(eventId, event.attribute, false)
+    val sql =
+      s"""
+         |delete from event
+         |where id = cast(? as uuid)
+         |and service_id = cast(? as uuid)
+       """.stripMargin
+
+    val ps = conn.prepareStatement(sql)
+    ps.setString(1, eventId)
+    ps.executeUpdate()
   }
 
   def getAllEvents(): Seq[Event] = {
@@ -69,24 +100,18 @@ class EventRequest(val settings: Settings, val conn: Connection)
     }
     val sql =
       s"""
-         |select id, start_time, end_time, capacity, schedule_creator, user_creator
-         |from (
-         |         select distinct on (e.service_id) e.id,
-         |                                           e.service_id,
-         |                                           ea.start_time,
-         |                                           ea.end_time,
-         |                                           ea.capacity,
-         |                                           ea.schedule_creator,
-         |                                           ea.user_creator,
-         |                                           m.is_valid
-         |         from event e
-         |             left join event_attribute ea on e.id = ea.event_id
-         |                  left join metadata m on ea.metadata_id = m.rid
-         |         where $serviceIdFilter
-         |            and $eventIdFilter
-         |         order by e.service_id, e.rid desc
-         |     ) event
-         |where event.is_valid
+         |select
+         |       id,
+         |       start_time,
+         |       end_time,
+         |       capacity,
+         |       service_id,
+         |       schedule_creator,
+         |       user_creator,
+         |       name
+         |from event
+         |where $serviceIdFilter
+         |and $eventIdFilter
        """.stripMargin
 
     val ps = conn.prepareStatement(sql)
@@ -94,28 +119,6 @@ class EventRequest(val settings: Settings, val conn: Connection)
     ps.setString(2, eventId.map(_.toString).getOrElse(""))
 
     createSeq(ps.executeQuery(), eventCreator)
-  }
-
-  private def insertEventAttributeInternal(eventId: UUID, event: EventAttribute, isValid: Boolean)(
-    implicit iu: InternalUser
-  ): Unit = {
-    val metaId = insertMetadataStatement(conn, true)
-    val sql =
-      s"""
-         |insert into event_attribute
-         |    (event_id, start_time, end_time, capacity, schedule_creator, user_creator, metadata_id)
-         |values
-         |    (cast(? as uuid), ?, ?, ?, cast(? as uuid), cast(? as uuid), ?)
-     """.stripMargin
-
-    val ps = conn.prepareStatement(sql)
-    ps.setString(1, eventId)
-    ps.setZonedDateTime(2, event.hours.start)
-    ps.setZonedDateTime(3, event.hours.end)
-    ps.setNullableInt(4, event.capacity)
-    ps.setNullableUUID(5, event.scheduleCreatorId)
-    ps.setNullableUUID(6, event.userCreatorId)
-    ps.setInt(7, metaId)
   }
 
 
