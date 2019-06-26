@@ -84,7 +84,9 @@ class ScheduleRequest(val settings: Settings, val conn: Connection)
 
     val ps = conn.prepareStatement(sql)
     serviceIds.zipWithIndex.foreach{
-      case (id, idx) => ps.setString(idx, id)
+      case (id, idx) => {
+        ps.setString(idx + 1, id)
+      }
     }
     val rs = ps.executeQuery()
     createSeq(rs, scheduleRsConverter)

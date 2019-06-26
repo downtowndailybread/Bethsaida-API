@@ -82,15 +82,15 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
       s"""
          |insert into attendance
          |    (id, check_in_time, check_out_time, event_id, client_id, metadata_id)
-         |VALUES (cast(? as uuid), ?, ?, cast(? as uuid), cast(? as uuid), ?)
+         |VALUES (cast(? as uuid), ?, null, cast(? as uuid), cast(? as uuid), ?)
        """.stripMargin
     val ps = conn.prepareStatement(sql)
     ps.setString(1, attendanceId)
     ps.setZonedDateTime(2, attrib.checkInTime)
-    ps.setZonedDateTime(3, attrib.checkOutTime)
-    ps.setString(4, eventId)
-    ps.setString(5, clientId)
-    ps.setInt(6, metaId)
+//    ps.setZonedDateTime(3, attrib.checkOutTime)
+    ps.setString(3, eventId)
+    ps.setString(4, clientId)
+    ps.setInt(5, metaId)
     ps.executeUpdate()
 
 

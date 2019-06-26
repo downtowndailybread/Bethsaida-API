@@ -1,6 +1,6 @@
 package org.downtowndailybread.bethsaida.request.util
 
-import java.sql.{Connection, PreparedStatement, ResultSet}
+import java.sql.{Connection, PreparedStatement, ResultSet, Types}
 import java.time.{OffsetDateTime, ZonedDateTime}
 import java.util.UUID
 
@@ -17,7 +17,9 @@ trait DatabaseRequest {
 
   def createSeq[E](rs: ResultSet, mapFunc: ResultSet => E): Seq[E] = {
     new Iterator[E] {
-      override def hasNext: Boolean = rs.next()
+      override def hasNext: Boolean = {
+        !rs.isClosed && rs.next()
+      }
 
       override def next(): E = mapFunc(rs)
     }.toSeq
@@ -51,7 +53,7 @@ trait DatabaseRequest {
       }
     }
     def setZonedDateTime(parameterIndex: Int, x: ZonedDateTime): Unit = {
-      ps.setObject(parameterIndex, x.toOffsetDateTime)
+      ps.setObject(parameterIndex, x.toOffsetDateTime, Types.TIMESTAMP_WITH_TIMEZONE)
     }
   }
 

@@ -1,6 +1,7 @@
 package org.downtowndailybread.bethsaida.request
 
-import java.sql.{Connection, ResultSet}
+import java.sql.{Connection, ResultSet, Types}
+import java.time.OffsetDateTime
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
@@ -123,6 +124,7 @@ class EventRequest(val settings: Settings, val conn: Connection)
 
 
   private def eventCreator(rs: ResultSet): Event = {
+    // FIXME handle nulls
     Event(
       rs.getString("id"),
       rs.getString("service_id"),
@@ -132,10 +134,18 @@ class EventRequest(val settings: Settings, val conn: Connection)
           rs.getZoneDateTime("end_time")
         ),
         Option(rs.getInt("capacity")),
-        Option[UUID](rs.getString("user_creator")),
-        Option[UUID](rs.getString("schedule_creator"))
+        parseOptionUUID(rs.getString("user_creator")),
+        parseOptionUUID(rs.getString("schedule_creator"))
       )
     )
+  }
+
+  private def parseOptionUUID(uuid: String): Option[UUID] = {
+    if (uuid == null){
+      None
+    } else {
+      Option[UUID](uuid)
+    }
   }
 
 }

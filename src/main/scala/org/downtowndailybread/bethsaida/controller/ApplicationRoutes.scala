@@ -20,6 +20,6 @@ trait ApplicationRoutes
   this: AuthenticationProvider with SettingsProvider with JsonSupport  =>
 
   val allRoutes = ignoreTrailingSlash {
-    allAuthenticationRoutes ~ allUserRoutes ~ allClientRoutes ~ allClientAttributeTypeRoutes ~ allServiceRoutes
+    allAuthenticationRoutes ~ allUserRoutes ~ allClientRoutes ~ allClientAttributeTypeRoutes ~ allServiceRoutes ~ eventAllRoute ~ eventAttendRoute
   }
 }

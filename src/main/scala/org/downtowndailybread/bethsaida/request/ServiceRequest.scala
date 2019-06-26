@@ -114,7 +114,7 @@ class ServiceRequest(val settings: Settings, val conn: Connection)
       ServiceAttributes(
         rs.getString("name"),
         ServiceType.withName(rs.getString("type")),
-        Option(rs.getInt("defaut_capacity"))
+        Option(rs.getInt("default_capacity"))
       )
     )
   }
