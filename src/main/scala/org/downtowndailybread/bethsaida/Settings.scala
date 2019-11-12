@@ -21,6 +21,7 @@ class Settings(config: Config) {
   val port = getOrElse("port", _.getInt, 8090)
   val prefix = getOrElse("prefix", _.getString, "api")
   val allowAnonymousUser = getOrElse("allow_anonymous_user", _.getBoolean, false)
+  val interface = getOrElse("interface", _.getString, "0.0.0.0")
   val timezone = TimeZone.getDefault
   val db = getOrElse("database", _.getString, "ddb")
   if (env != "dev" && secret == "changeme") {

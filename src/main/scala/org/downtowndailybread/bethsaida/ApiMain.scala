@@ -59,9 +59,9 @@ class ApiMain(val settings: Settings)
     workerSystem.actorOf(Props(classOf[EventScheduler], settings), "event-scheduler")
 
 
-    val bindingFuture = Http().bindAndHandle(Route.handlerFlow(routes), "localhost", settings.port)
+    val bindingFuture = Http().bindAndHandle(Route.handlerFlow(routes), settings.interface, settings.port)
 
-    println(s"Server online at http://localhost:${settings.port}/\nPress RETURN to stop...")
+    println(s"Server online at http://${settings.interface}:${settings.port}/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port
