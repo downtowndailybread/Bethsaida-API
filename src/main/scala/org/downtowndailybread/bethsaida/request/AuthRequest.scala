@@ -5,16 +5,28 @@ import java.sql.Connection
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.auth.{PasswordDoesNotMatchException, UserAccountLockedByAdminException, UserAccountLockedException, UserAccountNotConfirmedException}
 import org.downtowndailybread.bethsaida.exception.user.UserNotFoundException
-import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser, LoginParameters}
-import org.downtowndailybread.bethsaida.service.{HashProvider, UUIDProvider}
+import org.downtowndailybread.bethsaida.model.parameters.LoginParameters
+import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser}
+import org.downtowndailybread.bethsaida.request.util.BaseRequest
+import org.downtowndailybread.bethsaida.providers.{HashProvider, UUIDProvider}
 
-class AuthRequest(settings: Settings, conn: Connection) extends BaseRequest with HashProvider with UUIDProvider {
+class AuthRequest(val settings: Settings, val conn: Connection)
+  extends BaseRequest
+    with HashProvider
+    with UUIDProvider {
 
-  def getUser(userParameters: LoginParameters): InternalUser = {
-    val userRequest = new UserRequest(conn)
-    val user = userRequest.getRawUserFromEmail(userParameters.email)
+  /**
+    * Finds a user in the database based on the login parameters given. This method does all of the validation of
+    * password, active checks, and locked checks.
+    *
+    * @param loginParameters The login parameters
+    * @return the user if the parameters correctly match to a user in the database, or throws an exception.
+    */
+  def getUser(loginParameters: LoginParameters): InternalUser = {
+    val userRequest = new UserRequest(settings, conn)
+    val user = userRequest.getRawUserFromEmailOptional(loginParameters.email)
     user match {
-      case Some(u) if u.hash != hashPassword(userParameters.password, u.salt) =>
+      case Some(u) if u.hash != hashPassword(loginParameters.password, u.salt) =>
         throw new PasswordDoesNotMatchException
       case Some(u) if !u.confirmed =>
         throw new UserAccountNotConfirmedException
@@ -27,13 +39,14 @@ class AuthRequest(settings: Settings, conn: Connection) extends BaseRequest with
     }
   }
 
+  /**
+    * This action "confirms" the user, meaning the email address is associated with the user because they clicked on a
+    * link in the email.
+    *
+    * @param emailConfirm the object associating an email and a token.
+    * @param au           the internal user making the request.
+    */
   def confirmUser(emailConfirm: ConfirmEmail)(implicit au: InternalUser): Unit = {
-    val userRequest = new UserRequest(conn)
-    val user = userRequest.getRawUserFromEmail(emailConfirm.email) match {
-      case Some(u) => u
-      case None => throw new UserNotFoundException
-    }
-
-    userRequest.insertLoginInfoRecord(user.copy(confirmed = true, resetToken = Some(getUUID())))
+    new UserRequest(settings, conn).confirmEmail(emailConfirm.email, emailConfirm.token)
   }
 }

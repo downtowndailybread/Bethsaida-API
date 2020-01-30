@@ -1,8 +1,9 @@
 package org.downtowndailybread.bethsaida.model
 
-import java.time.LocalDateTime
+import java.util.UUID
 
 case class Event(
-                  service: Service,
-                  eventTime: LocalDateTime,
-                  metadata: Metadata) extends ModelBase
+                  id: UUID,
+                  serviceId: UUID,
+                  attribute: EventAttribute
+                )

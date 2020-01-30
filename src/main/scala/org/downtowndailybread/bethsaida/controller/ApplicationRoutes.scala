@@ -7,14 +7,15 @@ import org.downtowndailybread.bethsaida.controller.client.ClientRoutes
 import org.downtowndailybread.bethsaida.controller.clientattributetype.ClientAttributeTypeRoutes
 import org.downtowndailybread.bethsaida.controller.service.ServiceRoutes
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import org.downtowndailybread.bethsaida.service.{AuthenticationProvider, SettingsProvider}
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
 trait ApplicationRoutes
   extends AuthenticationRoutes
     with ClientRoutes
     with ClientAttributeTypeRoutes
     with ServiceRoutes
-    with UserRoutes {
+    with UserRoutes
+    with DatabaseConnectionProvider {
 
   this: AuthenticationProvider with SettingsProvider with JsonSupport  =>
 

@@ -2,13 +2,14 @@ package org.downtowndailybread.bethsaida.controller.clientattributetype
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
+import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.ClientAttributeType
-import org.downtowndailybread.bethsaida.request.{ClientAttributeTypeRequest, DatabaseSource}
-import org.downtowndailybread.bethsaida.service.AuthenticationProvider
+import org.downtowndailybread.bethsaida.request.ClientAttributeTypeRequest
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
-trait New {
-  this: AuthenticationProvider with JsonSupport =>
+trait New extends ControllerBase {
+  this: AuthenticationProvider with JsonSupport with SettingsProvider with DatabaseConnectionProvider =>
 
   val clientAttributeType_newRoute = {
     path("new") {
@@ -17,11 +18,13 @@ trait New {
           post {
             entity(as[Seq[ClientAttributeType]]) {
               cats =>
-                cats.foreach { cat =>
-                  DatabaseSource.runSql(c =>
-                    new ClientAttributeTypeRequest(c).insertClientAttributeType(cat))
+                futureComplete{
+                  cats.foreach { cat =>
+                    runSql(c =>
+                      new ClientAttributeTypeRequest(settings, c).insertClientAttributeType(cat))
+                  }
+                  StatusCodes.Created
                 }
-                complete(StatusCodes.Created)
             }
           }
       }

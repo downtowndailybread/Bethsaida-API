@@ -2,19 +2,29 @@ package org.downtowndailybread.bethsaida.controller.service
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import spray.json.JsNumber
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
-trait ServiceRoutes {
-  this: JsonSupport =>
-
+trait ServiceRoutes
+  extends All
+    with New
+    with Find
+    with Update
+    with Delete
+    with schedule.ScheduleRoutes
+    with event.EventRoutes {
+  this: JsonSupport with AuthenticationProvider with SettingsProvider with DatabaseConnectionProvider =>
 
   val allServiceRoutes = {
     pathPrefix("service") {
-      path("") {
-        get {
-          complete(JsNumber(1))
-        }
-      }
+
+      val serviceRoutes = service_allRoute ~
+        service_newRoute ~
+        service_findRoute ~
+        service_updateRoute ~
+        service_deleteRoute
+
+
+      serviceRoutes ~ scheduleRoutes ~ eventRoutes
     }
   }
 }

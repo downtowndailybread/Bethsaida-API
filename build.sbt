@@ -12,8 +12,6 @@ libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.5.21"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.8"
 
-libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
-
 libraryDependencies += "com.zaxxer" % "HikariCP" % "3.3.1"
 
 libraryDependencies += "org.postgresql" % "postgresql" % "9.4-1200-jdbc41"
@@ -24,8 +22,16 @@ libraryDependencies += "ch.megard" %% "akka-http-cors" % "0.4.0"
 
 libraryDependencies += "com.auth0" % "java-jwt" % "3.8.0"
 
-libraryDependencies += "commons-codec" % "commons-codec" % "1.12"
+libraryDependencies += "org.dmfs" % "lib-recur" % "0.11.2"
 
 libraryDependencies += "org.scalamock" %% "scalamock" % "4.1.0" % Test
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test
+
+libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "2.4.1" % Test
+
+libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % "2.5.19" % Test
+
+libraryDependencies += "com.typesafe.akka" %% "akka-http-testkit" % "10.1.8" % Test
+
+testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-n", "org.downtowndailybread.bethsaida.tag.UnitTest", "-oD")

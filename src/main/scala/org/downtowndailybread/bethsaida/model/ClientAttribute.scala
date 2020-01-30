@@ -3,6 +3,6 @@ package org.downtowndailybread.bethsaida.model
 import spray.json.JsValue
 
 case class ClientAttribute(
-                            attributeType: ClientAttributeType,
+                            attributeName: String,
                             attributeValue: JsValue
-                          ) extends ModelBase
+                          )
