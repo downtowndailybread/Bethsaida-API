@@ -8,7 +8,6 @@ class IntegrationMain extends BethsaidaSupport
   with BeforeAndAfterAll
   with AuthenticationTest
   with UserTest
-  with ClientAttributeTypeTest
   with ClientTest
    {
 

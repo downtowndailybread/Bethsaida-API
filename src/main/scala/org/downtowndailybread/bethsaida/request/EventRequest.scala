@@ -30,8 +30,8 @@ class EventRequest(val settings: Settings, val conn: Connection)
     val eventId = getUUID()
     val sql =
       s"""
-         |insert into event (id, start_time, end_time, capacity, service_id, schedule_creator, user_creator, name, metadata_id)
-         |values (cast(? as uuid), ?, ?, ?, cast(? as uuid), cast(? as uuid), cast(? as uuid), ?, ?)
+         |insert into event (id, start_time, end_time, capacity, service_id, schedule_creator, user_creator, name)
+         |values (cast(? as uuid), ?, ?, ?, cast(? as uuid), cast(? as uuid), cast(? as uuid), ?)
        """.stripMargin
 
     val ps = conn.prepareStatement(sql)
@@ -43,7 +43,6 @@ class EventRequest(val settings: Settings, val conn: Connection)
     ps.setNullableUUID(6, event.scheduleCreatorId)
     ps.setNullableUUID(7, event.userCreatorId)
     ps.setNullableString(8, None)
-    ps.setInt(9, insertMetadataStatement(conn, true))
 
     ps.executeUpdate()
     eventId

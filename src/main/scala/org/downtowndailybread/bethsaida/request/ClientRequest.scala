@@ -1,15 +1,13 @@
 package org.downtowndailybread.bethsaida.request
 
-import java.sql.Connection
+import java.sql.{Connection, ResultSet, Timestamp}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
-import org.downtowndailybread.bethsaida.exception.client.{ClientInsertionErrorException, ClientNotFoundException, MissingRequiredClientAttributeException}
-import org.downtowndailybread.bethsaida.exception.clientattributetype.ClientAttributeTypeNotFoundException
-import org.downtowndailybread.bethsaida.model.{Client, ClientAttribute, ClientAttributeType, ClientAttributeTypeAttribute, InternalUser}
+import org.downtowndailybread.bethsaida.exception.client.ClientNotFoundException
+import org.downtowndailybread.bethsaida.model.{Client, InternalUser, UpsertClient}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
-import spray.json._
+import org.downtowndailybread.bethsaida.providers.UUIDProvider
 
 
 class ClientRequest(val settings: Settings, val conn: Connection)
@@ -17,54 +15,49 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     with DatabaseRequest
     with UUIDProvider {
 
-  val clientAttributeTypesRequester = new ClientAttributeTypeRequest(settings, conn)
-
-  def getAllClients(uuid: Option[UUID] = None): Seq[Client] = {
-    val filter = uuid match {
-      case Some(id) => "c.id = cast(? as uuid)"
-      case None => "(1=1 or ''=?)"
-    }
+  def getClients(id: Option[UUID] = None): Seq[Client] = {
     val sql =
       s"""
          |select
          |       c.id,
-         |       cat.id as cat_id,
-         |       cat.name,
-         |       cat.display_name,
-         |       cat.ordering,
-         |       cat.required,
-         |       cat.required_for_onboarding,
-         |       cat.type,
-         |       ca.value
+         |       c.active,
+         |       c.first_name,
+         |       c.middle_name,
+         |       c.last_name,
+         |       c.date_of_birth,
+         |       c.client_photo,
+         |       c.race,
+         |       c.gender,
+         |       c.client_photo_id
          |from client c
-         |         inner join client_attribute ca
-         |                    on c.id = ca.client_id
-         |         inner join client_attribute_type cat
-         |                    on ca.client_attribute_type_id = cat.id
-         |where c.active
-         |and $filter
+         |where c.active = true
       """.stripMargin
     val statement = conn.prepareStatement(sql)
-    statement.setString(1, uuid.map(_.toString).getOrElse(""))
-
     val result = statement.executeQuery()
 
-    createSeq(result, {
-      rs =>
-        (
-          rs.getUUID("id"),
-          ClientAttribute(
-            rs.getString("name"),
-            rs.getString("value").parseJson
-          )
-        )
-    }).groupBy(_._1).map {
-      case (id, attribs) => Client(id, attribs.map(_._2))
-    }.toSeq
+    val nicknameSql =
+      s"""
+         |select
+         |  c.client_id,
+         |  c.nickname
+         |FROM client_alias c
+         |""".stripMargin
+
+    val nicknameStatement = conn.prepareStatement(nicknameSql)
+    val nicknameResult = nicknameStatement.executeQuery()
+    val nicknameMap = createSeq(
+      nicknameResult,
+      createNicknameFromResultSet
+    ).groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
+
+    createSeq(
+      result,
+      createClientFromResultSet(nicknameMap)
+    )
   }
 
   private def getClientOptionById(id: UUID): Option[Client] = {
-    getAllClients(Some(id)).headOption
+    getClients(Some(id)).headOption
   }
 
   def getClientById(id: UUID): Client = {
@@ -75,60 +68,61 @@ class ClientRequest(val settings: Settings, val conn: Connection)
   }
 
 
-  def insertClient(attribs: Seq[ClientAttribute])(implicit au: InternalUser): UUID = {
-    val clientMetadata = insertMetadataStatement(conn, true)
+  def insertClient(upsertClient: UpsertClient)(implicit au: InternalUser): UUID = {
     val id = getUUID()
+    val client = Client(
+      id,
+      upsertClient.firstName.get,
+      upsertClient.middleName,
+      upsertClient.lastName.get,
+      upsertClient.nicknames.get,
+      upsertClient.dateOfBirth.get,
+      upsertClient.photoIdTag.get
+    )
     val sql =
       s"""
          |insert into client
-         | (id, active, metadata_id)
-         |VALUES (cast(? as uuid), true, ?)
+         | (id, active, first_name, last_name, date_of_birth, photo_id_tag, middle_name)
+         |VALUES (cast(? as uuid), true, ?, ?, ?, ?, ?)
          |""".stripMargin
 
     val ps = conn.prepareStatement(sql)
-    ps.setString(1, id)
-    ps.setInt(2, clientMetadata)
+    ps.setString(1, client.id)
+    ps.setString(2, client.firstName)
+    ps.setString(3, client.lastName)
+    ps.setTimestamp(4, Timestamp.valueOf(client.dateOfBirth.atStartOfDay()))
+    ps.setString(5, client.photoIdTag)
+    ps.setNullableString(6, client.middleName)
     ps.executeUpdate()
 
-    upsertAttributes(id, attribs)
+    val nicknameSql =
+      s"""
+         |insert into client_alias
+         |(client_id, nickname)
+         |values (cast(? as uuid), ?)
+         |""".stripMargin
+
+    val nps = conn.prepareStatement(nicknameSql)
+    client.nicknames.foreach {
+      nickname =>
+        nps.setString(1, id)
+        nps.setString(2, nickname)
+        nps.addBatch()
+    }
+
+    nps.executeBatch()
+
     id
   }
 
-  def upsertAttributes(id: UUID, attribs: Seq[ClientAttribute])(implicit au: InternalUser) = {
-    val clientAttributeTypes = new ClientAttributeTypeRequest(settings, conn).getClientAttributeTypesInternal(None)
-    val attribSql =
-      s"""
-         |INSERT INTO client_attribute
-         |    (client_id, client_attribute_type_id, metadata_id, value)
-         |values (cast(? as uuid), cast(? as uuid), ?, cast(? as json))
-         |ON CONFLICT ON CONSTRAINT client_attribute_client_and_type_unique_constraint
-         |DO UPDATE SET value = EXCLUDED.value
-      """.stripMargin
-    val clientPs = conn.prepareStatement(attribSql)
-
-    attribs.foreach {
-      attrib =>
-        clientPs.setString(1, id)
-        clientPs.setString(2,
-          clientAttributeTypes.find(_._2.id == attrib.attributeName).map(_._1).get)
-        clientPs.setInt(3, insertMetadataStatement(conn, true))
-        clientPs.setString(4, attrib.attributeValue.toString())
-        clientPs.addBatch()
-    }
-    try{
-      clientPs.executeBatch()
-    } catch {
-      case e: Exception =>
-    }
-
-  }
 
   def deleteClient(id: UUID): Unit = {
     val sql =
       s"""
-        delete from client
+        update client
+        set active = false
         where id = cast(? as uuid)
-        cascade;
+        ;
         """
     val ps = conn.prepareStatement(sql)
     ps.setString(1, id)
@@ -137,58 +131,102 @@ class ClientRequest(val settings: Settings, val conn: Connection)
 
   def updateClient(
                     id: UUID,
-                    attribs: Seq[ClientAttribute]
+                    upsertClient: UpsertClient
                   )(implicit au: InternalUser): Unit = {
-    val existingClient = getClientOptionById(id)
-    val attributeType = new ClientAttributeTypeRequest(settings, conn).getClientAttributeTypes()
-    val newAttributes = attribs.map {
-      case ClientAttribute(tpe, value) =>
-        attributeType.find(_.id == tpe) match {
-          case Some(cat) => ClientAttribute(cat.id, value)
-          case None => throw new ClientAttributeTypeNotFoundException(tpe)
-        }
+    val client = {
+      val oldClient = getClientById(id)
+      oldClient.copy(
+        firstName = upsertClient.firstName.getOrElse(oldClient.firstName),
+        lastName = upsertClient.lastName.getOrElse(oldClient.lastName),
+        nicknames = upsertClient.nicknames.getOrElse(oldClient.nicknames),
+        dateOfBirth = upsertClient.dateOfBirth.getOrElse(oldClient.dateOfBirth),
+        photoIdTag = upsertClient.photoIdTag.getOrElse(oldClient.photoIdTag)
+      )
     }
 
-    val attribsContainsRequired = attributeType
-      .filter(_.clientAttributeTypeAttribute.required)
-      .map(at => (at.id, attribs.map(_.attributeName).contains(at.id)))
-    if (!attribsContainsRequired.forall(_._2)) {
-      throw new MissingRequiredClientAttributeException(attribsContainsRequired.filter(!_._2).map(_._1))
-    }
+    val sql =
+      s"""
+         |update client
+         |set first_name = ?,
+         |last_name = ?,
+         |date_of_birth = ?,
+         |photo_id_tag = ?
+         |where id = (cast(? as uuid))
+         |""".stripMargin
+    val ps = conn.prepareStatement(sql)
+    ps.setString(1, client.firstName)
+    ps.setString(2, client.lastName)
+    ps.setTimestamp(3, Timestamp.valueOf(client.dateOfBirth.atStartOfDay()))
+    ps.setString(4, client.photoIdTag)
+    ps.setString(5, id)
+    ps.executeUpdate()
 
+    val allNicknamesSql =
+      s"""
+         |select client_id, nickname
+         |from client_alias
+         |where client_id = (cast(? as uuid))
+         |""".stripMargin
 
-    val deletedAttributes = existingClient.map(_.attributes.filterNot(
-      eAttrib => newAttributes.exists(_.attributeName == eAttrib.attributeName)
-    )).getOrElse(Seq())
+    val nps = conn.prepareStatement(allNicknamesSql)
+    nps.setString(1, client.id)
+    val nrs = nps.executeQuery()
+    val allNicknames = createSeq(nrs, createNicknameFromResultSet).map(_._2)
 
-    val deltas = newAttributes.map(r => (r, true)) ++ deletedAttributes.map(r => (r, false))
+    val toAdd = client.nicknames.diff(allNicknames)
+    val toDelete = allNicknames.diff(client.nicknames)
 
-    if (deltas.nonEmpty) {
-      val clientAttributeTypes = new ClientAttributeTypeRequest(settings, conn).getClientAttributeTypes()
-
-      val attribSql =
+    if (toDelete.nonEmpty) {
+      val deleteNicknames =
         s"""
-           |insert into client_attribute
-           |    (client_id, client_attribute_type_id, metadata_id, value)
-           |values (cast(? as uuid), (select id from client_attribute_type where name = ?), ?, cast(? as json))
-       """.stripMargin
-      val aPs = conn.prepareStatement(attribSql)
+           |delete from client_alias
+           |where client_id = (cast(? as uuid))
+           |and nickname = ?
+           |""".stripMargin
+      val dps = conn.prepareStatement(deleteNicknames)
 
-      for {
-        (clientAttribute, include) <- deltas
-        cattrib <- clientAttributeTypes
-        if cattrib.id == clientAttribute.attributeName
-      } yield {
-        val metaId = insertMetadataStatement(conn, include)
-
-        aPs.setString(1, id)
-        aPs.setString(2, clientAttribute.attributeName)
-        aPs.setInt(3, metaId)
-        aPs.setString(4, clientAttribute.attributeValue.toString)
-        aPs.addBatch()
+      toDelete.foreach {
+        nickname =>
+          dps.setString(1, client.id)
+          dps.setString(2, nickname)
+          dps.addBatch()
       }
-
-      aPs.executeBatch()
+      dps.executeBatch()
     }
+
+
+    if (toAdd.nonEmpty) {
+      val addNicknames =
+        s"""
+           |insert into client_alias (client_id, nickname)
+           |values (cast(? as uuid), ?)
+           |""".stripMargin
+      val aps = conn.prepareStatement(addNicknames)
+
+      toAdd.foreach {
+        nickname =>
+          aps.setString(1, client.id)
+          aps.setString(2, nickname)
+          aps.addBatch()
+      }
+      aps.executeBatch()
+    }
+  }
+
+  private def createClientFromResultSet(nicknameMap: Map[UUID, Seq[String]])(rs: ResultSet): Client = {
+    val id = rs.getUUID("id")
+    Client(
+      id,
+      rs.getString("first_name"),
+      rs.getOptionalString("middle_name"),
+      rs.getString("last_name"),
+      nicknameMap.getOrElse(id, Seq()),
+      rs.getLocalDate("date_of_birth"),
+      rs.getString("photo_id_tag")
+    )
+  }
+
+  private def createNicknameFromResultSet(rs: ResultSet): (UUID, String) = {
+    (rs.getUUID("client_id"), rs.getString("nickname"))
   }
 }

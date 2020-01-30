@@ -1,7 +1,7 @@
 package org.downtowndailybread.bethsaida.request.util
 
 import java.sql.{Connection, PreparedStatement, ResultSet, Types}
-import java.time.{OffsetDateTime, ZonedDateTime}
+import java.time.{LocalDate, OffsetDateTime, ZonedDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.{DDBException, NoSuchIdException, TooManyRecordsFound}
@@ -77,38 +77,14 @@ trait DatabaseRequest {
     def getUUID(col: String): UUID = {
       parseUUID(rs.getString(col))
     }
+
+    def getLocalDate(col: String): LocalDate = {
+      rs.getTimestamp(col).toLocalDateTime.toLocalDate
+    }
   }
 
   implicit def toEnhancedResultSet(rs: ResultSet): EnhancedResultSet =
     new EnhancedResultSet(rs)
 
 
-
-  def insertMetadataStatement(connection: Connection, isValid: Boolean)
-                             (implicit user: InternalUser): Int = {
-    if(user == AnonymousUser) {
-      val ps = connection.prepareStatement(
-        s"""
-           |insert into metadata (is_valid, when_entered)
-           |VALUES (?, localtimestamp)
-           |RETURNING rid
-      """.stripMargin)
-      ps.setBoolean(1, isValid)
-      val rs = ps.executeQuery()
-      rs.next()
-      rs.getInt("rid")
-    } else {
-      val ps = connection.prepareStatement(
-        s"""
-           |insert into metadata (is_valid, when_entered, create_user)
-           |VALUES (?, localtimestamp, cast(? as uuid))
-           |RETURNING rid
-      """.stripMargin)
-      ps.setBoolean(1, isValid)
-      ps.setString(2, user.id)
-      val rs = ps.executeQuery()
-      rs.next()
-      rs.getInt("rid")
-    }
-  }
 }

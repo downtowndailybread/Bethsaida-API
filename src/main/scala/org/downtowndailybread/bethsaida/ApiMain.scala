@@ -31,7 +31,8 @@ class ApiMain(val settings: Settings)
     with ApplicationRoutes
     with AuthenticationProvider
     with SettingsProvider
-    with DatabaseConnectionProvider {
+    with DatabaseConnectionProvider
+    with MaterializerProvider {
 
   val anonymousUser = AnonymousUser
 
@@ -50,10 +51,11 @@ class ApiMain(val settings: Settings)
 
   implicit def rejectionHandler: RejectionHandler = RejectionHandler.newBuilder.handle(RejectionHandlers.rejectionHanders).result
 
+  implicit val system = ActorSystem("bethsaida-api")
+  implicit val actorMaterializer = ActorMaterializer()
+  implicit val executionContext = system.dispatcher
+
   def run() = {
-    implicit val system = ActorSystem("bethsaida-api")
-    implicit val materializer = ActorMaterializer()
-    implicit val executionContext = system.dispatcher
 
     val workerSystem = ActorSystem("worker-api")
     workerSystem.actorOf(Props(classOf[EventScheduler], settings), "event-scheduler")

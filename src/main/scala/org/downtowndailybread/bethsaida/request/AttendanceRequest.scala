@@ -76,13 +76,12 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
   def createAttendance(eventId: UUID, clientId: UUID, attrib: AttendanceAttribute)(
     implicit user: InternalUser
   ): UUID = {
-    val metaId = insertMetadataStatement(conn, true)
     val attendanceId = getUUID()
     val sql =
       s"""
          |insert into attendance
-         |    (id, check_in_time, check_out_time, event_id, client_id, metadata_id)
-         |VALUES (cast(? as uuid), ?, null, cast(? as uuid), cast(? as uuid), ?)
+         |    (id, check_in_time, check_out_time, event_id, client_id)
+         |VALUES (cast(? as uuid), ?, null, cast(? as uuid), cast(? as uuid))
        """.stripMargin
     val ps = conn.prepareStatement(sql)
     ps.setString(1, attendanceId)
@@ -90,7 +89,6 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
 //    ps.setZonedDateTime(3, attrib.checkOutTime)
     ps.setString(3, eventId)
     ps.setString(4, clientId)
-    ps.setInt(5, metaId)
     ps.executeUpdate()
 
 
