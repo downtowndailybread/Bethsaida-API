@@ -7,7 +7,6 @@ import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
-import com.typesafe.config.ConfigFactory
 import org.downtowndailybread.bethsaida.controller.ApplicationRoutes
 import org.downtowndailybread.bethsaida.json._
 import org.downtowndailybread.bethsaida.model.AnonymousUser
@@ -15,7 +14,6 @@ import org.downtowndailybread.bethsaida.providers._
 import org.downtowndailybread.bethsaida.service.{ExceptionHandlers, RejectionHandlers}
 import org.downtowndailybread.bethsaida.worker.EventScheduler
 
-import scala.io.StdIn
 
 object ApiMain {
   def main(args: Array[String]): Unit = {
