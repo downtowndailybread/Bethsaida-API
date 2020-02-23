@@ -21,7 +21,7 @@ trait BethsaidaSupport
     with JsonSupport
     with SettingsProvider
     with DatabaseConnectionProvider {
-  lazy val settings = new Settings(ConfigFactory.load("integration_test"))
+  lazy val settings = new Settings(Array("integration_test"))
 
   lazy val apiMain = new ApiMain(settings)
 

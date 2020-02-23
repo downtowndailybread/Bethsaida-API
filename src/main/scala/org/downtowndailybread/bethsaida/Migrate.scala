@@ -16,7 +16,7 @@ import org.downtowndailybread.bethsaida.model._
 object Migrate {
 
   def main(args: Array[String]): Unit = {
-    val settings = new Settings(ConfigFactory.load("flyway"))
+    val settings = new Settings(args)
     migrate(settings.ds)
   }
 

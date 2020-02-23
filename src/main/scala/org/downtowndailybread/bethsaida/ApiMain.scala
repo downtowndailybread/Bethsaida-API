@@ -6,6 +6,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.config.ConfigFactory
 import org.downtowndailybread.bethsaida.controller.ApplicationRoutes
 import org.downtowndailybread.bethsaida.json._
@@ -18,7 +19,7 @@ import scala.io.StdIn
 
 object ApiMain {
   def main(args: Array[String]): Unit = {
-    val settings = new Settings(ConfigFactory.load())
+    val settings = new Settings(args)
 
     val server = new ApiMain(settings)
 
@@ -37,7 +38,7 @@ class ApiMain(val settings: Settings)
   val anonymousUser = AnonymousUser
 
   val routes = {
-    cors() {
+    cors(CorsSettings(settings.config)) {
       pathPrefix(settings.prefix / settings.version) {
         path("") {
           complete(s"ddb api ${settings.version}")
