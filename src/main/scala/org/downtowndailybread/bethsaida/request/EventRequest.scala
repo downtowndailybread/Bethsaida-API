@@ -1,6 +1,7 @@
 package org.downtowndailybread.bethsaida.request
 
-import java.sql.{Connection, ResultSet}
+import java.sql.{Connection, ResultSet, Types}
+import java.time.OffsetDateTime
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
@@ -29,8 +30,8 @@ class EventRequest(val settings: Settings, val conn: Connection)
     val eventId = getUUID()
     val sql =
       s"""
-         |insert into event (id, start_time, end_time, capacity, service_id, schedule_creator, user_creator, name, metadata_id)
-         |values (cast(? as uuid), ?, ?, ?, cast(? as uuid), cast(? as uuid), cast(? as uuid), ?, ?)
+         |insert into event (id, start_time, end_time, capacity, service_id, schedule_creator, user_creator, name)
+         |values (cast(? as uuid), ?, ?, ?, cast(? as uuid), cast(? as uuid), cast(? as uuid), ?)
        """.stripMargin
 
     val ps = conn.prepareStatement(sql)
@@ -42,7 +43,6 @@ class EventRequest(val settings: Settings, val conn: Connection)
     ps.setNullableUUID(6, event.scheduleCreatorId)
     ps.setNullableUUID(7, event.userCreatorId)
     ps.setNullableString(8, None)
-    ps.setInt(9, insertMetadataStatement(conn, true))
 
     ps.executeUpdate()
     eventId
@@ -123,6 +123,7 @@ class EventRequest(val settings: Settings, val conn: Connection)
 
 
   private def eventCreator(rs: ResultSet): Event = {
+    // FIXME handle nulls
     Event(
       rs.getString("id"),
       rs.getString("service_id"),
@@ -132,10 +133,18 @@ class EventRequest(val settings: Settings, val conn: Connection)
           rs.getZoneDateTime("end_time")
         ),
         Option(rs.getInt("capacity")),
-        Option[UUID](rs.getString("user_creator")),
-        Option[UUID](rs.getString("schedule_creator"))
+        parseOptionUUID(rs.getString("user_creator")),
+        parseOptionUUID(rs.getString("schedule_creator"))
       )
     )
+  }
+
+  private def parseOptionUUID(uuid: String): Option[UUID] = {
+    if (uuid == null){
+      None
+    } else {
+      Option[UUID](uuid)
+    }
   }
 
 }

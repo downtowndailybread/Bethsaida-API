@@ -14,12 +14,22 @@ trait All extends ControllerBase {
     with DatabaseConnectionProvider
     with SettingsProvider =>
 
-  val event_allRoute = (serviceId: UUID) => path(PathEnd) {
+  val event_allForServiceRoute = (serviceId: UUID) => path(PathEnd) {
     authorize(_ => true) {
       implicit iu =>
         get {
           futureComplete(runSql(c =>
             new EventRequest(settings, c).getAllServiceEvents(serviceId)))
+        }
+    }
+  }
+
+  val event_allRoute = () => path(PathEnd) {
+    authorize(_ => true) {
+      implicit iu =>
+        get {
+          futureComplete(runSql(c =>
+            new EventRequest(settings, c).getAllEvents()))
         }
     }
   }

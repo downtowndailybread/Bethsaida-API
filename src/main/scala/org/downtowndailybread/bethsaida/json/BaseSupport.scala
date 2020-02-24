@@ -77,6 +77,7 @@ trait BaseSupport extends UUIDProvider {
           o("month").convertTo[Int],
           o("day").convertTo[Int]
         )
+        case JsString(s) => LocalDate.parse(s)
       }
     }
   }

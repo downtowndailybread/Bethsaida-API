@@ -3,7 +3,7 @@ package org.downtowndailybread.bethsaida.request
 import java.sql.Connection
 
 import org.downtowndailybread.bethsaida.Settings
-import org.downtowndailybread.bethsaida.exception.auth.{PasswordDoesNotMatchException, UserAccountLockedByAdminException, UserAccountLockedException, UserAccountNotConfirmedException}
+import org.downtowndailybread.bethsaida.exception.auth._
 import org.downtowndailybread.bethsaida.exception.user.UserNotFoundException
 import org.downtowndailybread.bethsaida.model.parameters.LoginParameters
 import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser}

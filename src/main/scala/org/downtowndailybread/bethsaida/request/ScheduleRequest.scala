@@ -19,13 +19,12 @@ class ScheduleRequest(val settings: Settings, val conn: Connection)
   implicit private def timeConverter(t: Time): LocalTime = t.toLocalTime
 
   def insertSchedule(serviceId: UUID, schedule: ScheduleDetail)(implicit iu: InternalUser): UUID = {
-    val metaId = insertMetadataStatement(conn, true)
     val id = getUUID()
     val sql =
       s"""
          |insert into schedule
-         |    (id, service_id, rrule, start_time, service_parameter, metadata_id)
-         |VALUES (cast(? as uuid), cast(? as uuid), ?, ?, ?, ?)
+         |    (id, service_id, rrule, start_time, service_parameter)
+         |VALUES (cast(? as uuid), cast(? as uuid), ?, ?, ?)
        """.stripMargin
     val ps = conn.prepareStatement(sql)
     ps.setString(1, id)
@@ -33,7 +32,6 @@ class ScheduleRequest(val settings: Settings, val conn: Connection)
     ps.setString(3, schedule.rrule)
     ps.setTime(4, java.sql.Time.valueOf(schedule.startTime))
     ps.setString(5, "".parseJson.toString)
-    ps.setInt(6, metaId)
     ps.executeUpdate()
     id
   }
@@ -84,7 +82,9 @@ class ScheduleRequest(val settings: Settings, val conn: Connection)
 
     val ps = conn.prepareStatement(sql)
     serviceIds.zipWithIndex.foreach{
-      case (id, idx) => ps.setString(idx, id)
+      case (id, idx) => {
+        ps.setString(idx + 1, id)
+      }
     }
     val rs = ps.executeQuery()
     createSeq(rs, scheduleRsConverter)

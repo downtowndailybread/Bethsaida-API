@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
-import com.typesafe.config.ConfigFactory
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import org.downtowndailybread.bethsaida.controller.ApplicationRoutes
 import org.downtowndailybread.bethsaida.json._
 import org.downtowndailybread.bethsaida.model.AnonymousUser
@@ -14,11 +14,10 @@ import org.downtowndailybread.bethsaida.providers._
 import org.downtowndailybread.bethsaida.service.{ExceptionHandlers, RejectionHandlers}
 import org.downtowndailybread.bethsaida.worker.EventScheduler
 
-import scala.io.StdIn
 
 object ApiMain {
   def main(args: Array[String]): Unit = {
-    val settings = new Settings(ConfigFactory.load())
+    val settings = new Settings(args)
 
     val server = new ApiMain(settings)
 
@@ -31,12 +30,13 @@ class ApiMain(val settings: Settings)
     with ApplicationRoutes
     with AuthenticationProvider
     with SettingsProvider
-    with DatabaseConnectionProvider {
+    with DatabaseConnectionProvider
+    with MaterializerProvider {
 
   val anonymousUser = AnonymousUser
 
   val routes = {
-    cors() {
+    cors(CorsSettings(settings.config)) {
       pathPrefix(settings.prefix / settings.version) {
         path("") {
           complete(s"ddb api ${settings.version}")
@@ -50,21 +50,18 @@ class ApiMain(val settings: Settings)
 
   implicit def rejectionHandler: RejectionHandler = RejectionHandler.newBuilder.handle(RejectionHandlers.rejectionHanders).result
 
+  implicit val system = ActorSystem("bethsaida-api")
+  implicit val actorMaterializer = ActorMaterializer()
+  implicit val executionContext = system.dispatcher
+
   def run() = {
-    implicit val system = ActorSystem("bethsaida-api")
-    implicit val materializer = ActorMaterializer()
-    implicit val executionContext = system.dispatcher
 
     val workerSystem = ActorSystem("worker-api")
     workerSystem.actorOf(Props(classOf[EventScheduler], settings), "event-scheduler")
 
 
-    val bindingFuture = Http().bindAndHandle(Route.handlerFlow(routes), "localhost", settings.port)
+    val bindingFuture = Http().bindAndHandle(Route.handlerFlow(routes), settings.interface, settings.port)
 
-    println(s"Server online at http://localhost:${settings.port}/\nPress RETURN to stop...")
-    StdIn.readLine() // let it run until user presses return
-    bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // and shutdown when done
+    println(s"Server online at http://${settings.interface}:${settings.port}/")
   }
 }

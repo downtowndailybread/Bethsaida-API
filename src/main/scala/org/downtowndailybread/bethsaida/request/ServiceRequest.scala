@@ -25,19 +25,17 @@ class ServiceRequest(val settings: Settings, val conn: Connection)
   }
 
   def insertService(attributes: ServiceAttributes)(implicit iu: InternalUser): UUID = {
-    val metaId = insertMetadataStatement(conn, true)
     val id = getUUID()
     val sql =
       s"""
-         |insert into service (id, name, type, default_capacity, metadata_id)
-         |VALUES (cast(? as uuid), ?, ?, ?, ?)
+         |insert into service (id, name, type, default_capacity)
+         |VALUES (cast(? as uuid), ?, ?, ?)
       """.stripMargin
     val ps = conn.prepareStatement(sql)
     ps.setString(1, id)
     ps.setString(2, attributes.name)
     ps.setString(3, attributes.serviceType.toString)
     ps.setNullableInt(4, attributes.defaultCapacity)
-    ps.setInt(5, metaId)
     ps.executeUpdate()
     id
   }
@@ -114,7 +112,7 @@ class ServiceRequest(val settings: Settings, val conn: Connection)
       ServiceAttributes(
         rs.getString("name"),
         ServiceType.withName(rs.getString("type")),
-        Option(rs.getInt("defaut_capacity"))
+        Option(rs.getInt("default_capacity"))
       )
     )
   }
