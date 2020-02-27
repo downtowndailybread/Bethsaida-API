@@ -1,3 +1,5 @@
+import sbtassembly.MergeStrategy
+
 name := "ClientMonitorApi"
 
 enablePlugins(FlywayPlugin)
@@ -36,7 +38,12 @@ libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % "2.5.19" %
 
 libraryDependencies += "com.typesafe.akka" %% "akka-http-testkit" % "10.1.8" % Test
 
-
-
+assemblyMergeStrategy in assembly := {
+  case x if x.contains("io.netty.versions.properties") => MergeStrategy.discard
+  case x if x.contains("module-info.class") => MergeStrategy.discard
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
 
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-n", "org.downtowndailybread.bethsaida.tag.UnitTest", "-oD")
