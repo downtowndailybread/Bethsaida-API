@@ -35,7 +35,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |       c.phone,
          |       c.gender,
          |       c.client_photo_id,
-         |       c.intake_date
+         |       c.intake_date,
+         |       c.intake_user
          |from client c
          |where c.active = true
          |AND $predicate
@@ -97,7 +98,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     val sql =
       s"""
          |insert into client
-         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, client_photo_id, intake_date, intake_user_id)
+         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, client_photo_id, intake_date, intake_user)
          |VALUES (cast(? as uuid), true, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, cast(? as uuid))
          |""".stripMargin
 
