@@ -1,5 +1,8 @@
 package org.downtowndailybread.bethsaida
 
+import java.io.{BufferedInputStream, File, FileInputStream}
+import java.nio.file.{Files, Paths}
+
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
@@ -13,10 +16,16 @@ import org.downtowndailybread.bethsaida.model.AnonymousUser
 import org.downtowndailybread.bethsaida.providers._
 import org.downtowndailybread.bethsaida.service.{ExceptionHandlers, RejectionHandlers}
 import org.downtowndailybread.bethsaida.worker.EventScheduler
+import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.model.{ListBucketsRequest, ListObjectsRequest, PutObjectRequest}
+import software.amazon.awssdk.services.s3.{S3Client, S3ClientBuilder}
+
 
 
 object ApiMain {
   def main(args: Array[String]): Unit = {
+
     val settings = new Settings(args)
 
     val server = new ApiMain(settings)

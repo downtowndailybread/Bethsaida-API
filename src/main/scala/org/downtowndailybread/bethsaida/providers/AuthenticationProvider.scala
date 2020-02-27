@@ -33,7 +33,7 @@ trait AuthenticationProvider {
               if ((settings.allowAnonymousUser && iu == AnonymousUser) || authorized) {
                 iu
               } else {
-                throw new UserNotAuthorizedException
+                throw new UserNotAuthorizedException("user is not authorized")
               }
           }
         )

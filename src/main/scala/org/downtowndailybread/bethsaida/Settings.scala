@@ -35,6 +35,13 @@ class Settings( val args: Array[String]) {
   }
   val provider = getOrElse("provider", _.getString, "provider")
 
+
+  val useAws = config.hasPath("aws.accessKeyId") && config.hasPath("aws.secretAccessKey")
+
+  val awsAccess = getOrElse("aws.accessKeyId", _.getString, "")
+  val awsSecret = getOrElse("aws.secretAccessKey", _.getString, "")
+  val awsBucket = getOrElse("aws.bucket", _.getString, "")
+
   lazy val ds = {
     val internalConfig = {
       import java.io.PrintWriter

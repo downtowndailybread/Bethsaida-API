@@ -1,6 +1,6 @@
 package org.downtowndailybread.bethsaida.request.util
 
-import java.sql.{Connection, PreparedStatement, ResultSet, Types}
+import java.sql.{Connection, PreparedStatement, ResultSet, Timestamp, Types}
 import java.time.{LocalDate, OffsetDateTime, ZonedDateTime}
 import java.util.UUID
 
@@ -52,6 +52,12 @@ trait DatabaseRequest {
         case None => ps.setNull(parameterIndex, java.sql.Types.VARCHAR)
       }
     }
+    def setNullableTimestamp(parameterIndex: Int, x: Option[Timestamp]): Unit = {
+      x match {
+        case Some(i) => ps.setTimestamp(parameterIndex, i)
+        case None => ps.setNull(parameterIndex, java.sql.Types.TIMESTAMP)
+      }
+    }
     def setZonedDateTime(parameterIndex: Int, x: ZonedDateTime): Unit = {
       ps.setObject(parameterIndex, x.toOffsetDateTime, Types.TIMESTAMP_WITH_TIMEZONE)
     }
@@ -64,6 +70,10 @@ trait DatabaseRequest {
     def getZoneDateTime(col: String): ZonedDateTime = {
       val r = rs.getObject(col, classOf[OffsetDateTime])
       r.atZoneSameInstant(settings.timezone.toZoneId)
+    }
+
+    def getOptionalInt(col: String): Option[Int] = {
+      Option(rs.getInt(col))
     }
 
     def getOptionalString(col: String): Option[String] = {
@@ -80,6 +90,10 @@ trait DatabaseRequest {
 
     def getLocalDate(col: String): LocalDate = {
       rs.getTimestamp(col).toLocalDateTime.toLocalDate
+    }
+
+    def getOptionalLocalDate(col: String): Option[LocalDate] = {
+      Option(rs.getTimestamp(col)).map(_.toLocalDateTime.toLocalDate)
     }
   }
 

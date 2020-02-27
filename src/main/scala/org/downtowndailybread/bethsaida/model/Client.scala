@@ -8,7 +8,12 @@ case class Client(
                    firstName: String,
                    middleName: Option[String],
                    lastName: String,
-                   nicknames: Seq[String],
                    dateOfBirth: LocalDate,
-                   photoIdTag: String
+                   gender: Gender,
+                   race: Race,
+                   phone: Option[Int],
+                   clientPhoto: Option[String],
+                   photoId: Option[String],
+                   intakeDate: Option[LocalDate],
+                   intakeUser: Option[InternalUser]
                  )
