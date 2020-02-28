@@ -43,6 +43,7 @@ libraryDependencies += "com.typesafe.akka" %% "akka-http-testkit" % "10.1.8" % T
 assemblyMergeStrategy in assembly := {
   case x if x.contains("io.netty.versions.properties") => MergeStrategy.discard
   case x if x.contains("module-info.class") => MergeStrategy.discard
+  case x if x.contains("Static") && x.contains("Binder") => MergeStrategy.first
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
