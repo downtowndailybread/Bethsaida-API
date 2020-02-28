@@ -28,6 +28,8 @@ libraryDependencies += "org.dmfs" % "lib-recur" % "0.11.2"
 
 libraryDependencies += "software.amazon.awssdk" % "s3" % "2.10.71"
 
+libraryDependencies += "com.sksamuel.scrimage" % "scrimage-core" % "4.0.0"
+
 libraryDependencies += "org.scalamock" %% "scalamock" % "4.1.0" % Test
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test

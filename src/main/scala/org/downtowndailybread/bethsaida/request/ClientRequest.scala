@@ -158,7 +158,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
 
     val sql =
       s"""
-         |update client
+         |update client set
          |first_name = ?,
          |last_name = ?,
          |date_of_birth = ?,
@@ -167,7 +167,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |race = ?,
          |phone = ?,
          |gender = ?,
-         |client_photo_id = ?
+         |client_photo_id = ?,
          |intake_date = ?
          |where id = (cast(? as uuid))
          |""".stripMargin

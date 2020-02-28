@@ -5,7 +5,7 @@ import akka.http.scaladsl.model.StatusCodes.{BadRequest, NotFound, Unauthorized}
 import akka.http.scaladsl.server.Directives.{complete, extractUri}
 import akka.http.scaladsl.server.ExceptionHandler
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
-import org.downtowndailybread.bethsaida.exception.{DDBException, NotFoundException, UnauthorizedException}
+import org.downtowndailybread.bethsaida.exception.{DDBException, InvalidImageFormat, NotFoundException, UnauthorizedException}
 import org.downtowndailybread.bethsaida.json.ExceptionJson
 
 object ExceptionHandlers extends SprayJsonSupport with ExceptionJson {
@@ -25,6 +25,13 @@ object ExceptionHandlers extends SprayJsonSupport with ExceptionJson {
           }
       }
     case r: DDBException =>
+      extractUri {
+        uri =>
+          cors() {
+            complete((BadRequest, ddbExceptionFormat.write(r)))
+          }
+      }
+    case r: InvalidImageFormat =>
       extractUri {
         uri =>
           cors() {

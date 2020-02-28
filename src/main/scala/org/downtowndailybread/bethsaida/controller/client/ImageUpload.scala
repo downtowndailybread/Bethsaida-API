@@ -8,9 +8,12 @@ import java.util.UUID
 import akka.http.scaladsl.server
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.FileInfo
-import akka.stream.scaladsl.{FileIO, Framing, Keep, Sink, Source}
+import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
+import com.sksamuel.scrimage.ImmutableImage
+import com.sksamuel.scrimage.nio.PngWriter
 import org.downtowndailybread.bethsaida.controller.ControllerBase
+import org.downtowndailybread.bethsaida.exception.InvalidImageFormat
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, MaterializerProvider, SettingsProvider}
 import software.amazon.awssdk.core.sync.RequestBody
@@ -19,10 +22,6 @@ import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.{ObjectCannedACL, PutObjectRequest}
 import spray.json.{JsObject, JsString}
 
-import collection.JavaConverters._
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success}
 
 trait ImageUpload extends ControllerBase {
   this: AuthenticationProvider with JsonSupport with SettingsProvider with MaterializerProvider with MaterializerProvider =>
@@ -35,6 +34,19 @@ trait ImageUpload extends ControllerBase {
     .region(Region.US_EAST_2)
     .build()
 
+  private def writeToS3(bytes: Array[Byte], tag: String): Unit = {
+    s3.putObject(
+      PutObjectRequest
+        .builder()
+        .bucket(settings.awsBucket)
+        .key(tag)
+        .contentType("image/png")
+        .acl(ObjectCannedACL.PUBLIC_READ)
+        .build(),
+      RequestBody.fromBytes(bytes)
+    )
+  }
+
   // Thanks Vladimir Matveev!
   //https://stackoverflow.com/questions/37430141/file-upload-using-akka-http
 
@@ -42,45 +54,35 @@ trait ImageUpload extends ControllerBase {
     post {
       fileUpload("fileUpload") {
         case (fileInfo, fileStream) if fileInfo.getContentType.mediaType.isImage =>
-          val filename = s"${UUID.randomUUID().toString}.${fileInfo.contentType.mediaType.subType}"
-          uploadImageToS3(fileInfo, fileStream, filename)
-
-
-
-        //            val sink =
-        //              FileIO.toPath(Paths.get("/tmp") resolve filename)
-        //            val writeResult = fileStream.runWith(sink)
-        //            onSuccess(writeResult) { result =>
-        //              result.status match {
-        //                case Success(_) => complete(s"http://localhost:9001/$filename")
-        //                case Failure(e) => throw e
-        //              }
-        //            }
+          val fileTag = UUID.randomUUID().toString
+          uploadImageToS3(fileInfo, fileStream, fileTag)
       }
     }
   }
 
-  private def uploadImageToS3(fileInfo: FileInfo, fileStream: Source[ByteString, Any], imageId: String): server.Route = {
+  private def uploadImageToS3(fileInfo: FileInfo, fileStream: Source[ByteString, Any], fileTag: String): server.Route = {
 
     val sink = Sink.seq[ByteString]
-    val writeResult = fileStream.runWith(sink).map(_.flatten)
+    val writeResult = fileStream.runWith(sink).map(_.flatten).map(_.toArray)
     onSuccess(writeResult) { result =>
-      s3.putObject(
-        PutObjectRequest
-          .builder()
-          .bucket(settings.awsBucket)
-          .key(imageId)
-          .contentType(fileInfo.contentType.mediaType.toString())
-          .acl(ObjectCannedACL.PUBLIC_READ)
-          .build(),
-        RequestBody.fromBytes(result.toArray)
-      )
-      complete(JsObject(Map("image" -> JsString(imageId))))
+
+
+      val image = try {
+        ImmutableImage.loader().fromBytes(result)
+      } catch {
+        case e: Exception => throw new InvalidImageFormat
+      }
+
+      val scaled250 = image.scaleToWidth(250).bytes(PngWriter.MaxCompression)
+      val scaled400 = image.scaleToWidth(400).bytes(PngWriter.MaxCompression)
+      val full = image.bytes(PngWriter.MaxCompression)
+
+      writeToS3(scaled250, s"${fileTag}_250.png")
+      writeToS3(scaled400, s"${fileTag}_400.png")
+      writeToS3(full, s"${fileTag}.png")
+
+      complete(JsObject(Map("image" -> JsString(fileTag))))
     }
-  }
-
-  private def saveImageToTemp(fs: Source[ByteString, Any]): Unit = {
-
   }
 }
 
