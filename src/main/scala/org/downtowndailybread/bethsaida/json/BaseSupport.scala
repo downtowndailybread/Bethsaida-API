@@ -18,6 +18,12 @@ trait BaseSupport extends UUIDProvider {
   }
   implicit def boolConverter(b: Boolean): JsValue = JsBoolean(b)
 
+  implicit def mapStringConverter(map: Map[String, String]): Map[String, JsValue] = {
+    map.map {
+      case (k, v) => (k -> JsString(v))
+    }
+  }
+
   implicit val uuidFormat = new RootJsonFormat[UUID] {
     override def read(json: JsValue): UUID = json match {
       case JsString(s) => parseUUID(s)

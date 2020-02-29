@@ -17,7 +17,8 @@ trait ServiceRoutes
   val allServiceRoutes = {
     pathPrefix("service") {
 
-      val serviceRoutes = service_allRoute ~
+      val serviceRoutes =
+        service_allRoute ~
         service_newRoute ~
         service_findRoute ~
         service_updateRoute ~

@@ -16,7 +16,7 @@ trait New extends ControllerBase {
         post {
           entity(as[ServiceAttributes]) {
             attrib =>
-              futureComplete(runSql(c => new ServiceRequest(settings, c).insertService(attrib)))
+              futureCompleteCreated(runSql(c => new ServiceRequest(settings, c).insertService(attrib)))
           }
         }
     }

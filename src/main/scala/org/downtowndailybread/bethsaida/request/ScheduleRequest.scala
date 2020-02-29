@@ -68,7 +68,12 @@ class ScheduleRequest(val settings: Settings, val conn: Connection)
   }
 
   def getSchedulesByServiceId(serviceIds: Seq[UUID]): Seq[Schedule] = {
-    val filter = serviceIds.map(_ => "cast(? as uuid)").mkString("(", ", ", ")")
+    val filter = if(serviceIds.isEmpty) {
+      "where 2 = 1"
+    } else {
+      "where service_id in " + serviceIds.map(_ => "cast(? as uuid)").mkString("(", ", ", ")")
+    }
+
     val sql =
       s"""
          |select id,
@@ -77,7 +82,7 @@ class ScheduleRequest(val settings: Settings, val conn: Connection)
          |       start_time,
          |       service_parameters
          |from schedule
-         |where service_id in $filter
+         |$filter
        """.stripMargin
 
     val ps = conn.prepareStatement(sql)
