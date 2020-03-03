@@ -7,7 +7,7 @@ import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.parameters.LoginParameters
 import org.downtowndailybread.bethsaida.request.AuthRequest
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
-import spray.json.{JsObject, JsString}
+import spray.json.{JsBoolean, JsObject, JsString}
 
 trait Login extends ControllerBase {
   this: AuthenticationProvider
@@ -23,7 +23,10 @@ trait Login extends ControllerBase {
           val authToken = createSignedToken(user.id)
           futureComplete {
             Thread.sleep(3000)
-            JsObject(Map(("auth_token", JsString(authToken))))
+            JsObject(Map(
+              "auth_token" -> JsString(authToken),
+              "admin" -> JsBoolean(user.admin)
+            ))
           }
       }
     }

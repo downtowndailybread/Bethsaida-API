@@ -1,24 +1,29 @@
-package org.downtowndailybread.bethsaida.controller.service.event
+package org.downtowndailybread.bethsaida.controller.event
 
 import java.util.UUID
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
+import org.downtowndailybread.bethsaida.model.EventAttribute
 import org.downtowndailybread.bethsaida.request.EventRequest
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
-trait Find extends ControllerBase {
+trait Update extends ControllerBase {
   this: JsonSupport with DatabaseConnectionProvider with SettingsProvider with AuthenticationProvider =>
 
-  val event_findRoute = (serviceId: UUID) => path(JavaUUID) {
+  val event_updateRoute = (serviceId: UUID) => path(JavaUUID / "update") {
     eventId =>
       authorize(_ => true) {
         implicit iu =>
-          get {
-            futureComplete {
-              runSql(c =>
-                new EventRequest(settings, c).getEvent(serviceId, eventId))
+          post {
+            entity(as[EventAttribute]) {
+              ea =>
+                futureComplete {
+                  runSql(c =>
+                    new EventRequest(settings, c).updateEvent(eventId, ea))
+                  "Event updated"
+                }
             }
           }
       }

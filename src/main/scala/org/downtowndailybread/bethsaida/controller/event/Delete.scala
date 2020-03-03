@@ -1,4 +1,4 @@
-package org.downtowndailybread.bethsaida.controller.service.event
+package org.downtowndailybread.bethsaida.controller.event
 
 import java.util.UUID
 

@@ -10,8 +10,8 @@ case class UpsertClient(
                          dateOfBirth: Option[LocalDate],
                          gender: Option[Gender],
                          race: Option[Race],
-                         phone: Option[Int],
-                         clientPhoto: Option[String],
-                         photoId: Option[String],
+                         phone: Option[String],
+                         clientPhoto: Option[UUID],
+                         photoId: Option[UUID],
                          intakeDate: Option[LocalDate]
                  )

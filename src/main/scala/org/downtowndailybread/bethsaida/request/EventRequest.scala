@@ -1,14 +1,14 @@
 package org.downtowndailybread.bethsaida.request
 
-import java.sql.{Connection, ResultSet, Types}
-import java.time.OffsetDateTime
+import java.sql.{Connection, ResultSet, Timestamp}
+import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.event.EventNotFoundException
 import org.downtowndailybread.bethsaida.model.{Event, EventAttribute, HoursOfOperation, InternalUser}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
+import org.downtowndailybread.bethsaida.providers.UUIDProvider
 
 class EventRequest(val settings: Settings, val conn: Connection)
   extends BaseRequest
@@ -16,58 +16,47 @@ class EventRequest(val settings: Settings, val conn: Connection)
     with UUIDProvider {
 
   def getAllServiceEvents(serviceId: UUID): Seq[Event] = {
-    getAllEventsInternal(Some(serviceId), None)
+    getAllEventsInternal(Some(serviceId), None, None)
   }
 
-  def getEvent(serviceId: UUID, eventId: UUID): Event = {
-    getAllEventsInternal(Some(serviceId), Some(eventId)) match {
+  def getEvent(eventId: UUID): Event = {
+    getAllEventsInternal(None, Some(eventId), None) match {
       case e :: Nil => e
       case _ => throw new EventNotFoundException
     }
   }
 
-  def createEvent(serviceId: UUID, event: EventAttribute)(implicit iu: InternalUser): UUID = {
+  def createEvent(event: EventAttribute)(implicit iu: InternalUser): UUID = {
     val eventId = getUUID()
     val sql =
       s"""
-         |insert into event (id, start_time, end_time, capacity, service_id, schedule_creator, user_creator, name)
-         |values (cast(? as uuid), ?, ?, ?, cast(? as uuid), cast(? as uuid), cast(? as uuid), ?)
+         |insert into event (id, capacity, service_id, user_creator, date)
+         |values (cast(? as uuid), ?, cast(? as uuid), cast(? as uuid), ?)
        """.stripMargin
 
     val ps = conn.prepareStatement(sql)
     ps.setString(1, eventId)
-    ps.setZonedDateTime(2, event.hours.start)
-    ps.setZonedDateTime(3, event.hours.end)
-    ps.setNullableInt(4, event.capacity)
-    ps.setString(5, serviceId)
-    ps.setNullableUUID(6, event.scheduleCreatorId)
-    ps.setNullableUUID(7, event.userCreatorId)
-    ps.setNullableString(8, None)
-
+    ps.setInt(2, event.capacity)
+    ps.setString(3, event.serviceId)
+    ps.setNullableUUID(4, Some(iu.id))
+    ps.setTimestamp(5, Timestamp.valueOf(event.date.atStartOfDay()))
     ps.executeUpdate()
     eventId
   }
 
-  def updateEvent(serviceId: UUID, eventId: UUID, event: EventAttribute)(implicit iu: InternalUser): Unit = {
+  def updateEvent(eventId: UUID, event: EventAttribute)(implicit iu: InternalUser): Unit = {
     val sql =
       s"""
          |update event
-         |    set start_time = ?,
-         |        end_time = ?,
-         |        capacity = ?,
+         |    set capacity = ?,
          |        service_id = cast(? as uuid),
-         |        schedule_creator = cast(? as uuid),
-         |        user_creator = cast(? as uuid)
+         |        date = ?,
          |where id = cast(? as uuid)
        """.stripMargin
     val ps = conn.prepareStatement(sql)
-    ps.setZonedDateTime(1, event.hours.start)
-    ps.setZonedDateTime(2, event.hours.end)
-    ps.setNullableInt(3, event.capacity)
-    ps.setString(4, serviceId)
-    ps.setNullableUUID(5, event.scheduleCreatorId)
-    ps.setNullableUUID(6, event.userCreatorId)
-    ps.setString(7, eventId)
+    ps.setInt(1, event.capacity)
+    ps.setString(2, event.serviceId)
+    ps.setTimestamp(3, Timestamp.valueOf(event.date.atStartOfDay()))
 
     ps.executeUpdate()
   }
@@ -86,10 +75,14 @@ class EventRequest(val settings: Settings, val conn: Connection)
   }
 
   def getAllEvents(): Seq[Event] = {
-    getAllEventsInternal(None, None)
+    getAllEventsInternal(None, None, None)
   }
 
-  private def getAllEventsInternal(serviceId: Option[UUID], eventId: Option[UUID]): Seq[Event] = {
+  def getAllActiveEvents(): Seq[Event] = {
+    getAllEventsInternal(None, None, Some(LocalDateTime.now().minusDays(1L)))
+  }
+
+  private def getAllEventsInternal(serviceId: Option[UUID], eventId: Option[UUID], date: Option[LocalDateTime]): Seq[Event] = {
     val serviceIdFilter = serviceId match {
       case Some(i) => "e.service_id = cast(? as uuid)"
       case None => "(1 = 1 or '' = ?)"
@@ -98,27 +91,31 @@ class EventRequest(val settings: Settings, val conn: Connection)
       case Some(i) => "e.id = cast(? as uuid)"
       case None => "(1 = 1 or '' = ?)"
     }
+    val dateFilter = date match {
+      case Some(i) => "e.date > ?"
+      case None => "(1 = 1 or ? = e.date)"
+    }
     val sql =
       s"""
          |select
          |       id,
-         |       start_time,
-         |       end_time,
          |       capacity,
          |       service_id,
-         |       schedule_creator,
          |       user_creator,
-         |       name
-         |from event
+         |       date
+         |from event e
          |where $serviceIdFilter
          |and $eventIdFilter
-       """.stripMargin
+         |and $dateFilter
+         |""".stripMargin
 
     val ps = conn.prepareStatement(sql)
     ps.setString(1, serviceId.map(_.toString).getOrElse(""))
     ps.setString(2, eventId.map(_.toString).getOrElse(""))
+    ps.setTimestamp(3, date.map(Timestamp.valueOf).getOrElse(Timestamp.valueOf(LocalDateTime.now())))
 
-    createSeq(ps.executeQuery(), eventCreator)
+    val result = createSeq(ps.executeQuery(), eventCreator)
+    result
   }
 
 
@@ -126,15 +123,11 @@ class EventRequest(val settings: Settings, val conn: Connection)
     // FIXME handle nulls
     Event(
       rs.getString("id"),
-      rs.getString("service_id"),
       EventAttribute(
-        HoursOfOperation(
-          rs.getZoneDateTime("start_time"),
-          rs.getZoneDateTime("end_time")
-        ),
-        Option(rs.getInt("capacity")),
-        parseOptionUUID(rs.getString("user_creator")),
-        parseOptionUUID(rs.getString("schedule_creator"))
+        rs.getString("service_id"),
+        rs.getInt("capacity"),
+        rs.getTimestamp("date").toLocalDateTime.toLocalDate,
+        rs.getOptionalUUID("user_creator")
       )
     )
   }

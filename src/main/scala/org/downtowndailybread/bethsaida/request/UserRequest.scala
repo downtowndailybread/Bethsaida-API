@@ -169,14 +169,15 @@ class UserRequest(val settings: Settings, val conn: Connection)
       resultSet.getBoolean("confirmed"),
       resultSet.getOptionalUUID("reset_token"),
       resultSet.getBoolean("user_lock"),
-      resultSet.getBoolean("admin_lock")
+      resultSet.getBoolean("admin_lock"),
+      resultSet.getBoolean("admin")
     )
   }
 
 
   private lazy val rawUserSql =
     s"""
-       |select id, email, name, salt, hash, confirmed, reset_token, user_lock, admin_lock
+       |select id, email, name, salt, hash, confirmed, reset_token, user_lock, admin_lock, admin
        |from user_account
        |where 1=1
      """.stripMargin

@@ -1,10 +1,11 @@
 package org.downtowndailybread.bethsaida.model
 
+import java.time.LocalDate
 import java.util.UUID
 
 case class EventAttribute (
-                  hours: HoursOfOperation,
-                  capacity: Option[Int],
-                  userCreatorId: Option[UUID],
-                  scheduleCreatorId: Option[UUID]
+                  serviceId: UUID,
+                  capacity: Int,
+                  date: LocalDate,
+                  createUserId: Option[UUID]
                 )

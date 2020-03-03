@@ -15,12 +15,7 @@ import org.downtowndailybread.bethsaida.json._
 import org.downtowndailybread.bethsaida.model.AnonymousUser
 import org.downtowndailybread.bethsaida.providers._
 import org.downtowndailybread.bethsaida.service.{ExceptionHandlers, RejectionHandlers}
-import org.downtowndailybread.bethsaida.worker.EventScheduler
-import software.amazon.awssdk.core.sync.RequestBody
-import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.model.{ListBucketsRequest, ListObjectsRequest, PutObjectRequest}
-import software.amazon.awssdk.services.s3.{S3Client, S3ClientBuilder}
-
+import org.downtowndailybread.bethsaida.worker.ImageCleanup
 
 
 object ApiMain {
@@ -40,7 +35,8 @@ class ApiMain(val settings: Settings)
     with AuthenticationProvider
     with SettingsProvider
     with DatabaseConnectionProvider
-    with MaterializerProvider {
+    with MaterializerProvider
+    with S3Provider {
 
   val anonymousUser = AnonymousUser
 
@@ -66,7 +62,8 @@ class ApiMain(val settings: Settings)
   def run() = {
 
     val workerSystem = ActorSystem("worker-api")
-    workerSystem.actorOf(Props(classOf[EventScheduler], settings), "event-scheduler")
+//    workerSystem.actorOf(Props(classOf[EventScheduler], settings), "event-scheduler")
+    workerSystem.actorOf(Props(classOf[ImageCleanup], settings), "image-cleanup")
 
 
     val bindingFuture = Http().bindAndHandle(Route.handlerFlow(routes), settings.interface, settings.port)

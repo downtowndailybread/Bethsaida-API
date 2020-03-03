@@ -1,4 +1,4 @@
-package org.downtowndailybread.bethsaida.controller.service.event
+package org.downtowndailybread.bethsaida.controller.event
 
 import java.util.UUID
 
@@ -14,22 +14,33 @@ trait All extends ControllerBase {
     with DatabaseConnectionProvider
     with SettingsProvider =>
 
-  val event_allForServiceRoute = (serviceId: UUID) => path(PathEnd) {
-    authorize(_ => true) {
-      implicit iu =>
-        get {
-          futureComplete(runSql(c =>
-            new EventRequest(settings, c).getAllServiceEvents(serviceId)))
-        }
-    }
-  }
+//  val event_allForServiceRoute = (serviceId: UUID) => path(PathEnd) {
+//    authorize(_ => true) {
+//      implicit iu =>
+//        get {
+//          futureComplete(runSql(c =>
+//            new EventRequest(settings, c).getAllServiceEvents(serviceId)))
+//        }
+//    }
+//  }
 
-  val event_allRoute = () => path(PathEnd) {
-    authorize(_ => true) {
+  val event_allRoute = path(PathEnd) {
+    authorizeNotAnonymous {
       implicit iu =>
         get {
           futureComplete(runSql(c =>
             new EventRequest(settings, c).getAllEvents()))
+        }
+    }
+  }
+
+  val event_allActiveRoute = path("active") {
+    authorizeNotAnonymous {
+      implicit iu =>
+        get {
+          futureComplete(runSql(c =>
+            new EventRequest(settings, c).getAllActiveEvents()
+          ))
         }
     }
   }

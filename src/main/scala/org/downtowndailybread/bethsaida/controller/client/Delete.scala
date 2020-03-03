@@ -16,7 +16,7 @@ trait Delete extends ControllerBase {
     idStr =>
       val id = UUID.fromString(idStr)
       post {
-        authorizeNotAnonymous {
+        authorize(_.admin) {
           implicit authUser =>
             runSql(c => new ClientRequest(settings, c).deleteClient(id))
             complete(Success(s"client id $id successfully deleted"))

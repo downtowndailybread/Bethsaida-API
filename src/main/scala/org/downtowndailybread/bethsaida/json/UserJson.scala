@@ -59,7 +59,8 @@ trait UserJson extends BaseSupport {
               case JsNull => None
             } ).map(parseUUID),
             o("userLock").convertTo[Boolean],
-            o("adminLock").convertTo[Boolean]
+            o("adminLock").convertTo[Boolean],
+            false
           )
       }
     }
@@ -70,4 +71,19 @@ trait UserJson extends BaseSupport {
   implicit val passwordResetFormat = jsonFormat3(PasswordResetParameters)
 
   implicit val initiatePasswordResetParameters = jsonFormat1(InitiatePasswordResetParameters)
+
+  val simpleUserFormat = new RootJsonWriter[InternalUser] {
+    override def write(obj: InternalUser): JsValue = JsObject(
+      Map(
+        "id" -> JsString(obj.id),
+        "name" -> JsString(obj.name)
+      )
+    )
+  }
+
+  val simpleUserSeqFormat = new RootJsonWriter[Seq[InternalUser]] {
+    override def write(obj: Seq[InternalUser]): JsValue = {
+      JsArray(obj.map(simpleUserFormat.write).toVector)
+    }
+  }
 }

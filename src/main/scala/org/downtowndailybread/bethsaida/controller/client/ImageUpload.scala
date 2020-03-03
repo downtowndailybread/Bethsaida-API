@@ -15,42 +15,28 @@ import com.sksamuel.scrimage.nio.PngWriter
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.exception.InvalidImageFormat
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, MaterializerProvider, SettingsProvider}
-import software.amazon.awssdk.core.sync.RequestBody
-import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model.{ObjectCannedACL, PutObjectRequest}
+import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, MaterializerProvider, S3Provider, SettingsProvider}
 import spray.json.{JsObject, JsString}
 
 
 trait ImageUpload extends ControllerBase {
-  this: AuthenticationProvider with JsonSupport with SettingsProvider with MaterializerProvider with MaterializerProvider =>
+  this: AuthenticationProvider
+    with JsonSupport
+    with SettingsProvider
+    with MaterializerProvider
+    with MaterializerProvider
+    with S3Provider
+  =>
 
 
   implicit lazy val ec = actorMaterializer.executionContext
 
-  private val s3 = S3Client
-    .builder()
-    .region(Region.US_EAST_2)
-    .build()
 
-  private def writeToS3(bytes: Array[Byte], tag: String): Unit = {
-    s3.putObject(
-      PutObjectRequest
-        .builder()
-        .bucket(settings.awsBucket)
-        .key(tag)
-        .contentType("image/png")
-        .acl(ObjectCannedACL.PUBLIC_READ)
-        .build(),
-      RequestBody.fromBytes(bytes)
-    )
-  }
 
   // Thanks Vladimir Matveev!
   //https://stackoverflow.com/questions/37430141/file-upload-using-akka-http
 
-  val client_imageuploadroute = path("imageupload") {
+  val client_imageuploadRoute = path("imageupload") {
     post {
       fileUpload("fileUpload") {
         case (fileInfo, fileStream) if fileInfo.getContentType.mediaType.isImage =>

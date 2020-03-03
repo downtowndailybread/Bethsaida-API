@@ -14,7 +14,8 @@ case class InternalUser(
                          confirmed: Boolean,
                          resetToken: Option[UUID],
                          userLock: Boolean,
-                         adminLock: Boolean
+                         adminLock: Boolean,
+                         admin: Boolean
                        ) {
   def getUserParameters(withPassword: String): UserParameters = UserParameters(
     name,
@@ -44,4 +45,4 @@ object InternalUser {
 
 object AnonymousUser extends InternalUser(
   UUID.fromString("00000000-0000-0000-0000-000000000000"),
-  "", "", "", "", true, None, false, false)
+  "", "", "", "", true, None, false, false, false)

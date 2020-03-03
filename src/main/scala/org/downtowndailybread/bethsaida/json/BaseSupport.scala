@@ -11,11 +11,14 @@ import org.downtowndailybread.bethsaida.providers.UUIDProvider
 trait BaseSupport extends UUIDProvider {
 
   implicit def intConverter(i: Int): JsValue = JsNumber(i)
+
   implicit def stringConverter(s: String): JsValue = JsString(s)
+
   implicit def stringOptionConverter(s: Option[String]): JsValue = s match {
     case Some(s) => JsString(s)
     case None => JsNull
   }
+
   implicit def boolConverter(b: Boolean): JsValue = JsBoolean(b)
 
   implicit def mapStringConverter(map: Map[String, String]): Map[String, JsValue] = {
@@ -33,21 +36,22 @@ trait BaseSupport extends UUIDProvider {
     override def write(obj: UUID): JsValue = JsString(obj)
   }
 
-  implicit def seqFormat[T : JsonFormat](implicit format: JsonFormat[T]): RootJsonFormat[Seq[T]] =
+  implicit def seqFormat[T: JsonFormat](implicit format: JsonFormat[T]): RootJsonFormat[Seq[T]] =
     new RootJsonFormat[Seq[T]] {
-    override def read(json: JsValue): Seq[T] = json match {
-      case JsArray(arr) => arr.map(arrVal => format.read(arrVal)).toList
-      case s => throw new MalformedJsonErrorException(s"could not seq: $s")
+      override def read(json: JsValue): Seq[T] = json match {
+        case JsArray(arr) => arr.map(arrVal => format.read(arrVal)).toList
+        case s => throw new MalformedJsonErrorException(s"could not seq: $s")
+      }
+
+      override def write(obj: Seq[T]): JsValue = JsArray(obj.map(format.write).toVector)
     }
 
-    override def write(obj: Seq[T]): JsValue = JsArray(obj.map(format.write).toVector)
-  }
-
-  implicit def seqWriter[T: JsonWriter](implicit format: JsonWriter[T]): JsonWriter[Seq[T]] = new JsonWriter[Seq[T]] {
-    override def write(obj: Seq[T]): JsValue = {
-      JsArray(obj.map(format.write).toVector)
+  implicit def seqWriter[T: JsonWriter](implicit format: RootJsonWriter[T]): RootJsonWriter[Seq[T]] =
+    new RootJsonWriter[Seq[T]] {
+      override def write(obj: Seq[T]): JsValue = {
+        JsArray(obj.map(format.write).toVector)
+      }
     }
-  }
 
 
   implicit val localTimeFormat = new RootJsonFormat[LocalTime] {
@@ -76,6 +80,7 @@ trait BaseSupport extends UUIDProvider {
       ("month", obj.getMonthValue),
       ("day", obj.getDayOfMonth)
     )
+
     override def read(json: JsValue): LocalDate = {
       (json: @unchecked) match {
         case JsObject(o) => LocalDate.of(

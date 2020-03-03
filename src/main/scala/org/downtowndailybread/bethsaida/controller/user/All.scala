@@ -9,12 +9,23 @@ import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, Datab
 trait All extends ControllerBase {
   this: AuthenticationProvider with JsonSupport with DatabaseConnectionProvider with SettingsProvider =>
 
+//  val user_allRoute = path(PathEnd) {
+//    authorizeNotAnonymous {
+//      implicit authUser =>
+//        get {
+//          futureComplete(runSql(c =>
+//            userSeqFormat.write(new UserRequest(settings, c).getAllUsers)))
+//        }
+//    }
+//  }
+
   val user_allRoute = path(PathEnd) {
     authorizeNotAnonymous {
       implicit authUser =>
         get {
           futureComplete(runSql(c =>
-            userSeqFormat.write(new UserRequest(settings, c).getAllUsers)))
+            simpleUserSeqFormat.write(new UserRequest(settings, c).getAllUsers())
+          ))
         }
     }
   }

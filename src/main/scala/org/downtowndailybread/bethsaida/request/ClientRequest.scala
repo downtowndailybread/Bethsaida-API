@@ -15,12 +15,13 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     with DatabaseRequest
     with UUIDProvider {
 
-  def getClients(id: Option[UUID] = None): Seq[Client] = {
+  def getAllClients(id: List[UUID] = List()): Seq[Client] = {
 
     val predicate = id match {
-      case Some(id) => s"id = cast('${id.toString}' as uuid)"
-      case None => s"1=1"
+      case Nil => s"1=1"
+      case _ => s"id in (" + id.map(ids => s"cast('${ids.toString}' as uuid)").mkString("(", ", ", ")") + ")"
     }
+
     val sql =
       s"""
          |select
@@ -34,7 +35,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |       c.race,
          |       c.phone,
          |       c.gender,
-         |       c.client_photo_id,
+         |       c.photo_id,
          |       c.intake_date,
          |       c.intake_user
          |from client c
@@ -68,7 +69,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
   }
 
   private def getClientOptionById(id: UUID): Option[Client] = {
-    getClients(Some(id)).headOption
+    getAllClients(List(id)).headOption
   }
 
   def getClientById(id: UUID): Client = {
@@ -98,8 +99,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     val sql =
       s"""
          |insert into client
-         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, client_photo_id, intake_date, intake_user)
-         |VALUES (cast(? as uuid), true, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, cast(? as uuid))
+         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, photo_id, intake_date, intake_user)
+         |VALUES (cast(? as uuid), true, ?, ?, ?, cast(? as uuid), ?, ?, ?, ?, cast(? as uuid), ?, cast(? as uuid))
          |""".stripMargin
 
     val ps = conn.prepareStatement(sql)
@@ -107,12 +108,12 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setString(2, client.firstName)
     ps.setString(3, client.lastName)
     ps.setTimestamp(4, Timestamp.valueOf(client.dateOfBirth.atStartOfDay()))
-    ps.setNullableString(5, client.clientPhoto)
+    ps.setNullableUUID(5, client.clientPhoto)
     ps.setNullableString(6, client.middleName)
     ps.setString(7, client.race.string)
-    ps.setNullableInt(8, client.phone)
+    ps.setNullableString(8, client.phone)
     ps.setString(9, client.gender.string)
-    ps.setNullableString(10, client.photoId)
+    ps.setNullableUUID(10, client.photoId)
     ps.setNullableTimestamp(11, client.intakeDate.map(ts => Timestamp.valueOf(ts.atStartOfDay())))
     ps.setString(12, au.id)
     ps.executeUpdate()
@@ -156,18 +157,19 @@ class ClientRequest(val settings: Settings, val conn: Connection)
                     client: UpsertClient
                   )(implicit au: InternalUser): Unit = {
 
+    val existingClient = getClientById(id)
     val sql =
       s"""
          |update client set
          |first_name = ?,
          |last_name = ?,
          |date_of_birth = ?,
-         |client_photo = ?,
+         |client_photo = cast(? as uuid),
          |middle_name = ?,
          |race = ?,
          |phone = ?,
          |gender = ?,
-         |client_photo_id = ?,
+         |photo_id = cast(? as uuid),
          |intake_date = ?
          |where id = (cast(? as uuid))
          |""".stripMargin
@@ -176,15 +178,23 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setString(1, client.firstName.get)
     ps.setString(2, client.lastName.get)
     ps.setTimestamp(3, Timestamp.valueOf(client.dateOfBirth.get.atStartOfDay()))
-    ps.setNullableString(4, client.clientPhoto)
+    ps.setNullableUUID(4, client.clientPhoto)
     ps.setNullableString(5, client.middleName)
     ps.setString(6, client.race.get.string)
-    ps.setNullableInt(7, client.phone)
+    ps.setNullableString(7, client.phone)
     ps.setString(8, client.gender.get.string)
-    ps.setNullableString(9, client.photoId)
+    ps.setNullableUUID(9, client.photoId)
     ps.setTimestamp(10, Timestamp.valueOf(client.intakeDate.get.atStartOfDay()))
     ps.setString(11, id.toString)
     ps.executeUpdate()
+
+    val imageReq = new ImageRequest(settings, conn)
+    if(existingClient.photoId != client.photoId) {
+      imageReq.deleteImage(existingClient.photoId)
+      imageReq.createImage(existingClient.photoId)
+    }
+
+
 
 //    val allNicknamesSql =
 //      s"""
@@ -248,9 +258,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       rs.getLocalDate("date_of_birth"),
       Gender(rs.getString("gender")),
       Race(rs.getString("race")),
-      rs.getOptionalInt("phone"),
-      rs.getOptionalString("client_photo"),
-      rs.getOptionalString("client_photo_id"),
+      rs.getOptionalString("phone"),
+      rs.getOptionalUUID("client_photo"),
+      rs.getOptionalUUID("photo_id"),
       rs.getOptionalLocalDate("intake_date"),
       Some(new UserRequest(settings, conn).getRawUserFromUuid(rs.getUUID("intake_user")))
     )

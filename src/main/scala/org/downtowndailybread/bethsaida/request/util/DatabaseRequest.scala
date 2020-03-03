@@ -22,7 +22,7 @@ trait DatabaseRequest {
       }
 
       override def next(): E = mapFunc(rs)
-    }.toSeq
+    }.toList
   }
 
   def getSingle[E](rs: ResultSet, mapFunc: ResultSet => E): E = {

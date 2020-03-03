@@ -22,7 +22,7 @@ trait ClientJson extends BaseSupport {
             o.get("dateOfBirth").map(_.convertTo[LocalDate]),
             o.get("gender").map(_.convertTo[Gender]),
             o.get("race").map(_.convertTo[Race]),
-            o.get("phone").map(_.convertTo[Int]),
+            o.get("phone").map(_.convertTo[String]),
             o.get("clientPhoto").map(_.convertTo[String]),
             o.get("photoId").map(_.convertTo[String]),
             o.get("intakeDate").map(_.convertTo[LocalDate])
