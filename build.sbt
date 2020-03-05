@@ -24,11 +24,13 @@ libraryDependencies += "ch.megard" %% "akka-http-cors" % "0.4.0"
 
 libraryDependencies += "com.auth0" % "java-jwt" % "3.8.0"
 
-libraryDependencies += "org.dmfs" % "lib-recur" % "0.11.2"
+//libraryDependencies += "org.dmfs" % "lib-recur" % "0.11.2"
 
 libraryDependencies += "software.amazon.awssdk" % "s3" % "2.10.71"
 
 libraryDependencies += "com.sksamuel.scrimage" % "scrimage-core" % "4.0.0"
+
+libraryDependencies += "com.amazonaws" % "aws-java-sdk-ses" % "1.11.734"
 
 libraryDependencies += "org.scalamock" %% "scalamock" % "4.1.0" % Test
 

@@ -14,7 +14,7 @@ trait New extends ControllerBase {
     with SettingsProvider =>
 
   val user_newRoute = path("new") {
-    authorize(_ => true) {
+    authorize(_.admin) {
       implicit authUser =>
         post {
           entity(as[UserParameters]) {

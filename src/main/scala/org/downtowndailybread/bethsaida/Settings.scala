@@ -42,6 +42,8 @@ class Settings( val args: Array[String]) {
   val awsSecret = getOrElse("aws.secretAccessKey", _.getString, "")
   val awsBucket = getOrElse("aws.bucket", _.getString, "")
 
+  val emailFrom = getOrElse("aws.emailFrom", _.getString, "bethsaida@pinestreet.org")
+
   lazy val ds = {
     val internalConfig = {
       import java.io.PrintWriter

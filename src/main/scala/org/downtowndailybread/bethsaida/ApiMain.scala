@@ -1,7 +1,5 @@
 package org.downtowndailybread.bethsaida
 
-import java.io.{BufferedInputStream, File, FileInputStream}
-import java.nio.file.{Files, Paths}
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http

@@ -27,7 +27,9 @@ trait AuthenticationProvider {
           authenticateSignedToken(c)
         }).flatMap(iu =>
           onSuccess(Future {
-            isUserAuthorized(iu)
+            val r = isUserAuthorized(iu)
+            runSql(conn => new UserRequest(settings, conn).touchTimestamp(iu.id))
+            r
           }).map {
             authorized =>
               if ((settings.allowAnonymousUser && iu == AnonymousUser) || authorized) {

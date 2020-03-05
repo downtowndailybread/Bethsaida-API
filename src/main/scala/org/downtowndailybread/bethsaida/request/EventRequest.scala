@@ -44,21 +44,22 @@ class EventRequest(val settings: Settings, val conn: Connection)
     eventId
   }
 
-  def updateEvent(eventId: UUID, event: EventAttribute)(implicit iu: InternalUser): Unit = {
+  def updateEvent(eventId: UUID, event: EventAttribute)(implicit iu: InternalUser): UUID = {
     val sql =
       s"""
          |update event
          |    set capacity = ?,
          |        service_id = cast(? as uuid),
-         |        date = ?,
+         |        date = ?
          |where id = cast(? as uuid)
        """.stripMargin
     val ps = conn.prepareStatement(sql)
     ps.setInt(1, event.capacity)
     ps.setString(2, event.serviceId)
     ps.setTimestamp(3, Timestamp.valueOf(event.date.atStartOfDay()))
-
+    ps.setString(4, eventId.toString)
     ps.executeUpdate()
+    eventId
   }
 
   def deleteEvent(serviceId: UUID, eventId: UUID)(implicit iu: InternalUser): Unit = {

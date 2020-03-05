@@ -1,6 +1,7 @@
 package org.downtowndailybread.bethsaida.request
 
 import java.sql.{Connection, ResultSet}
+import java.time.LocalDateTime
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
@@ -74,10 +75,16 @@ class UserRequest(val settings: Settings, val conn: Connection)
 
   def updateUser(user: UserParameters, userId: UUID)(implicit iu: InternalUser): UUID = {
     val ur = getRawUserFromUuid(userId)
+    val adminFlag = if(iu.admin) {
+      user.admin.getOrElse(ur.admin)
+    } else {
+      ur.admin
+    }
     updateUserRecords(ur.copy(
       email = user.loginParameters.email,
-      hash = hashPassword(user.loginParameters.password, ur.salt),
-      name = user.name
+      hash = if(user.loginParameters.password.isBlank) ur.hash else hashPassword(user.loginParameters.password, ur.salt),
+      name = user.name,
+      admin = adminFlag
     ))
   }
 
@@ -134,7 +141,8 @@ class UserRequest(val settings: Settings, val conn: Connection)
          |      confirmed = ?,
          |      admin_lock = ?,
          |      user_lock = ?,
-         |      reset_token = cast(? as uuid)
+         |      reset_token = cast(? as uuid),
+         |      admin = ?
          |where id = cast(? as uuid)
        """.stripMargin
 
@@ -147,9 +155,24 @@ class UserRequest(val settings: Settings, val conn: Connection)
     ps.setBoolean(6, t.adminLock)
     ps.setBoolean(7, t.userLock)
     ps.setNullableUUID(8, t.resetToken)
-    ps.setString(9, t.id)
+    ps.setBoolean(9, t.admin)
+    ps.setString(10, t.id)
+
     ps.executeUpdate()
     t.id
+  }
+
+  def touchTimestamp(id: UUID): Unit = {
+    val sql =
+      s"""
+      update user_account
+      set latest_activity = now()
+      where id = cast(? as uuid)
+         """.stripMargin
+
+    val ps = conn.prepareStatement(sql)
+    ps.setString(1, id.toString)
+    ps.executeUpdate()
   }
 
   private def extractSingleUserFromRs(resultSet: ResultSet): InternalUser = {
@@ -170,14 +193,16 @@ class UserRequest(val settings: Settings, val conn: Connection)
       resultSet.getOptionalUUID("reset_token"),
       resultSet.getBoolean("user_lock"),
       resultSet.getBoolean("admin_lock"),
-      resultSet.getBoolean("admin")
+      resultSet.getBoolean("admin"),
+      resultSet.getTimestamp("create_time").toLocalDateTime,
+      resultSet.getTimestamp("latest_activity").toLocalDateTime
     )
   }
 
 
   private lazy val rawUserSql =
     s"""
-       |select id, email, name, salt, hash, confirmed, reset_token, user_lock, admin_lock, admin
+       |select id, email, name, salt, hash, confirmed, reset_token, user_lock, admin_lock, admin, create_time, latest_activity
        |from user_account
        |where 1=1
      """.stripMargin

@@ -12,17 +12,16 @@ import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, Datab
 trait Update extends ControllerBase {
   this: JsonSupport with DatabaseConnectionProvider with SettingsProvider with AuthenticationProvider =>
 
-  val event_updateRoute = (serviceId: UUID) => path(JavaUUID / "update") {
+  val event_updateRoute = path(JavaUUID / "update") {
     eventId =>
       authorize(_ => true) {
         implicit iu =>
           post {
             entity(as[EventAttribute]) {
               ea =>
-                futureComplete {
+                futureCompleteCreated {
                   runSql(c =>
                     new EventRequest(settings, c).updateEvent(eventId, ea))
-                  "Event updated"
                 }
             }
           }

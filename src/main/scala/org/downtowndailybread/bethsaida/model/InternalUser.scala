@@ -1,5 +1,6 @@
 package org.downtowndailybread.bethsaida.model
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.model.parameters.{LoginParameters, UserParameters}
@@ -15,11 +16,14 @@ case class InternalUser(
                          resetToken: Option[UUID],
                          userLock: Boolean,
                          adminLock: Boolean,
-                         admin: Boolean
+                         admin: Boolean,
+                         createTime: LocalDateTime,
+                         latestActivity: LocalDateTime
                        ) {
   def getUserParameters(withPassword: String): UserParameters = UserParameters(
     name,
-    LoginParameters(email, withPassword)
+    LoginParameters(email, withPassword),
+    Some(admin)
   )
 }
 
@@ -45,4 +49,4 @@ object InternalUser {
 
 object AnonymousUser extends InternalUser(
   UUID.fromString("00000000-0000-0000-0000-000000000000"),
-  "", "", "", "", true, None, false, false, false)
+  "", "", "", "", true, None, false, false, false, LocalDateTime.now(), LocalDateTime.now())

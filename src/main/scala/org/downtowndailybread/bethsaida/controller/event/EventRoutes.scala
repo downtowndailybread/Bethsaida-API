@@ -29,7 +29,7 @@ trait EventRoutes extends All with Delete with Find with New with Update with Co
   val allEventRoutes = {
     pathPrefix("event") {
 
-      val eventRoutes = event_allRoute ~ event_newRoute ~ event_allActiveRoute ~ event_findRoute
+      val eventRoutes = event_allRoute ~ event_newRoute ~ event_allActiveRoute ~ event_findRoute ~ event_updateRoute
 
 
       eventRoutes

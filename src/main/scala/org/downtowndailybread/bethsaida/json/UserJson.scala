@@ -1,5 +1,7 @@
 package org.downtowndailybread.bethsaida.json
 
+import java.time.format.DateTimeFormatter
+
 import spray.json._
 import DefaultJsonProtocol._
 import org.downtowndailybread.bethsaida.model.parameters._
@@ -16,7 +18,8 @@ trait UserJson extends BaseSupport {
           LoginParameters(
             j("email").convertTo[String],
             j("password").convertTo[String]
-          )
+          ),
+          j.get("admin").map(_.convertTo[Boolean]).orElse(None)
         )
       }
     }
@@ -31,7 +34,7 @@ trait UserJson extends BaseSupport {
 
   implicit val confirmEmailFormat = jsonFormat2(ConfirmEmail)
 
-  implicit val internalUserFormat = new RootJsonFormat[InternalUser] {
+  /*implicit val internalUserFormat = new RootJsonFormat[InternalUser] {
     override def write(obj: InternalUser): JsValue = {
       JsObject(
         ("id", JsString(obj.id)),
@@ -64,26 +67,36 @@ trait UserJson extends BaseSupport {
           )
       }
     }
-  }
+  }*/
 
-  implicit val userSeqFormat = seqFormat[InternalUser]
+//  implicit val userSeqFormat = seqFormat[InternalUser]
 
   implicit val passwordResetFormat = jsonFormat3(PasswordResetParameters)
 
   implicit val initiatePasswordResetParameters = jsonFormat1(InitiatePasswordResetParameters)
 
-  val simpleUserFormat = new RootJsonWriter[InternalUser] {
+  implicit val simpleUserFormat = new RootJsonFormat[InternalUser] {
     override def write(obj: InternalUser): JsValue = JsObject(
       Map(
         "id" -> JsString(obj.id),
-        "name" -> JsString(obj.name)
+        "name" -> JsString(obj.name),
+        "email" -> JsString(obj.email),
+        "admin" -> JsBoolean(obj.admin),
+        "createTime" -> JsString(obj.createTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)),
+        "latestActivity" -> JsString(obj.latestActivity.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)),
+        "confirmed" -> JsBoolean(obj.confirmed),
+        "adminLock" -> JsBoolean(obj.adminLock),
+        "userLock" -> JsBoolean(obj.userLock)
       )
     )
+
+    override def read(json: JsValue): InternalUser = ???
   }
 
-  val simpleUserSeqFormat = new RootJsonWriter[Seq[InternalUser]] {
-    override def write(obj: Seq[InternalUser]): JsValue = {
-      JsArray(obj.map(simpleUserFormat.write).toVector)
-    }
-  }
+  implicit val simpleUserSeqFormat = seqFormat[InternalUser]
+//    new RootJsonWriter[Seq[InternalUser]] {
+//    override def write(obj: Seq[InternalUser]): JsValue = {
+//      JsArray(obj.map(simpleUserFormat.write).toVector)
+//    }
+//  }
 }

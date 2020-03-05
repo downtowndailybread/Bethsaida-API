@@ -6,7 +6,7 @@ import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.service.{ScheduleNotFoundException, ServiceNotFoundException}
-import org.downtowndailybread.bethsaida.model.{InternalUser, Schedule, ScheduleDetail, Service, ServiceAttributes, ServiceType}
+import org.downtowndailybread.bethsaida.model.{InternalUser, Service, ServiceAttributes, ServiceType}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 
@@ -95,13 +95,13 @@ class ServiceRequest(val settings: Settings, val conn: Connection)
 
     val serviceAttributes = createSeq(rs, serviceRsConverter)
 
-    val schedules = new ScheduleRequest(settings, conn).getSchedulesByServiceId(serviceAttributes.map(_._1))
+//    val schedules = new ScheduleRequest(settings, conn).getSchedulesByServiceId(serviceAttributes.map(_._1))
 
     serviceAttributes.map{
       case (id, attributes) => Service(
         id,
-        attributes,
-        schedules.filter(_.serviceId == id)
+        attributes
+//        schedules.filter(_.serviceId == id)
       )
     }
   }
