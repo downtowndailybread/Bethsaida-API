@@ -1,7 +1,7 @@
 package org.downtowndailybread.bethsaida.request
 
 import java.sql.{Connection, ResultSet}
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneId, ZoneOffset, ZonedDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
@@ -194,8 +194,8 @@ class UserRequest(val settings: Settings, val conn: Connection)
       resultSet.getBoolean("user_lock"),
       resultSet.getBoolean("admin_lock"),
       resultSet.getBoolean("admin"),
-      resultSet.getTimestamp("create_time").toLocalDateTime,
-      resultSet.getTimestamp("latest_activity").toLocalDateTime
+      ZonedDateTime.of(resultSet.getTimestamp("create_time").toLocalDateTime, ZoneId.of("America/New_York")),
+      ZonedDateTime.of(resultSet.getTimestamp("latest_activity").toLocalDateTime, ZoneId.of("America/New_York"))
     )
   }
 

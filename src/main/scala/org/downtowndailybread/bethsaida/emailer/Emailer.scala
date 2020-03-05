@@ -10,6 +10,16 @@ import org.downtowndailybread.bethsaida.Settings
 
 object Emailer {
 
+  def main(args: Array[String]): Unit = {
+    val settings = new Settings(args)
+
+    val to = args(1)
+    val subject = args(2)
+    val content = args(3)
+    Emailer.sendEmail(to, subject, content, settings)
+
+  }
+
   def sendEmail(to: String, subject: String, content: String, settings: Settings) {
     try {
       val client = AmazonSimpleEmailServiceClientBuilder.standard()
@@ -25,7 +35,7 @@ object Emailer {
             .withCharset("UTF-8").withData(content))
             .withText(new Content().withCharset("UTF-8").withData(content)))
             .withSubject(new Content().withCharset("UTF-8").withData(subject))
-        ).withSource(settings.emailFrom)
+        ).withSource(to)
 
       client.sendEmail(request)
     } catch {

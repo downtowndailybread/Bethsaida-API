@@ -9,6 +9,7 @@ import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import org.downtowndailybread.bethsaida.controller.ApplicationRoutes
+import org.downtowndailybread.bethsaida.emailer.Emailer
 import org.downtowndailybread.bethsaida.json._
 import org.downtowndailybread.bethsaida.model.AnonymousUser
 import org.downtowndailybread.bethsaida.providers._
