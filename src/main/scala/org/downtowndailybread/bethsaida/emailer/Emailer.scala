@@ -7,7 +7,6 @@ import com.amazonaws.services.simpleemail.model.{Body, Content, Destination, Mes
 import org.downtowndailybread.bethsaida.Settings
 
 
-
 object Emailer {
 
   def main(args: Array[String]): Unit = {
@@ -23,6 +22,11 @@ object Emailer {
   def sendEmail(to: String, subject: String, content: String, settings: Settings) {
     try {
       val client = AmazonSimpleEmailServiceClientBuilder.standard()
+        .withCredentials(
+          new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+            settings.awsAccess, settings.awsSecret
+          ))
+        )
         .withRegion(Regions.US_EAST_1)
         .build()
       val request = new SendEmailRequest()
@@ -31,9 +35,9 @@ object Emailer {
         .withMessage(
           new Message()
             .withBody(new Body()
-            .withHtml(new Content()
-            .withCharset("UTF-8").withData(content))
-            .withText(new Content().withCharset("UTF-8").withData(content)))
+              .withHtml(new Content()
+                .withCharset("UTF-8").withData(content))
+              .withText(new Content().withCharset("UTF-8").withData(content)))
             .withSubject(new Content().withCharset("UTF-8").withData(subject))
         ).withSource(settings.emailFrom)
 
