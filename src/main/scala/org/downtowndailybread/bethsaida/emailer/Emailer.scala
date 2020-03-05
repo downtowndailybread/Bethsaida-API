@@ -30,7 +30,7 @@ object Emailer {
         .withRegion(Regions.US_EAST_1)
         .build()
       val request = new SendEmailRequest()
-        .withDestination(new Destination().withToAddresses(settings.emailFrom))
+        .withDestination(new Destination().withToAddresses(to))
         .withReturnPath(settings.emailFrom)
         .withMessage(
           new Message()
