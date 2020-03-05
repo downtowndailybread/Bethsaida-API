@@ -35,7 +35,7 @@ object Emailer {
             .withCharset("UTF-8").withData(content))
             .withText(new Content().withCharset("UTF-8").withData(content)))
             .withSubject(new Content().withCharset("UTF-8").withData(subject))
-        ).withSource(to)
+        ).withSource(settings.emailFrom)
 
       client.sendEmail(request)
     } catch {
