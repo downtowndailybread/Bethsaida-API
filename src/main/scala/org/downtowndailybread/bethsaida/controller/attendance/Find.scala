@@ -1,24 +1,23 @@
-package org.downtowndailybread.bethsaida.controller.event
-
-import java.util.UUID
+package org.downtowndailybread.bethsaida.controller.attendance
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import org.downtowndailybread.bethsaida.request.EventRequest
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
+import org.downtowndailybread.bethsaida.request.AttendanceRequest
 
-trait Find extends ControllerBase {
+trait Find  extends ControllerBase {
   this: JsonSupport with DatabaseConnectionProvider with SettingsProvider with AuthenticationProvider =>
 
-  val event_findRoute = path(JavaUUID) {
+  val attendance_findByEventRoute = path("event" / JavaUUID) {
     eventId =>
       authorizeNotAnonymous {
         implicit iu =>
           get {
             futureComplete {
               runSql(c =>
-                new EventRequest(settings, c).getEvent(eventId))
+                new AttendanceRequest(settings, c).getAttendanceByEventId(eventId)
+              )
             }
           }
       }

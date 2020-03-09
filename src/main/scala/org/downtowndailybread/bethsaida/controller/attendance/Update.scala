@@ -1,27 +1,26 @@
-package org.downtowndailybread.bethsaida.controller.event
-
-import java.util.UUID
+package org.downtowndailybread.bethsaida.controller.attendance
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import org.downtowndailybread.bethsaida.model.EventAttribute
-import org.downtowndailybread.bethsaida.request.EventRequest
+import org.downtowndailybread.bethsaida.model.AttendanceAttribute
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
+import org.downtowndailybread.bethsaida.request.{AttendanceRequest, EventRequest}
 
 trait Update extends ControllerBase {
   this: JsonSupport with DatabaseConnectionProvider with SettingsProvider with AuthenticationProvider =>
 
-  val event_updateRoute = path(JavaUUID / "update") {
-    eventId =>
+  val attendance_updateRoute = path(JavaUUID / "update") {
+    id =>
       authorizeNotAnonymous {
         implicit iu =>
           post {
-            entity(as[EventAttribute]) {
+            entity(as[AttendanceAttribute]) {
               ea =>
                 futureCompleteCreated {
                   runSql(c =>
-                    new EventRequest(settings, c).updateEvent(eventId, ea))
+                    new AttendanceRequest(settings, c).updateAttendance(id, ea))
+                  id
                 }
             }
           }

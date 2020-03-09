@@ -13,7 +13,7 @@ trait Delete extends ControllerBase {
 
   val event_deleteRoute = (serviceId: UUID) => path(JavaUUID / "delete") {
     eventId =>
-      authorize(_ => true) {
+      authorizeNotAnonymous {
         implicit iu =>
           post {
             futureComplete {

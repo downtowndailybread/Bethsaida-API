@@ -67,10 +67,6 @@ trait DatabaseRequest {
     new EnhancedPreparedStatement(ps)
 
   class EnhancedResultSet(rs: ResultSet) {
-    def getZoneDateTime(col: String): ZonedDateTime = {
-      val r = rs.getObject(col, classOf[OffsetDateTime])
-      r.atZoneSameInstant(settings.timezone.toZoneId)
-    }
 
     def getOptionalInt(col: String): Option[Int] = {
       Option(rs.getInt(col))

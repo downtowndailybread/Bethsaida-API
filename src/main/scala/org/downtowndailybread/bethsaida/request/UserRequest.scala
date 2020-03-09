@@ -93,14 +93,14 @@ class UserRequest(val settings: Settings, val conn: Connection)
     updateUserRecords(ur)
   }
 
-  def insertUser(user: UserParameters)(implicit au: InternalUser): UUID = {
+  def  insertUser(user: UserParameters)(implicit au: InternalUser): UUID = {
     val userId = getUUID()
     val createBaseRecordSql =
       s"""
          |insert into user_account
-         |    (id, email, name, salt, hash, confirmed, admin_lock, user_lock, reset_token)
+         |    (id, email, name, salt, hash, confirmed, admin_lock, user_lock, reset_token, admin)
          |VALUES
-         |    (cast(? as uuid), ?, ?, ?, ?, ?, ?, ?, cast(? as uuid))
+         |    (cast(? as uuid), ?, ?, ?, ?, ?, ?, ?, cast(? as uuid), ?)
        """.stripMargin
     val salt = generateSalt()
     val hash = hashPassword(user.loginParameters.password, salt)
@@ -115,6 +115,7 @@ class UserRequest(val settings: Settings, val conn: Connection)
     ps.setBoolean(7, false)
     ps.setBoolean(8, false)
     ps.setNullableString(9, Some(getUUID()))
+    ps.setBoolean(10, user.admin.exists(identity))
     try {
       ps.executeUpdate()
     } catch {

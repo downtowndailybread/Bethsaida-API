@@ -80,7 +80,7 @@ class EventRequest(val settings: Settings, val conn: Connection)
   }
 
   def getAllActiveEvents(): Seq[Event] = {
-    getAllEventsInternal(None, None, Some(LocalDateTime.now().minusDays(1L)))
+    getAllEventsInternal(None, None, Some(LocalDate.now().minusDays(1L).atStartOfDay()))
   }
 
   private def getAllEventsInternal(serviceId: Option[UUID], eventId: Option[UUID], date: Option[LocalDateTime]): Seq[Event] = {
@@ -93,7 +93,7 @@ class EventRequest(val settings: Settings, val conn: Connection)
       case None => "(1 = 1 or '' = ?)"
     }
     val dateFilter = date match {
-      case Some(i) => "e.date > ?"
+      case Some(i) => "e.date >= ?"
       case None => "(1 = 1 or ? = e.date)"
     }
     val sql =
