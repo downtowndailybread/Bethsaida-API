@@ -103,7 +103,7 @@ class ApiMain(val settings: Settings)
 
     val workerSystem = ActorSystem("worker-api")
 
-    workerSystem.actorOf(Props(classOf[ImageCleanup], settings), "image-cleanup")
+//    workerSystem.actorOf(Props(classOf[ImageCleanup], settings), "image-cleanup")
 
     Http().bindAndHandle(Route.handlerFlow(routes), settings.interface, settings.port)
 
