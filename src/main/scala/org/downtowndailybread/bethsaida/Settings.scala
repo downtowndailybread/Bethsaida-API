@@ -44,6 +44,8 @@ class Settings( val args: Array[String]) {
 
   val emailFrom = getOrElse("aws.emailFrom", _.getString, "bethsaida@pinestreet.org")
 
+  val logPath = getOrElse("logPath", _.getString, "/bethsaida/log/")
+
   lazy val ds = {
     val internalConfig = {
       import java.io.PrintWriter

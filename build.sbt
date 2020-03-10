@@ -24,7 +24,11 @@ libraryDependencies += "ch.megard" %% "akka-http-cors" % "0.4.0"
 
 libraryDependencies += "com.auth0" % "java-jwt" % "3.8.0"
 
-//libraryDependencies += "org.dmfs" % "lib-recur" % "0.11.2"
+libraryDependencies +=  "com.typesafe.akka" %% "akka-slf4j" % "2.5.21"
+
+//libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.30"
+
+libraryDependencies +=  "ch.qos.logback" % "logback-classic" % "1.2.3"
 
 libraryDependencies += "software.amazon.awssdk" % "s3" % "2.10.71"
 

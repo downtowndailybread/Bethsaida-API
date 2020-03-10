@@ -42,6 +42,7 @@ class ImageRequest(val settings: Settings, val conn: Connection)
         val ps = conn.prepareStatement(sql)
         ps.setString(1, k)
         ps.executeUpdate()
+      case None =>
     }
   }
 
