@@ -15,5 +15,7 @@ case class Client(
                    clientPhoto: Option[UUID],
                    photoId: Option[UUID],
                    intakeDate: Option[LocalDate],
-                   intakeUser: Option[InternalUser]
+                   intakeUser: Option[InternalUser],
+                   isBanned: Boolean,
+                   banId: Option[UUID]
                  )

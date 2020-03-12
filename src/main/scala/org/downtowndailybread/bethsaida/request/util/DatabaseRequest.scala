@@ -1,7 +1,7 @@
 package org.downtowndailybread.bethsaida.request.util
 
 import java.sql.{Connection, PreparedStatement, ResultSet, Timestamp, Types}
-import java.time.{LocalDate, OffsetDateTime, ZonedDateTime}
+import java.time.{LocalDate, LocalDateTime, OffsetDateTime, ZonedDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.{DDBException, NoSuchIdException, TooManyRecordsFound}
@@ -52,6 +52,11 @@ trait DatabaseRequest {
         case None => ps.setNull(parameterIndex, java.sql.Types.VARCHAR)
       }
     }
+
+    def setUUID(parameterIndex: Int, x: UUID): Unit = {
+      ps.setString(parameterIndex, x.toString)
+    }
+
     def setNullableTimestamp(parameterIndex: Int, x: Option[Timestamp]): Unit = {
       x match {
         case Some(i) => ps.setTimestamp(parameterIndex, i)
@@ -85,11 +90,19 @@ trait DatabaseRequest {
     }
 
     def getLocalDate(col: String): LocalDate = {
-      rs.getTimestamp(col).toLocalDateTime.toLocalDate
+      getLocalDateTime(col).toLocalDate
+    }
+
+    def getLocalDateTime(col: String): LocalDateTime = {
+      rs.getTimestamp(col).toLocalDateTime
     }
 
     def getOptionalLocalDate(col: String): Option[LocalDate] = {
-      Option(rs.getTimestamp(col)).map(_.toLocalDateTime.toLocalDate)
+      getOptionalLocalDateTime(col).map(_.toLocalDate)
+    }
+
+    def getOptionalLocalDateTime(col: String): Option[LocalDateTime] = {
+      Option(rs.getTimestamp(col)).map(_.toLocalDateTime)
     }
   }
 

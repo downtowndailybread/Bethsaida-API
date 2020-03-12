@@ -19,7 +19,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
 
     val predicate = id match {
       case Nil => s"1=1"
-      case _ => s"id in (" + id.map(ids => s"cast('${ids.toString}' as uuid)").mkString("(", ", ", ")") + ")"
+      case _ => s"c.id in (" + id.map(ids => s"cast('${ids.toString}' as uuid)").mkString("(", ", ", ")") + ")"
     }
 
     val sql =
@@ -37,29 +37,18 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |       c.gender,
          |       c.photo_id,
          |       c.intake_date,
-         |       c.intake_user
+         |       c.intake_user,
+         |       not b.id is null as is_banned,
+         |       b.id as banned_id
          |from client c
+         |left join ban b
+         |on c.id = b.client_id and current_timestamp > b.start and (b.stop is null or current_timestamp < b.stop)
          |where c.active = true
          |AND $predicate
       """.stripMargin
     val statement = conn.prepareStatement(sql)
     val result = statement.executeQuery()
 
-//    val nicknameSql =
-//      s"""
-//         |select
-//         |  c.client_id,
-//         |  c.nickname
-//         |FROM client_alias c
-//         |""".stripMargin
-//
-//    val nicknameStatement = conn.prepareStatement(nicknameSql)
-//    val nicknameResult = nicknameStatement.executeQuery()
-//    val nicknameMap = createSeq(
-//      nicknameResult,
-//      createNicknameFromResultSet
-//    ).groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
-//
     val r = createSeq(
       result,
       createClientFromResultSet()
@@ -94,7 +83,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       upsertClient.clientPhoto,
       upsertClient.photoId,
       upsertClient.intakeDate,
-      Some(au)
+      Some(au),
+      false,
+      None
     )
     val sql =
       s"""
@@ -262,7 +253,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       rs.getOptionalUUID("client_photo"),
       rs.getOptionalUUID("photo_id"),
       rs.getOptionalLocalDate("intake_date"),
-      Some(new UserRequest(settings, conn).getRawUserFromUuid(rs.getUUID("intake_user")))
+      Some(new UserRequest(settings, conn).getRawUserFromUuid(rs.getUUID("intake_user"))),
+      rs.getBoolean("is_banned"),
+      rs.getOptionalUUID("banned_id")
     )
   }
 

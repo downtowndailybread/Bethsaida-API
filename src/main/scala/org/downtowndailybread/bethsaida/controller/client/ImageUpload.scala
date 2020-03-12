@@ -45,14 +45,6 @@ trait ImageUpload extends ControllerBase {
 
 
           uploader(writeToS3)
-//          if(settings.useAws) {
-//            uploader(writeToS3)
-//          } else {
-//            uploader(
-//              (ar, name) =>
-//                val bufferedWriter = new BufferedWriter(new FileWriter("/tmp/" + name));
-//            )
-//          }
       }
     }
   }
@@ -79,9 +71,6 @@ trait ImageUpload extends ControllerBase {
       val scaled400 = image.scaleToWidth(400).bytes(PngWriter.MaxCompression)
       val full = image.bytes(PngWriter.MaxCompression)
 
-      //      writeToS3(scaled250, s"${fileTag}_250.png")
-      //      writeToS3(scaled400, s"${fileTag}_400.png")
-      //      writeToS3(full, s"${fileTag}.png")
 
       target(scaled250, s"${fileTag}_250.png")
       target(scaled400, s"${fileTag}_400.png")
@@ -92,7 +81,3 @@ trait ImageUpload extends ControllerBase {
     }
   }
 }
-
-/*
-
- */

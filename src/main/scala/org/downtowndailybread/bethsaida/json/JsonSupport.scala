@@ -13,6 +13,7 @@ trait JsonSupport
     with AttendanceJson
     with ServiceJson
     with EventJson
+    with NoteJson
     with SettingsProvider
     with ExceptionJson
     with DatabaseConnectionProvider {

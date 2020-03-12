@@ -1,6 +1,7 @@
 package org.downtowndailybread.bethsaida.controller.user
 
 import akka.http.scaladsl.server.Directives._
+import org.downtowndailybread.bethsaida.controller.client.ban.BanRoutes
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 

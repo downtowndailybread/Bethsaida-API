@@ -1,10 +1,11 @@
 package org.downtowndailybread.bethsaida.request
 
 import java.sql.{Connection, ResultSet, Timestamp}
-import java.time.{LocalTime, ZoneId, ZonedDateTime}
+import java.time.{LocalDateTime, LocalTime, ZoneId, ZonedDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
+import org.downtowndailybread.bethsaida.exception.attendance.BannedUserProhibitedException
 import org.downtowndailybread.bethsaida.model.{Attendance, AttendanceAttribute, InternalUser}
 import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
@@ -76,6 +77,11 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
   def createAttendance(attrib: AttendanceAttribute)(
     implicit user: InternalUser
   ): UUID = {
+
+    if(new ClientRequest(settings, conn).getClientById(attrib.clientId).isBanned) {
+      throw new BannedUserProhibitedException()
+    }
+
     val attendanceId = getUUID()
     val sql =
       s"""
@@ -85,9 +91,8 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
        """.stripMargin
     val ps = conn.prepareStatement(sql)
     ps.setString(1, attendanceId)
-    ps.setTimestamp(2, Timestamp.valueOf(attrib.checkInTime.toLocalDateTime))
-//    ps.setZonedDateTime(2, attrib.checkInTime)
-//    ps.setZonedDateTime(3, attrib.checkOutTime)
+    val s = Timestamp.valueOf(attrib.checkInTime.withZoneSameInstant(ZoneId.of("America/New_York")).toLocalDateTime)
+    ps.setTimestamp(2, s)
     ps.setString(3, attrib.eventId)
     ps.setString(4, attrib.clientId)
     ps.executeUpdate()

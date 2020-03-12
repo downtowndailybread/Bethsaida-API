@@ -29,7 +29,7 @@ trait AttendanceJson extends BaseSupport {
         Map(
           "eventId" -> uuidFormat.write(obj.eventId),
           "clientId" -> uuidFormat.write(obj.clientId),
-          "checkInTime" -> zonedDateTime.write(obj.checkInTime)
+          "checkInTime" -> zonedDateTimeFormat.write(obj.checkInTime)
         )
       )
     }
