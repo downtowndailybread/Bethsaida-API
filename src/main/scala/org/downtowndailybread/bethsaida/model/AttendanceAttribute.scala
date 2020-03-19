@@ -1,8 +1,10 @@
 package org.downtowndailybread.bethsaida.model
 
 import java.time.ZonedDateTime
+import java.util.UUID
 
 case class AttendanceAttribute(
-                                checkInTime: ZonedDateTime,
-                                checkOutTime: ZonedDateTime
+                                eventId: UUID,
+                                clientId: UUID,
+                                checkInTime: ZonedDateTime
                               )

@@ -10,21 +10,21 @@ trait ServiceRoutes
     with Find
     with Update
     with Delete
-    with schedule.ScheduleRoutes
-    with event.EventRoutes {
+    with org.downtowndailybread.bethsaida.controller.event.EventRoutes {
   this: JsonSupport with AuthenticationProvider with SettingsProvider with DatabaseConnectionProvider =>
 
   val allServiceRoutes = {
     pathPrefix("service") {
 
-      val serviceRoutes = service_allRoute ~
-        service_newRoute ~
-        service_findRoute ~
-        service_updateRoute ~
-        service_deleteRoute
+      val serviceRoutes =
+        service_allRoute ~
+          service_newRoute ~
+          service_findRoute ~
+          service_updateRoute ~
+          service_deleteRoute
 
 
-      serviceRoutes ~ scheduleRoutes ~ eventRoutes
+      serviceRoutes
     }
   }
 }

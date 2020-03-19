@@ -11,12 +11,12 @@ trait New extends ControllerBase {
   this: JsonSupport with AuthenticationProvider with DatabaseConnectionProvider with SettingsProvider =>
 
   val service_newRoute = path("new") {
-    authorizeNotAnonymous {
+    authorize(_.admin) {
       implicit user =>
         post {
           entity(as[ServiceAttributes]) {
             attrib =>
-              futureComplete(runSql(c => new ServiceRequest(settings, c).insertService(attrib)))
+              futureCompleteCreated(runSql(c => new ServiceRequest(settings, c).insertService(attrib)))
           }
         }
     }

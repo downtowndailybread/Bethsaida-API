@@ -22,7 +22,8 @@ trait UserTest {
     LoginParameters(
       "nobody@nobody.com",
       "initialPassword"
-    )
+    ),
+    None
   )
 
   private val otherUserPromise = Promise[UUID]()

@@ -15,7 +15,7 @@ trait Find extends ControllerBase {
         implicit authUser =>
           get {
             futureComplete(runSql(c =>
-              new UserRequest(settings, c).getRawUserFromUuid(uid)))
+              simpleUserFormat.write(new UserRequest(settings, c).getRawUserFromUuid(uid))))
           }
       }
   }

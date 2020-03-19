@@ -43,7 +43,8 @@ trait BethsaidaSupport
     LoginParameters(
       "andy@guenin.com",
       "AndyGueninPassword"
-    )
+    ),
+    None
   )
 
   class EnhancedHttpRequest(val httpRequest: HttpRequest) {

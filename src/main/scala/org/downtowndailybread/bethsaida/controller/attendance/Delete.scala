@@ -1,24 +1,26 @@
-package org.downtowndailybread.bethsaida.controller.service.event
+package org.downtowndailybread.bethsaida.controller.attendance
 
 import java.util.UUID
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import org.downtowndailybread.bethsaida.request.EventRequest
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
+import org.downtowndailybread.bethsaida.request.{AttendanceRequest, EventRequest}
 
-trait Find extends ControllerBase {
+trait Delete extends ControllerBase {
   this: JsonSupport with DatabaseConnectionProvider with SettingsProvider with AuthenticationProvider =>
 
-  val event_findRoute = (serviceId: UUID) => path(JavaUUID) {
-    eventId =>
-      authorize(_ => true) {
+  val attendance_deleteRoute = path(JavaUUID / "delete") {
+    attendanceId =>
+      authorizeNotAnonymous {
         implicit iu =>
-          get {
-            futureComplete {
+          post {
+            futureCompleteCreated {
               runSql(c =>
-                new EventRequest(settings, c).getEvent(serviceId, eventId))
+                new AttendanceRequest(settings, c).deleteAttendance(attendanceId)
+              )
+              attendanceId
             }
           }
       }

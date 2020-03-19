@@ -1,4 +1,4 @@
-package org.downtowndailybread.bethsaida.controller.service.event
+package org.downtowndailybread.bethsaida.controller.event
 
 import java.util.UUID
 
@@ -8,18 +8,17 @@ import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.request.EventRequest
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
 
-trait Delete extends ControllerBase {
+trait Find extends ControllerBase {
   this: JsonSupport with DatabaseConnectionProvider with SettingsProvider with AuthenticationProvider =>
 
-  val event_deleteRoute = (serviceId: UUID) => path(JavaUUID / "delete") {
+  val event_findRoute = path(JavaUUID) {
     eventId =>
-      authorize(_ => true) {
+      authorizeNotAnonymous {
         implicit iu =>
-          post {
+          get {
             futureComplete {
               runSql(c =>
-                new EventRequest(settings, c).deleteEvent(serviceId, eventId))
-              "event deleted"
+                new EventRequest(settings, c).getEvent(eventId))
             }
           }
       }

@@ -6,7 +6,7 @@ import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.service.{ScheduleNotFoundException, ServiceNotFoundException}
-import org.downtowndailybread.bethsaida.model.{InternalUser, Schedule, ScheduleDetail, Service, ServiceAttributes, ServiceType}
+import org.downtowndailybread.bethsaida.model.{InternalUser, Service, ServiceAttributes, ServiceType}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 
@@ -74,10 +74,12 @@ class ServiceRequest(val settings: Settings, val conn: Connection)
   }
 
   private def serviceGetter(uuid: Option[UUID]): Seq[Service] = {
-    val (serviceFilter, schedFilter, id: String) = uuid match {
-      case Some(i) => ("a.service_id = cast(? as uuid)", "sched.service_id = cast(? as uuid)", i)
-      case None => ("(1 = 1 or '' = ?)", "(1 = 1 or '' = ?)", "")
+
+    val serviceFilter = uuid match {
+      case Some(id) => s"id = cast('${id.toString}' as uuid)"
+      case None => "1=1"
     }
+
     val sql =
       s"""
          |select id,
@@ -86,23 +88,20 @@ class ServiceRequest(val settings: Settings, val conn: Connection)
          |       default_capacity
          |from service
          |where $serviceFilter
-         | and $schedFilter
        """.stripMargin
 
     val ps = conn.prepareStatement(sql)
-    ps.setString(1, id)
-    ps.setString(2, id)
     val rs = ps.executeQuery()
 
     val serviceAttributes = createSeq(rs, serviceRsConverter)
 
-    val schedules = new ScheduleRequest(settings, conn).getSchedulesByServiceId(serviceAttributes.map(_._1))
+//    val schedules = new ScheduleRequest(settings, conn).getSchedulesByServiceId(serviceAttributes.map(_._1))
 
     serviceAttributes.map{
       case (id, attributes) => Service(
         id,
-        attributes,
-        schedules.filter(_.serviceId == id)
+        attributes
+//        schedules.filter(_.serviceId == id)
       )
     }
   }
@@ -111,7 +110,7 @@ class ServiceRequest(val settings: Settings, val conn: Connection)
     (rs.getString("id"),
       ServiceAttributes(
         rs.getString("name"),
-        ServiceType.withName(rs.getString("type")),
+        ServiceType.apply(rs.getString("type")),
         Option(rs.getInt("default_capacity"))
       )
     )

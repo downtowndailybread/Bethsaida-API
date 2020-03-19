@@ -12,14 +12,14 @@ trait Update extends ControllerBase {
 
   val service_updateRoute = path(JavaUUID / "update") {
     id =>
-      authorizeNotAnonymous {
+      authorize(_.admin) {
         implicit user =>
           post {
             entity(as[ServiceAttributes]) {
               sa =>
-                futureComplete({
+                futureCompleteCreated({
                   runSql(c => new ServiceRequest(settings, c).updateService(id, sa))
-                  "service updated"
+                  id
                 })
             }
           }

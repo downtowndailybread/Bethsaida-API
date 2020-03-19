@@ -1,7 +1,7 @@
 package org.downtowndailybread.bethsaida.request.util
 
-import java.sql.{Connection, PreparedStatement, ResultSet, Types}
-import java.time.{LocalDate, OffsetDateTime, ZonedDateTime}
+import java.sql.{Connection, PreparedStatement, ResultSet, Timestamp, Types}
+import java.time.{LocalDate, LocalDateTime, OffsetDateTime, ZonedDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.{DDBException, NoSuchIdException, TooManyRecordsFound}
@@ -22,7 +22,7 @@ trait DatabaseRequest {
       }
 
       override def next(): E = mapFunc(rs)
-    }.toSeq
+    }.toList
   }
 
   def getSingle[E](rs: ResultSet, mapFunc: ResultSet => E): E = {
@@ -52,6 +52,17 @@ trait DatabaseRequest {
         case None => ps.setNull(parameterIndex, java.sql.Types.VARCHAR)
       }
     }
+
+    def setUUID(parameterIndex: Int, x: UUID): Unit = {
+      ps.setString(parameterIndex, x.toString)
+    }
+
+    def setNullableTimestamp(parameterIndex: Int, x: Option[Timestamp]): Unit = {
+      x match {
+        case Some(i) => ps.setTimestamp(parameterIndex, i)
+        case None => ps.setNull(parameterIndex, java.sql.Types.TIMESTAMP)
+      }
+    }
     def setZonedDateTime(parameterIndex: Int, x: ZonedDateTime): Unit = {
       ps.setObject(parameterIndex, x.toOffsetDateTime, Types.TIMESTAMP_WITH_TIMEZONE)
     }
@@ -61,9 +72,9 @@ trait DatabaseRequest {
     new EnhancedPreparedStatement(ps)
 
   class EnhancedResultSet(rs: ResultSet) {
-    def getZoneDateTime(col: String): ZonedDateTime = {
-      val r = rs.getObject(col, classOf[OffsetDateTime])
-      r.atZoneSameInstant(settings.timezone.toZoneId)
+
+    def getOptionalInt(col: String): Option[Int] = {
+      Option(rs.getInt(col))
     }
 
     def getOptionalString(col: String): Option[String] = {
@@ -79,7 +90,19 @@ trait DatabaseRequest {
     }
 
     def getLocalDate(col: String): LocalDate = {
-      rs.getTimestamp(col).toLocalDateTime.toLocalDate
+      getLocalDateTime(col).toLocalDate
+    }
+
+    def getLocalDateTime(col: String): LocalDateTime = {
+      rs.getTimestamp(col).toLocalDateTime
+    }
+
+    def getOptionalLocalDate(col: String): Option[LocalDate] = {
+      getOptionalLocalDateTime(col).map(_.toLocalDate)
+    }
+
+    def getOptionalLocalDateTime(col: String): Option[LocalDateTime] = {
+      Option(rs.getTimestamp(col)).map(_.toLocalDateTime)
     }
   }
 

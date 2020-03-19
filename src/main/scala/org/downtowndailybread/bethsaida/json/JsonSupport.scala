@@ -10,8 +10,10 @@ trait JsonSupport
     with DefaultJsonProtocol
     with ClientJson
     with UserJson
+    with AttendanceJson
     with ServiceJson
     with EventJson
+    with NoteJson
     with SettingsProvider
     with ExceptionJson
     with DatabaseConnectionProvider {

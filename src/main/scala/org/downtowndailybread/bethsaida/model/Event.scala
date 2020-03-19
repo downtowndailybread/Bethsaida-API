@@ -4,6 +4,5 @@ import java.util.UUID
 
 case class Event(
                   id: UUID,
-                  serviceId: UUID,
                   attribute: EventAttribute
                 )

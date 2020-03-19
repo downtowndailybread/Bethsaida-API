@@ -11,7 +11,7 @@ trait Delete extends ControllerBase {
 
   val service_deleteRoute = path(JavaUUID / "delete") {
     id =>
-      authorizeNotAnonymous {
+      authorize(_.admin) {
         implicit user =>
           post {
             futureComplete({

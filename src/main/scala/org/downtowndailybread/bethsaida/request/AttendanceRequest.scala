@@ -1,10 +1,11 @@
 package org.downtowndailybread.bethsaida.request
 
-import java.sql.{Connection, ResultSet}
-import java.time.LocalTime
+import java.sql.{Connection, ResultSet, Timestamp}
+import java.time.{LocalDateTime, LocalTime, ZoneId, ZonedDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
+import org.downtowndailybread.bethsaida.exception.attendance.BannedUserProhibitedException
 import org.downtowndailybread.bethsaida.model.{Attendance, AttendanceAttribute, InternalUser}
 import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
@@ -22,23 +23,23 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
     getSingle(ps.executeQuery(), createRs)
   }
 
-  def getAttendanceByClientId(clientId: UUID): Seq[Attendance] = {
+  def getAttendanceByClientId(clientId: UUID): Seq[AttendanceAttribute] = {
     val sql = getAttendanceSql("client_id = ?")
     val ps = conn.prepareStatement(sql)
     ps.setString(1, clientId)
 
-    createSeq(ps.executeQuery(), createRs)
+    createSeq(ps.executeQuery(), createRs).map(_.attribute)
   }
 
   def getAttendanceByEventId(eventId: UUID): Seq[Attendance] = {
-    val sql = getAttendanceSql("event_id = ?")
+    val sql = getAttendanceSql("event_id = cast(? as uuid)")
     val ps = conn.prepareStatement(sql)
     ps.setString(1, eventId)
 
     createSeq(ps.executeQuery(), createRs)
   }
 
-  def updateAttendance(attendanceId: UUID, attendance: Attendance)(
+  def updateAttendance(attendanceId: UUID, attribute: AttendanceAttribute)(
     implicit user: InternalUser
   ): Unit = {
     val sql =
@@ -52,11 +53,11 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
          |where id = cast(? as uuid)
        """.stripMargin
     val ps = conn.prepareStatement(sql)
-    ps.setZonedDateTime(1, attendance.attribute.checkInTime)
-    ps.setZonedDateTime(2, attendance.attribute.checkInTime)
-    ps.setString(3, attendance.eventId)
-    ps.setString(4, attendance.clientId)
-    ps.setString(1, attendanceId)
+    ps.setZonedDateTime(1, attribute.checkInTime)
+    ps.setZonedDateTime(2, attribute.checkInTime)
+    ps.setString(3, attribute.eventId)
+    ps.setString(4, attribute.clientId)
+    ps.setString(5, attendanceId)
     ps.executeUpdate()
   }
 
@@ -65,7 +66,7 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
   ): Unit = {
     val sql =
       s"""
-         |delete attendance
+         |delete from attendance
          |where id = cast(? as uuid)
        """.stripMargin
     val ps = conn.prepareStatement(sql)
@@ -73,22 +74,27 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
     ps.executeUpdate()
   }
 
-  def createAttendance(eventId: UUID, clientId: UUID, attrib: AttendanceAttribute)(
+  def createAttendance(attrib: AttendanceAttribute)(
     implicit user: InternalUser
   ): UUID = {
+
+    if(new ClientRequest(settings, conn).getClientById(attrib.clientId).isBanned) {
+      throw new BannedUserProhibitedException()
+    }
+
     val attendanceId = getUUID()
     val sql =
       s"""
          |insert into attendance
-         |    (id, check_in_time, check_out_time, event_id, client_id)
-         |VALUES (cast(? as uuid), ?, null, cast(? as uuid), cast(? as uuid))
+         |    (id, check_in_time, event_id, client_id)
+         |VALUES (cast(? as uuid), ?, cast(? as uuid), cast(? as uuid))
        """.stripMargin
     val ps = conn.prepareStatement(sql)
     ps.setString(1, attendanceId)
-    ps.setZonedDateTime(2, attrib.checkInTime)
-//    ps.setZonedDateTime(3, attrib.checkOutTime)
-    ps.setString(3, eventId)
-    ps.setString(4, clientId)
+    val s = Timestamp.valueOf(attrib.checkInTime.withZoneSameInstant(ZoneId.of("America/New_York")).toLocalDateTime)
+    ps.setTimestamp(2, s)
+    ps.setString(3, attrib.eventId)
+    ps.setString(4, attrib.clientId)
     ps.executeUpdate()
 
 
@@ -98,11 +104,10 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
   private def createRs(rs: ResultSet): Attendance = {
     Attendance(
       rs.getString("id"),
-      rs.getUUID("event_id"),
-      rs.getUUID("client_id"),
       AttendanceAttribute(
-        rs.getZoneDateTime("check_in_time"),
-        rs.getZoneDateTime("check_out_time")
+        rs.getUUID("event_id"),
+        rs.getUUID("client_id"),
+        ZonedDateTime.of(rs.getTimestamp("check_in_time").toLocalDateTime, ZoneId.of("America/New_York"))
       )
     )
   }
@@ -111,7 +116,6 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
     s"""
        |select id,
        |       check_in_time,
-       |       check_out_time,
        |       event_id,
        |       client_id
        |from attendance

@@ -1,6 +1,7 @@
 package org.downtowndailybread.bethsaida.json
 
-import java.time.{LocalDate, LocalDateTime, LocalTime, OffsetDateTime, ZoneOffset, ZonedDateTime}
+import java.time.format.DateTimeFormatter
+import java.time.{LocalDate, LocalDateTime, LocalTime, OffsetDateTime, ZoneId, ZoneOffset, ZonedDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.MalformedJsonErrorException
@@ -11,12 +12,21 @@ import org.downtowndailybread.bethsaida.providers.UUIDProvider
 trait BaseSupport extends UUIDProvider {
 
   implicit def intConverter(i: Int): JsValue = JsNumber(i)
+
   implicit def stringConverter(s: String): JsValue = JsString(s)
+
   implicit def stringOptionConverter(s: Option[String]): JsValue = s match {
     case Some(s) => JsString(s)
     case None => JsNull
   }
+
   implicit def boolConverter(b: Boolean): JsValue = JsBoolean(b)
+
+  implicit def mapStringConverter(map: Map[String, String]): Map[String, JsValue] = {
+    map.map {
+      case (k, v) => (k -> JsString(v))
+    }
+  }
 
   implicit val uuidFormat = new RootJsonFormat[UUID] {
     override def read(json: JsValue): UUID = json match {
@@ -27,20 +37,28 @@ trait BaseSupport extends UUIDProvider {
     override def write(obj: UUID): JsValue = JsString(obj)
   }
 
-  implicit def seqFormat[T : JsonFormat](implicit format: JsonFormat[T]): RootJsonFormat[Seq[T]] =
+  implicit def seqFormat[T: JsonFormat](implicit format: JsonFormat[T]): RootJsonFormat[Seq[T]] =
     new RootJsonFormat[Seq[T]] {
-    override def read(json: JsValue): Seq[T] = json match {
-      case JsArray(arr) => arr.map(arrVal => format.read(arrVal)).toList
-      case s => throw new MalformedJsonErrorException(s"could not seq: $s")
+      override def read(json: JsValue): Seq[T] = json match {
+        case JsArray(arr) => arr.map(arrVal => format.read(arrVal)).toList
+        case s => throw new MalformedJsonErrorException(s"could not seq: $s")
+      }
+
+      override def write(obj: Seq[T]): JsValue = JsArray(obj.map(format.write).toVector)
     }
 
-    override def write(obj: Seq[T]): JsValue = JsArray(obj.map(format.write).toVector)
-  }
-
-  implicit def seqWriter[T: JsonWriter](implicit format: JsonWriter[T]): JsonWriter[Seq[T]] = new JsonWriter[Seq[T]] {
-    override def write(obj: Seq[T]): JsValue = {
-      JsArray(obj.map(format.write).toVector)
+  implicit def seqWriter[T: JsonWriter](implicit format: RootJsonWriter[T]): RootJsonWriter[Seq[T]] =
+    new RootJsonWriter[Seq[T]] {
+      override def write(obj: Seq[T]): JsValue = {
+        JsArray(obj.map(format.write).toVector)
+      }
     }
+
+  implicit def localDateTimeToZone(d: LocalDateTime): ZonedDateTime = {
+    ZonedDateTime.of(
+      d,
+      ZoneId.of("America/New_York")
+    )
   }
 
 
@@ -64,12 +82,15 @@ trait BaseSupport extends UUIDProvider {
     }
   }
 
+
+
   implicit val localDateFormat = new RootJsonFormat[LocalDate] {
     override def write(obj: LocalDate): JsValue = JsObject(
       ("year", obj.getYear),
       ("month", obj.getMonthValue),
       ("day", obj.getDayOfMonth)
     )
+
     override def read(json: JsValue): LocalDate = {
       (json: @unchecked) match {
         case JsObject(o) => LocalDate.of(
@@ -82,45 +103,29 @@ trait BaseSupport extends UUIDProvider {
     }
   }
 
+  val formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSVV")
+  val zone = ZoneId.of("America/New_York")
+
   implicit val localDateTimeFormat = new RootJsonFormat[LocalDateTime] {
-    override def write(obj: LocalDateTime): JsValue = JsObject(
-      ("date", localDateFormat.write(obj.toLocalDate)),
-      ("time", localTimeFormat.write(obj.toLocalTime))
-    )
+    override def write(obj: LocalDateTime): JsValue = obj.format(formatter)
 
     override def read(json: JsValue): LocalDateTime = {
       (json: @unchecked) match {
-        case JsObject(o) => LocalDateTime.of(
-          localDateFormat.read(o("date")),
-          localTimeFormat.read(o("time"))
-        )
+        case JsString(o) => LocalDateTime.parse(o, formatter)
       }
     }
   }
 
-  implicit val offsetDateTimeFormat = new RootJsonFormat[OffsetDateTime] {
-    override def write(obj: OffsetDateTime): JsValue = JsObject(
-      ("datetime", localDateTimeFormat.write(obj.toLocalDateTime)),
-      ("offset", obj.getOffset.getId)
-    )
-
-    override def read(json: JsValue): OffsetDateTime = {
-      (json: @unchecked) match {
-        case JsObject(o) => OffsetDateTime.of(
-          localDateTimeFormat.read(o("datetime")),
-          ZoneOffset.of(o("offset").convertTo[String])
-        )
-      }
-    }
-  }
-
-  implicit val zonedDateTime = new RootJsonFormat[ZonedDateTime] {
+  implicit val zonedDateTimeFormat = new RootJsonFormat[ZonedDateTime] {
     override def write(obj: ZonedDateTime): JsValue = {
-      offsetDateTimeFormat.write(obj.toOffsetDateTime)
+      JsString(obj.withZoneSameInstant(zone).withZoneSameInstant(ZoneId.of("Z")).format(formatter))
     }
 
     override def read(json: JsValue): ZonedDateTime = {
-      offsetDateTimeFormat.read(json).toZonedDateTime
+//      val localDate = LocalDateTime.parse(json.convertTo[String], DateTimeFormatter.ofPattern("M/d/u, h:m:s a"))
+//      val resp = ZonedDateTime.of(localDate, zone)
+//      resp
+      ZonedDateTime.parse(json.convertTo[String], formatter)
     }
   }
 }

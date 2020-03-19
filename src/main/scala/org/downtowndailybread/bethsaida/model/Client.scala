@@ -8,7 +8,14 @@ case class Client(
                    firstName: String,
                    middleName: Option[String],
                    lastName: String,
-                   nicknames: Seq[String],
                    dateOfBirth: LocalDate,
-                   photoIdTag: String
+                   gender: Gender,
+                   race: Race,
+                   phone: Option[String],
+                   clientPhoto: Option[UUID],
+                   photoId: Option[UUID],
+                   intakeDate: Option[LocalDate],
+                   intakeUser: Option[InternalUser],
+                   isBanned: Boolean,
+                   banId: Option[UUID]
                  )
