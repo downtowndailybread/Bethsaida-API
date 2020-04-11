@@ -7,7 +7,7 @@ import java.util.UUID
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.user.{EmailAlreadyExistsException, UserNotFoundException}
 import org.downtowndailybread.bethsaida.model.parameters.UserParameters
-import org.downtowndailybread.bethsaida.model.InternalUser
+import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 import org.downtowndailybread.bethsaida.providers.{HashProvider, UUIDProvider}
 import org.postgresql.util.PSQLException
@@ -21,16 +21,18 @@ class UserRequest(val settings: Settings, val conn: Connection)
     with HashProvider {
 
   def emailAndTokenMatch(email: String, confirmation: UUID): Option[InternalUser] = {
-    getRawUserFromEmailOptional(email) match {
+    val ret = getRawUserFromEmailOptional(email) match {
       case Some(user) if user.resetToken.contains(confirmation) =>
         Some(user)
       case _ => None
     }
+    ret
   }
 
-  def confirmEmail(email: String, confirmation: UUID)(implicit au: InternalUser): Unit = {
-    emailAndTokenMatch(email, confirmation) match {
-      case Some(user) => updateUserRecords(user.copy(confirmed = true, resetToken = None))
+  def confirmEmail(confirmation: ConfirmEmail): UUID = {
+    emailAndTokenMatch(confirmation.email, confirmation.token) match {
+      case Some(user) => updateUserRecords(user.copy(confirmed = true, resetToken = None, hash = hashPassword(confirmation.password, user.salt)))(user)
+        user.id
       case None => throw new UserNotFoundException
     }
   }

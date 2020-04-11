@@ -33,7 +33,7 @@ trait UserJson extends BaseSupport {
     }
   }
 
-  implicit val confirmEmailFormat = jsonFormat2(ConfirmEmail)
+  implicit val confirmEmailFormat = jsonFormat3(ConfirmEmail)
 
   implicit val passwordResetFormat = jsonFormat3(PasswordResetParameters)
 

@@ -2,6 +2,7 @@ package org.downtowndailybread.bethsaida.controller.user
 
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.controller.ControllerBase
+import org.downtowndailybread.bethsaida.emailer.Emailer
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.parameters.UserParameters
 import org.downtowndailybread.bethsaida.request.UserRequest
@@ -19,7 +20,22 @@ trait New extends ControllerBase {
         post {
           entity(as[UserParameters]) {
             us =>
-              futureCompleteCreated(runSql(c => new UserRequest(settings, c).insertUser(us)))
+              futureCompleteCreated {
+                val user =
+                  runSql{c =>
+                    val uuid = new UserRequest(settings, c).insertUser(us)
+                    new UserRequest(settings, c).getRawUserFromUuid(uuid)
+                  }
+
+                Emailer.sendEmail(
+                  us.loginParameters.email,
+                  "Complete your Bethsaida registration",
+                  "You have been registered for Bethsaida, the client database for Downtown Daily Bread.\n\nPlease click the following link to complete your signup.\n\n" +
+                    s"https://${if(settings.isDev) "edge." else ""}bethsaida.downtowndailybread.org/confirm/${user.email}/${user.resetToken.getOrElse("")}",
+                  settings
+                )
+                user.id
+              }
           }
         }
     }

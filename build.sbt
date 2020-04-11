@@ -26,7 +26,7 @@ libraryDependencies += "com.auth0" % "java-jwt" % "3.8.0"
 
 libraryDependencies +=  "com.typesafe.akka" %% "akka-slf4j" % "2.5.21"
 
-//libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.30"
+libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.30"
 
 libraryDependencies +=  "ch.qos.logback" % "logback-classic" % "1.2.3"
 

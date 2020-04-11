@@ -1,6 +1,7 @@
 package org.downtowndailybread.bethsaida.request
 
 import java.sql.Connection
+import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.auth._
@@ -44,9 +45,8 @@ class AuthRequest(val settings: Settings, val conn: Connection)
     * link in the email.
     *
     * @param emailConfirm the object associating an email and a token.
-    * @param au           the internal user making the request.
     */
-  def confirmUser(emailConfirm: ConfirmEmail)(implicit au: InternalUser): Unit = {
-    new UserRequest(settings, conn).confirmEmail(emailConfirm.email, emailConfirm.token)
+  def confirmUser(emailConfirm: ConfirmEmail): UUID = {
+    new UserRequest(settings, conn).confirmEmail(emailConfirm)
   }
 }

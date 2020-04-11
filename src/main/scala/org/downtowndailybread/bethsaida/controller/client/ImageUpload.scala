@@ -1,8 +1,5 @@
 package org.downtowndailybread.bethsaida.controller.client
 
-import java.io.{BufferedInputStream, BufferedWriter, CharArrayWriter, FileWriter, InputStream, OutputStream, OutputStreamWriter}
-import java.nio.ByteBuffer
-import java.nio.file.Paths
 import java.util.UUID
 
 import akka.http.scaladsl.server
