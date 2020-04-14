@@ -1,12 +1,11 @@
 package org.downtowndailybread.bethsaida.json
 
-import java.time.{LocalDate, LocalDateTime, ZoneId}
 import java.time.format.DateTimeFormatter
 
-import spray.json._
-import DefaultJsonProtocol._
 import org.downtowndailybread.bethsaida.model.parameters._
-import org.downtowndailybread.bethsaida.model.{BanAttribute, BanType, ConfirmEmail, DateBan, InternalUser}
+import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser}
+import spray.json.DefaultJsonProtocol._
+import spray.json._
 
 trait UserJson extends BaseSupport {
 

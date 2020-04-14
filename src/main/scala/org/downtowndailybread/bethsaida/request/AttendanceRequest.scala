@@ -1,13 +1,13 @@
 package org.downtowndailybread.bethsaida.request
 
 import java.sql.{Connection, ResultSet, Timestamp}
-import java.time.{LocalDateTime, LocalTime, ZoneId, ZonedDateTime}
+import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.attendance.BannedUserProhibitedException
 import org.downtowndailybread.bethsaida.model.{Attendance, AttendanceAttribute, InternalUser}
-import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
+import org.downtowndailybread.bethsaida.providers.UUIDProvider
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 
 class AttendanceRequest(val settings: Settings, val conn: Connection)

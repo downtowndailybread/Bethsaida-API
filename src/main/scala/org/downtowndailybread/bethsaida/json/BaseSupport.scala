@@ -1,13 +1,13 @@
 package org.downtowndailybread.bethsaida.json
 
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, LocalDateTime, LocalTime, OffsetDateTime, ZoneId, ZoneOffset, ZonedDateTime}
+import java.time._
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.MalformedJsonErrorException
-import spray.json._
-import DefaultJsonProtocol._
 import org.downtowndailybread.bethsaida.providers.UUIDProvider
+import spray.json.DefaultJsonProtocol._
+import spray.json._
 
 trait BaseSupport extends UUIDProvider {
 

@@ -2,11 +2,12 @@ package org.downtowndailybread.bethsaida.providers
 
 import java.util.UUID
 
-import collection.JavaConverters._
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model.{Delete, DeleteObjectRequest, DeleteObjectsRequest, ListObjectsRequest, ListObjectsResponse, ObjectCannedACL, ObjectIdentifier, PutObjectRequest, S3Object}
+import software.amazon.awssdk.services.s3.model._
+
+import scala.collection.JavaConverters._
 
 trait S3Provider {
 

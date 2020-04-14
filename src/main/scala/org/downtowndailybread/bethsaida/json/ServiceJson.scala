@@ -1,10 +1,8 @@
 package org.downtowndailybread.bethsaida.json
 
-import java.time.LocalTime
-
-import spray.json._
-import DefaultJsonProtocol._
 import org.downtowndailybread.bethsaida.model.{Service, ServiceAttributes}
+import spray.json.DefaultJsonProtocol._
+import spray.json._
 
 trait ServiceJson extends BaseSupport {
 //

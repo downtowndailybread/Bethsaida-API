@@ -1,7 +1,5 @@
 package org.downtowndailybread.bethsaida.model
 
-import java.time.LocalDate
-
 sealed abstract class BanType(val str: String)
 
 object DateBan extends BanType("DB")

@@ -1,11 +1,10 @@
 package org.downtowndailybread.bethsaida.request.util
 
-import java.sql.{Connection, PreparedStatement, ResultSet, Timestamp, Types}
-import java.time.{LocalDate, LocalDateTime, OffsetDateTime, ZonedDateTime}
+import java.sql.{PreparedStatement, ResultSet, Timestamp, Types}
+import java.time.{LocalDate, LocalDateTime, ZonedDateTime}
 import java.util.UUID
 
-import org.downtowndailybread.bethsaida.exception.{DDBException, NoSuchIdException, TooManyRecordsFound}
-import org.downtowndailybread.bethsaida.model.{AnonymousUser, InternalUser}
+import org.downtowndailybread.bethsaida.exception.{NoSuchIdException, TooManyRecordsFound}
 import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 
 trait DatabaseRequest {

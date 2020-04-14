@@ -1,6 +1,6 @@
 package org.downtowndailybread.bethsaida.controller.client.ban
 
-import akka.http.scaladsl.server.Directives.{JavaUUID, as, entity, path, post}
+import akka.http.scaladsl.server.Directives.{JavaUUID, path, post}
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}

@@ -3,7 +3,6 @@ package org.downtowndailybread.integration
 import java.util.UUID
 
 import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
-import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.downtowndailybread.bethsaida.model.InternalUser
 import org.downtowndailybread.bethsaida.model.parameters.{LoginParameters, UserParameters}
 import org.downtowndailybread.bethsaida.request.UserRequest

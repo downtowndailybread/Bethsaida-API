@@ -1,28 +1,21 @@
 package org.downtowndailybread.bethsaida
 
 
-import java.time.LocalDateTime
-
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
+import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.directives.{DebuggingDirectives, LogEntry}
 import akka.stream.ActorMaterializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import org.downtowndailybread.bethsaida.controller.ApplicationRoutes
-import org.downtowndailybread.bethsaida.emailer.Emailer
 import org.downtowndailybread.bethsaida.json._
 import org.downtowndailybread.bethsaida.model.AnonymousUser
 import org.downtowndailybread.bethsaida.providers._
 import org.downtowndailybread.bethsaida.service.{ExceptionHandlers, RejectionHandlers}
-import org.downtowndailybread.bethsaida.worker.ImageCleanup
-import java.io.PrintStream
-import java.time.format.DateTimeFormatter
-
-import akka.event.{Logging, LoggingAdapter}
-import akka.http.scaladsl.model.HttpRequest
-import akka.http.scaladsl.server.directives.{DebuggingDirectives, LogEntry}
 import org.slf4j.LoggerFactory
 
 
@@ -30,6 +23,8 @@ object ApiMain {
   def main(args: Array[String]): Unit = {
 
     val settings = new Settings(args)
+
+    Migrate.main(args)
 
     val server = new ApiMain(settings)
 

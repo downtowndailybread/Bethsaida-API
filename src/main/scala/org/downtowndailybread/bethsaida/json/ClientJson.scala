@@ -3,9 +3,9 @@ package org.downtowndailybread.bethsaida.json
 import java.time.{LocalDate, LocalDateTime, ZonedDateTime}
 
 import org.downtowndailybread.bethsaida.model._
-import spray.json._
-import DefaultJsonProtocol._
 import org.downtowndailybread.bethsaida.providers.{DatabaseConnectionProvider, SettingsProvider}
+import spray.json.DefaultJsonProtocol._
+import spray.json._
 
 import scala.util.Try
 
@@ -27,14 +27,16 @@ trait ClientJson extends BaseSupport {
             o.get("phone").map(_.convertTo[String]),
             o.get("clientPhoto").map(_.convertTo[String]),
             o.get("photoId").map(_.convertTo[String]),
-            o.get("intakeDate").map(_.convertTo[LocalDate])
+            o.get("intakeDate").map(_.convertTo[LocalDate]),
+            o.get("raceSecondary").map(_.convertTo[Race]),
+            o.get("hispanic").map(_.convertTo[Boolean])
           )
       }
     }
   }
 
 
-  implicit val clientFormat = jsonFormat14(Client)
+  implicit val clientFormat = jsonFormat16(Client)
 
   implicit val seqClientFormat = seqFormat[Client]
 

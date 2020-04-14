@@ -1,7 +1,5 @@
 package org.downtowndailybread.bethsaida.controller.client.ban
 
-import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport

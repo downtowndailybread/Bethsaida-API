@@ -6,14 +6,9 @@ import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.client.DuplicateBanException
-import org.downtowndailybread.bethsaida.exception.user.{EmailAlreadyExistsException, UserNotFoundException}
-import org.downtowndailybread.bethsaida.model.{Ban, BanAttribute, BanType, DateBan, InternalUser}
-import org.downtowndailybread.bethsaida.model.parameters.UserParameters
+import org.downtowndailybread.bethsaida.model.{Ban, BanAttribute, BanType, InternalUser}
 import org.downtowndailybread.bethsaida.providers.{HashProvider, UUIDProvider}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.postgresql.util.PSQLException
-
-import scala.util.Try
 
 class BanRequest(val settings: Settings, val conn: Connection)
   extends BaseRequest

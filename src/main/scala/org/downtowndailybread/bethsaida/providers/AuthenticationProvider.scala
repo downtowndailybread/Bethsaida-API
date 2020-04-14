@@ -2,8 +2,8 @@ package org.downtowndailybread.bethsaida.providers
 
 import java.util.UUID
 
-import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Directive1
+import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.directives.Credentials.{Missing, Provided}
 import com.auth0.jwt.JWT

@@ -2,14 +2,14 @@ package org.downtowndailybread.integration
 
 import java.util.UUID
 
-import spray.json._
 import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
 import org.downtowndailybread.bethsaida.request.UserRequest
 import org.downtowndailybread.bethsaida.tag.IntegrationTest
 import org.downtowndailybread.integration.base.BethsaidaSupport
+import spray.json._
 
 import scala.concurrent._
-import duration._
+import scala.concurrent.duration._
 
 trait AuthenticationTest {
 

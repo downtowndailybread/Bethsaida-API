@@ -3,11 +3,10 @@ package org.downtowndailybread.bethsaida.json
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import spray.json._
-import DefaultJsonProtocol._
 import org.downtowndailybread.bethsaida.model.{Attendance, AttendanceAttribute}
 import org.downtowndailybread.bethsaida.providers.SettingsProvider
-import spray.json.{JsObject, JsValue, RootJsonFormat}
+import spray.json.DefaultJsonProtocol._
+import spray.json.{JsObject, JsValue, RootJsonFormat, _}
 
 trait AttendanceJson extends BaseSupport {
     this: SettingsProvider =>

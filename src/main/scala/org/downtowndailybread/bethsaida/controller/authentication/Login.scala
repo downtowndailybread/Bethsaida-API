@@ -5,8 +5,8 @@ import akka.http.scaladsl.server.PathMatchers.PathEnd
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.parameters.LoginParameters
-import org.downtowndailybread.bethsaida.request.{AuthRequest, UserRequest}
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
+import org.downtowndailybread.bethsaida.request.{AuthRequest, UserRequest}
 import spray.json.{JsBoolean, JsObject, JsString}
 
 trait Login extends ControllerBase {

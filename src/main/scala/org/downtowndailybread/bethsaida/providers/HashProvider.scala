@@ -1,6 +1,6 @@
 package org.downtowndailybread.bethsaida.providers
 
-import java.security.{SecureRandom, SecureRandomParameters}
+import java.security.SecureRandom
 import java.util.Base64
 
 import javax.crypto.SecretKeyFactory

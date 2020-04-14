@@ -5,8 +5,8 @@ import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.exception.auth.ResetTokenInvalidException
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.parameters.PasswordResetParameters
-import org.downtowndailybread.bethsaida.request.UserRequest
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
+import org.downtowndailybread.bethsaida.request.UserRequest
 
 trait ResetPassword extends ControllerBase {
   this: JsonSupport with AuthenticationProvider with SettingsProvider with DatabaseConnectionProvider =>

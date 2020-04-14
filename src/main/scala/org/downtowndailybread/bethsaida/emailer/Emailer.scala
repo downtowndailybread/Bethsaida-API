@@ -1,9 +1,9 @@
 package org.downtowndailybread.bethsaida.emailer
 
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials, PropertiesCredentials}
+import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder
-import com.amazonaws.services.simpleemail.model.{Body, Content, Destination, Message, SendEmailRequest}
+import com.amazonaws.services.simpleemail.model._
 import org.downtowndailybread.bethsaida.Settings
 
 

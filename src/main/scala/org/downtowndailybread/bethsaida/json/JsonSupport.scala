@@ -16,6 +16,7 @@ trait JsonSupport
     with NoteJson
     with SettingsProvider
     with ExceptionJson
+    with StatsJson
     with DatabaseConnectionProvider {
 
 

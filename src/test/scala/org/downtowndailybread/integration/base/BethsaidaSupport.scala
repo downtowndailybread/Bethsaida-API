@@ -4,7 +4,6 @@ import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.typesafe.config.ConfigFactory
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.model.parameters.{LoginParameters, UserParameters}
 import org.downtowndailybread.bethsaida.providers.{DatabaseConnectionProvider, SettingsProvider}

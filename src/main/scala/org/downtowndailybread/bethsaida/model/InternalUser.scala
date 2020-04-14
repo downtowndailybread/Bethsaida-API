@@ -4,7 +4,7 @@ import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.model.parameters.{LoginParameters, UserParameters}
-import spray.json.{JsNull, JsObject, JsString, JsValue, RootJsonFormat, RootJsonWriter}
+import spray.json.{JsNull, JsObject, JsString, JsValue, RootJsonFormat}
 
 case class InternalUser(
                          id: UUID,

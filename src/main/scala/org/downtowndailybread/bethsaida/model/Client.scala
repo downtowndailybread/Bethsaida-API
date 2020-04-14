@@ -17,5 +17,7 @@ case class Client(
                    intakeDate: Option[LocalDate],
                    intakeUser: Option[InternalUser],
                    isBanned: Boolean,
-                   banId: Option[UUID]
+                   banId: Option[UUID],
+                   raceSecondary: Option[Race],
+                   hispanic: Boolean
                  )

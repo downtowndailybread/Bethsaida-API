@@ -5,9 +5,9 @@ import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.client.ClientNotFoundException
-import org.downtowndailybread.bethsaida.model.{Client, Gender, InternalUser, Race, UpsertClient}
-import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
+import org.downtowndailybread.bethsaida.model._
 import org.downtowndailybread.bethsaida.providers.UUIDProvider
+import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 
 
 class ClientRequest(val settings: Settings, val conn: Connection)
@@ -39,7 +39,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |       c.intake_date,
          |       c.intake_user,
          |       not b.id is null as is_banned,
-         |       b.id as banned_id
+         |       b.id as banned_id,
+         |       c.secondary_race as race_secondary,
+         |       c.hispanic
          |from client c
          |left join ban b
          |on c.id = b.client_id and current_timestamp > b.start and (b.stop is null or current_timestamp < b.stop)
@@ -85,13 +87,15 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       upsertClient.intakeDate,
       Some(au),
       false,
-      None
+      None,
+      upsertClient.raceSecondary,
+      upsertClient.hispanic.getOrElse(false)
     )
     val sql =
       s"""
          |insert into client
-         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, photo_id, intake_date, intake_user)
-         |VALUES (cast(? as uuid), true, ?, ?, ?, cast(? as uuid), ?, ?, ?, ?, cast(? as uuid), ?, cast(? as uuid))
+         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, photo_id, intake_date, intake_user, secondary_race, hispanic)
+         |VALUES (cast(? as uuid), true, ?, ?, ?, cast(? as uuid), ?, ?, ?, ?, cast(? as uuid), ?, cast(? as uuid), ?, ?)
          |""".stripMargin
 
     val ps = conn.prepareStatement(sql)
@@ -107,24 +111,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setNullableUUID(10, client.photoId)
     ps.setNullableTimestamp(11, client.intakeDate.map(ts => Timestamp.valueOf(ts.atStartOfDay())))
     ps.setString(12, au.id)
+    ps.setString(13, client.raceSecondary.getOrElse(NotApplicable).string)
+    ps.setBoolean(14, client.hispanic)
     ps.executeUpdate()
-
-//    val nicknameSql =
-//      s"""
-//         |insert into client_alias
-//         |(client_id, nickname)
-//         |values (cast(? as uuid), ?)
-//         |""".stripMargin
-//
-//    val nps = conn.prepareStatement(nicknameSql)
-//    client.nicknames.foreach {
-//      nickname =>
-//        nps.setString(1, id)
-//        nps.setString(2, nickname)
-//        nps.addBatch()
-//    }
-//
-//    nps.executeBatch()
 
     id
   }
@@ -161,7 +150,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |phone = ?,
          |gender = ?,
          |photo_id = cast(? as uuid),
-         |intake_date = ?
+         |intake_date = ?,
+         |secondary_race = ?,
+         |hispanic = ?
          |where id = (cast(? as uuid))
          |""".stripMargin
     val ps = conn.prepareStatement(sql)
@@ -176,7 +167,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setString(8, client.gender.get.string)
     ps.setNullableUUID(9, client.photoId)
     ps.setTimestamp(10, Timestamp.valueOf(client.intakeDate.get.atStartOfDay()))
-    ps.setString(11, id.toString)
+    ps.setString(11, client.raceSecondary.getOrElse(NotApplicable).string)
+    ps.setBoolean(12, client.hispanic.getOrElse(false))
+    ps.setString(13, id.toString)
     ps.executeUpdate()
 
     val imageReq = new ImageRequest(settings, conn)
@@ -184,59 +177,6 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       imageReq.deleteImage(existingClient.photoId)
       imageReq.createImage(existingClient.photoId)
     }
-
-
-
-//    val allNicknamesSql =
-//      s"""
-//         |select client_id, nickname
-//         |from client_alias
-//         |where client_id = (cast(? as uuid))
-//         |""".stripMargin
-//
-//    val nps = conn.prepareStatement(allNicknamesSql)
-//    nps.setString(1, client.id)
-//    val nrs = nps.executeQuery()
-//    val allNicknames = createSeq(nrs, createNicknameFromResultSet).map(_._2)
-//
-//    val toAdd = client.nicknames.diff(allNicknames)
-//    val toDelete = allNicknames.diff(client.nicknames)
-//
-//    if (toDelete.nonEmpty) {
-//      val deleteNicknames =
-//        s"""
-//           |delete from client_alias
-//           |where client_id = (cast(? as uuid))
-//           |and nickname = ?
-//           |""".stripMargin
-//      val dps = conn.prepareStatement(deleteNicknames)
-//
-//      toDelete.foreach {
-//        nickname =>
-//          dps.setString(1, client.id)
-//          dps.setString(2, nickname)
-//          dps.addBatch()
-//      }
-//      dps.executeBatch()
-//    }
-
-//
-//    if (toAdd.nonEmpty) {
-//      val addNicknames =
-//        s"""
-//           |insert into client_alias (client_id, nickname)
-//           |values (cast(? as uuid), ?)
-//           |""".stripMargin
-//      val aps = conn.prepareStatement(addNicknames)
-//
-//      toAdd.foreach {
-//        nickname =>
-//          aps.setString(1, client.id)
-//          aps.setString(2, nickname)
-//          aps.addBatch()
-//      }
-//      aps.executeBatch()
-//    }
   }
 
   private def createClientFromResultSet()(rs: ResultSet): Client = {
@@ -255,7 +195,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       rs.getOptionalLocalDate("intake_date"),
       Some(new UserRequest(settings, conn).getRawUserFromUuid(rs.getUUID("intake_user"))),
       rs.getBoolean("is_banned"),
-      rs.getOptionalUUID("banned_id")
+      rs.getOptionalUUID("banned_id"),
+      rs.getOptionalString("race_secondary").map(Race.apply),
+      rs.getBoolean("hispanic")
     )
   }
 

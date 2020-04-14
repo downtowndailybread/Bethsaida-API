@@ -3,11 +3,10 @@ package org.downtowndailybread.bethsaida.controller.attendance
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.exception.attendance.{BannedUserProhibitedException, DuplicateAttendanceException}
-import org.downtowndailybread.bethsaida.exception.event.DuplicateRecordsException
 import org.downtowndailybread.bethsaida.json.JsonSupport
-import org.downtowndailybread.bethsaida.model.{AttendanceAttribute, EventAttribute}
+import org.downtowndailybread.bethsaida.model.AttendanceAttribute
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}
-import org.downtowndailybread.bethsaida.request.{AttendanceRequest, EventRequest}
+import org.downtowndailybread.bethsaida.request.AttendanceRequest
 import org.postgresql.util.PSQLException
 
 trait New extends ControllerBase {

@@ -23,10 +23,11 @@ case object NativeAmerican extends Race(3, "native_american")
 case object PacificIslander extends Race(4, "pacific_islander")
 case object OtherRace extends Race(5, "other")
 case object Refused extends Race(6, "refused_to_identify")
+case object NotApplicable extends Race(7, "not_applicable")
 
 object Race {
 
-  private val all = List(Black, Asian, Caucasian, NativeAmerican, PacificIslander, OtherRace, Refused)
+  private val all = List(Black, Asian, Caucasian, NativeAmerican, PacificIslander, OtherRace, Refused, NotApplicable)
 
   def apply(str: String): Race = all.find(_.string == str).getOrElse(throw new Exception(s"could not find race $str"))
 

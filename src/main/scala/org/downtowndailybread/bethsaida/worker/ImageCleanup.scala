@@ -9,7 +9,7 @@ import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.providers._
 import org.downtowndailybread.bethsaida.request.ClientRequest
 
-import collection.JavaConverters._
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
 
 class ImageCleanup(val settings: Settings)

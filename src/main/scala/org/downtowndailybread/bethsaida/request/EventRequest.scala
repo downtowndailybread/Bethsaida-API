@@ -6,9 +6,9 @@ import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.event.EventNotFoundException
-import org.downtowndailybread.bethsaida.model.{Event, EventAttribute, HoursOfOperation, InternalUser}
-import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
+import org.downtowndailybread.bethsaida.model.{Event, EventAttribute, InternalUser}
 import org.downtowndailybread.bethsaida.providers.UUIDProvider
+import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 
 class EventRequest(val settings: Settings, val conn: Connection)
   extends BaseRequest

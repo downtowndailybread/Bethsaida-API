@@ -8,8 +8,8 @@ import org.downtowndailybread.bethsaida.exception.auth._
 import org.downtowndailybread.bethsaida.exception.user.UserNotFoundException
 import org.downtowndailybread.bethsaida.model.parameters.LoginParameters
 import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser}
-import org.downtowndailybread.bethsaida.request.util.BaseRequest
 import org.downtowndailybread.bethsaida.providers.{HashProvider, UUIDProvider}
+import org.downtowndailybread.bethsaida.request.util.BaseRequest
 
 class AuthRequest(val settings: Settings, val conn: Connection)
   extends BaseRequest

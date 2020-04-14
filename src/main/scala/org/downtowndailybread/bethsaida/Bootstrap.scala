@@ -1,7 +1,7 @@
 package org.downtowndailybread.bethsaida
 
-import org.downtowndailybread.bethsaida.model.{AnonymousUser, ConfirmEmail}
 import org.downtowndailybread.bethsaida.model.parameters.{LoginParameters, UserParameters}
+import org.downtowndailybread.bethsaida.model.{AnonymousUser, ConfirmEmail}
 import org.downtowndailybread.bethsaida.providers.{DatabaseConnectionProvider, SettingsProvider}
 import org.downtowndailybread.bethsaida.request.UserRequest
 

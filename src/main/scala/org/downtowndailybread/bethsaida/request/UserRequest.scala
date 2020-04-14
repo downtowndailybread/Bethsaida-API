@@ -1,15 +1,15 @@
 package org.downtowndailybread.bethsaida.request
 
 import java.sql.{Connection, ResultSet}
-import java.time.{LocalDateTime, ZoneId, ZoneOffset, ZonedDateTime}
+import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.user.{EmailAlreadyExistsException, UserNotFoundException}
 import org.downtowndailybread.bethsaida.model.parameters.UserParameters
 import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser}
-import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 import org.downtowndailybread.bethsaida.providers.{HashProvider, UUIDProvider}
+import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 import org.postgresql.util.PSQLException
 
 import scala.util.Try

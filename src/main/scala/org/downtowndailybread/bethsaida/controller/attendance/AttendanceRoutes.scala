@@ -1,7 +1,6 @@
 package org.downtowndailybread.bethsaida.controller.attendance
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Directives.pathPrefix
+import akka.http.scaladsl.server.Directives.{pathPrefix, _}
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, SettingsProvider}

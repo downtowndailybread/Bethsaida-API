@@ -1,10 +1,8 @@
 package org.downtowndailybread.bethsaida.json
 
-import java.util.UUID
-
-import spray.json._
-import DefaultJsonProtocol._
 import org.downtowndailybread.bethsaida.model.{Event, EventAttribute, HoursOfOperation}
+import spray.json.DefaultJsonProtocol._
+import spray.json._
 
 trait EventJson extends BaseSupport {
 

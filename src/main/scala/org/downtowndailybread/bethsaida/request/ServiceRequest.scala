@@ -5,10 +5,10 @@ import java.time.LocalTime
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
-import org.downtowndailybread.bethsaida.exception.service.{ScheduleNotFoundException, ServiceNotFoundException}
+import org.downtowndailybread.bethsaida.exception.service.ServiceNotFoundException
 import org.downtowndailybread.bethsaida.model.{InternalUser, Service, ServiceAttributes, ServiceType}
+import org.downtowndailybread.bethsaida.providers.UUIDProvider
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
-import org.downtowndailybread.bethsaida.providers.{SettingsProvider, UUIDProvider}
 
 class ServiceRequest(val settings: Settings, val conn: Connection)
   extends BaseRequest

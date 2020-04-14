@@ -5,11 +5,7 @@ import java.util.UUID
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.PngWriter
-import org.downtowndailybread.bethsaida.exception.InvalidImageFormat
-import org.downtowndailybread.bethsaida.model.parameters.{LoginParameters, UserParameters}
-import org.downtowndailybread.bethsaida.model.{AnonymousUser, ConfirmEmail}
 import org.downtowndailybread.bethsaida.providers.{DatabaseConnectionProvider, S3Provider, SettingsProvider}
-import org.downtowndailybread.bethsaida.request.UserRequest
 
 
 /*

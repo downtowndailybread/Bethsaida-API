@@ -1,12 +1,10 @@
 package org.downtowndailybread.bethsaida.controller.client
 
-import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
 import org.downtowndailybread.bethsaida.controller.ControllerBase
 import org.downtowndailybread.bethsaida.json.JsonSupport
 import org.downtowndailybread.bethsaida.providers.{AuthenticationProvider, DatabaseConnectionProvider, S3Provider, SettingsProvider}
-import org.downtowndailybread.bethsaida.request.{ClientRequest, ImageRequest}
+import org.downtowndailybread.bethsaida.request.ImageRequest
 
 import scala.util.Success
 
