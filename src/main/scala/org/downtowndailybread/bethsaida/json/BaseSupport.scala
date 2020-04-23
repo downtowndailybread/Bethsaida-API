@@ -5,6 +5,7 @@ import java.time._
 import java.util.UUID
 
 import org.downtowndailybread.bethsaida.exception.MalformedJsonErrorException
+import org.downtowndailybread.bethsaida.model.LocalDateTimeWrapper
 import org.downtowndailybread.bethsaida.providers.UUIDProvider
 import spray.json.DefaultJsonProtocol._
 import spray.json._
@@ -106,8 +107,21 @@ trait BaseSupport extends UUIDProvider {
   val formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSVV")
   val zone = ZoneId.of("America/New_York")
 
+
+  implicit val zonedDateTimeFormat = new RootJsonFormat[ZonedDateTime] {
+    override def write(obj: ZonedDateTime): JsValue = {
+      JsString(obj.withZoneSameInstant(zone).withZoneSameInstant(ZoneId.of("Z")).format(formatter))
+    }
+
+    override def read(json: JsValue): ZonedDateTime = {
+      ZonedDateTime.parse(json.convertTo[String], formatter)
+    }
+  }
+
+
   implicit val localDateTimeFormat = new RootJsonFormat[LocalDateTime] {
-    override def write(obj: LocalDateTime): JsValue = obj.format(formatter)
+    override def write(obj: LocalDateTime): JsValue =
+      ZonedDateTime.of(obj, ZoneId.of("Z")).withZoneSameInstant(zone).toLocalDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
 
     override def read(json: JsValue): LocalDateTime = {
       (json: @unchecked) match {
@@ -116,16 +130,5 @@ trait BaseSupport extends UUIDProvider {
     }
   }
 
-  implicit val zonedDateTimeFormat = new RootJsonFormat[ZonedDateTime] {
-    override def write(obj: ZonedDateTime): JsValue = {
-      JsString(obj.withZoneSameInstant(zone).withZoneSameInstant(ZoneId.of("Z")).format(formatter))
-    }
-
-    override def read(json: JsValue): ZonedDateTime = {
-//      val localDate = LocalDateTime.parse(json.convertTo[String], DateTimeFormatter.ofPattern("M/d/u, h:m:s a"))
-//      val resp = ZonedDateTime.of(localDate, zone)
-//      resp
-      ZonedDateTime.parse(json.convertTo[String], formatter)
-    }
-  }
+  implicit val localDateTimeWrapper = jsonFormat1(LocalDateTimeWrapper)
 }

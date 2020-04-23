@@ -1,6 +1,7 @@
 package org.downtowndailybread.bethsaida.json
 
 import java.time.{LocalDate, LocalDateTime, ZonedDateTime}
+import java.util.UUID
 
 import org.downtowndailybread.bethsaida.model._
 import org.downtowndailybread.bethsaida.providers.{DatabaseConnectionProvider, SettingsProvider}
@@ -11,7 +12,7 @@ import scala.util.Try
 
 
 trait ClientJson extends BaseSupport {
-  this: DatabaseConnectionProvider with SettingsProvider =>
+  this: DatabaseConnectionProvider with SettingsProvider with UserJson =>
 
   implicit val newClientFormat = new RootJsonReader[UpsertClient] {
     override def read(json: JsValue): UpsertClient = {
@@ -29,7 +30,8 @@ trait ClientJson extends BaseSupport {
             o.get("photoId").map(_.convertTo[String]),
             o.get("intakeDate").map(_.convertTo[LocalDate]),
             o.get("raceSecondary").map(_.convertTo[Race]),
-            o.get("hispanic").map(_.convertTo[Boolean])
+            o.get("hispanic").map(_.convertTo[Boolean]),
+            o.get("intakeUserId").map(_.convertTo[UUID])
           )
       }
     }

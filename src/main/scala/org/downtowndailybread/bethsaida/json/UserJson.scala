@@ -14,7 +14,8 @@ trait UserJson extends BaseSupport {
     override def read(json: JsValue): UserParameters = {
       (json: @unchecked) match {
         case JsObject(j) => UserParameters(
-          j("name").convertTo[String],
+          j("firstName").convertTo[String],
+          j("lastName").convertTo[String],
           LoginParameters(
             j("email").convertTo[String],
             j("password").convertTo[String]
@@ -26,7 +27,8 @@ trait UserJson extends BaseSupport {
 
     override def write(obj: UserParameters): JsValue = {
       JsObject(Map(
-        ("name", JsString(obj.name)),
+        ("firstName", JsString(obj.firstName)),
+        ("lastName", JsString(obj.lastName)),
         ("email", JsString(obj.loginParameters.email))
       ))
     }
@@ -42,7 +44,8 @@ trait UserJson extends BaseSupport {
     override def write(obj: InternalUser): JsValue = JsObject(
       Map(
         "id" -> JsString(obj.id),
-        "name" -> JsString(obj.name),
+        "firstName" -> JsString(obj.firstName),
+        "lastName" -> JsString(obj.lastName),
         "email" -> JsString(obj.email),
         "admin" -> JsBoolean(obj.admin),
         "createTime" -> JsString(obj.createTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)),

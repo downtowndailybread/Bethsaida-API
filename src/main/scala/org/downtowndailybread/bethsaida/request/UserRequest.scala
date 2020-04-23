@@ -70,7 +70,8 @@ class UserRequest(val settings: Settings, val conn: Connection)
     updateUserRecords(ur.copy(
       email = user.loginParameters.email,
       hash = hashPassword(user.loginParameters.password, ur.salt),
-      name = user.name,
+      firstName = user.firstName,
+      lastName = user.lastName,
       resetToken = None
     ))
   }
@@ -85,7 +86,8 @@ class UserRequest(val settings: Settings, val conn: Connection)
     updateUserRecords(ur.copy(
       email = user.loginParameters.email,
       hash = if(user.loginParameters.password.isBlank) ur.hash else hashPassword(user.loginParameters.password, ur.salt),
-      name = user.name,
+      firstName = user.firstName,
+      lastName = user.lastName,
       admin = adminFlag
     ))
   }
@@ -100,9 +102,9 @@ class UserRequest(val settings: Settings, val conn: Connection)
     val createBaseRecordSql =
       s"""
          |insert into user_account
-         |    (id, email, name, salt, hash, confirmed, admin_lock, user_lock, reset_token, admin)
+         |    (id, email, firstName, lastName, salt, hash, confirmed, admin_lock, user_lock, reset_token, admin)
          |VALUES
-         |    (cast(? as uuid), ?, ?, ?, ?, ?, ?, ?, cast(? as uuid), ?)
+         |    (cast(? as uuid), ?, ?, ?, ?, ?, ?, ?, ?, cast(? as uuid), ?)
        """.stripMargin
     val salt = generateSalt()
     val hash = hashPassword(user.loginParameters.password, salt)
@@ -110,14 +112,15 @@ class UserRequest(val settings: Settings, val conn: Connection)
     val ps = conn.prepareStatement(createBaseRecordSql)
     ps.setString(1, userId)
     ps.setString(2, user.loginParameters.email)
-    ps.setString(3, user.name)
-    ps.setString(4, salt)
-    ps.setString(5, hash)
-    ps.setBoolean(6, false)
+    ps.setString(4, user.firstName)
+    ps.setString(3, user.lastName)
+    ps.setString(5, salt)
+    ps.setString(6, hash)
     ps.setBoolean(7, false)
     ps.setBoolean(8, false)
-    ps.setNullableString(9, Some(getUUID()))
-    ps.setBoolean(10, user.admin.exists(identity))
+    ps.setBoolean(9, false)
+    ps.setNullableString(10, Some(getUUID()))
+    ps.setBoolean(11, user.admin.exists(identity))
     try {
       ps.executeUpdate()
     } catch {
@@ -138,7 +141,8 @@ class UserRequest(val settings: Settings, val conn: Connection)
       s"""
          |update user_account
          |  set email = ?,
-         |      name = ?,
+         |      firstName = ?,
+         |      lastName = ?,
          |      salt = ?,
          |      hash = ?,
          |      confirmed = ?,
@@ -151,15 +155,16 @@ class UserRequest(val settings: Settings, val conn: Connection)
 
     val ps = conn.prepareStatement(sql)
     ps.setString(1, t.email)
-    ps.setString(2, t.name)
-    ps.setString(3, t.salt)
-    ps.setString(4, t.hash)
-    ps.setBoolean(5, t.confirmed)
-    ps.setBoolean(6, t.adminLock)
-    ps.setBoolean(7, t.userLock)
-    ps.setNullableUUID(8, t.resetToken)
-    ps.setBoolean(9, t.admin)
-    ps.setString(10, t.id)
+    ps.setString(2, t.firstName)
+    ps.setString(3, t.lastName)
+    ps.setString(4, t.salt)
+    ps.setString(5, t.hash)
+    ps.setBoolean(6, t.confirmed)
+    ps.setBoolean(7, t.adminLock)
+    ps.setBoolean(8, t.userLock)
+    ps.setNullableUUID(9, t.resetToken)
+    ps.setBoolean(10, t.admin)
+    ps.setString(11, t.id)
 
     ps.executeUpdate()
     t.id
@@ -189,7 +194,8 @@ class UserRequest(val settings: Settings, val conn: Connection)
     InternalUser(
       resultSet.getString("id"),
       resultSet.getString("email"),
-      resultSet.getString("name"),
+      resultSet.getString("first_name"),
+      resultSet.getString("last_name"),
       resultSet.getString("salt"),
       resultSet.getString("hash"),
       resultSet.getBoolean("confirmed"),
@@ -205,7 +211,7 @@ class UserRequest(val settings: Settings, val conn: Connection)
 
   private lazy val rawUserSql =
     s"""
-       |select id, email, name, salt, hash, confirmed, reset_token, user_lock, admin_lock, admin, create_time, latest_activity
+       |select id, email, first_name, last_name, salt, hash, confirmed, reset_token, user_lock, admin_lock, admin, create_time, latest_activity
        |from user_account
        |where 1=1
      """.stripMargin

@@ -85,7 +85,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       upsertClient.clientPhoto,
       upsertClient.photoId,
       upsertClient.intakeDate,
-      Some(au),
+      upsertClient.intakeUserId.get,
       false,
       None,
       upsertClient.raceSecondary,
@@ -110,7 +110,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setString(9, client.gender.string)
     ps.setNullableUUID(10, client.photoId)
     ps.setNullableTimestamp(11, client.intakeDate.map(ts => Timestamp.valueOf(ts.atStartOfDay())))
-    ps.setString(12, au.id)
+    ps.setUUID(12, client.intakeUserId)
     ps.setString(13, client.raceSecondary.getOrElse(NotApplicable).string)
     ps.setBoolean(14, client.hispanic)
     ps.executeUpdate()
@@ -152,7 +152,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |photo_id = cast(? as uuid),
          |intake_date = ?,
          |secondary_race = ?,
-         |hispanic = ?
+         |hispanic = ?,
+         |intake_user = cast(? as uuid)
          |where id = (cast(? as uuid))
          |""".stripMargin
     val ps = conn.prepareStatement(sql)
@@ -169,7 +170,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setTimestamp(10, Timestamp.valueOf(client.intakeDate.get.atStartOfDay()))
     ps.setString(11, client.raceSecondary.getOrElse(NotApplicable).string)
     ps.setBoolean(12, client.hispanic.getOrElse(false))
-    ps.setString(13, id.toString)
+    ps.setUUID(13, client.intakeUserId.get)
+    ps.setString(14, id.toString)
     ps.executeUpdate()
 
     val imageReq = new ImageRequest(settings, conn)
@@ -193,7 +195,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       rs.getOptionalUUID("client_photo"),
       rs.getOptionalUUID("photo_id"),
       rs.getOptionalLocalDate("intake_date"),
-      Some(new UserRequest(settings, conn).getRawUserFromUuid(rs.getUUID("intake_user"))),
+      rs.getUUID("intake_user"),
       rs.getBoolean("is_banned"),
       rs.getOptionalUUID("banned_id"),
       rs.getOptionalString("race_secondary").map(Race.apply),

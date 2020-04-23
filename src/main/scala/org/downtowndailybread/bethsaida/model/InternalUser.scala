@@ -9,7 +9,8 @@ import spray.json.{JsNull, JsObject, JsString, JsValue, RootJsonFormat}
 case class InternalUser(
                          id: UUID,
                          email: String,
-                         name: String,
+                         firstName: String,
+                         lastName: String,
                          salt: String,
                          hash: String,
                          confirmed: Boolean,
@@ -21,7 +22,8 @@ case class InternalUser(
                          latestActivity: ZonedDateTime
                        ) {
   def getUserParameters(withPassword: String): UserParameters = UserParameters(
-    name,
+    firstName,
+    lastName,
     LoginParameters(email, withPassword),
     Some(admin)
   )
@@ -35,7 +37,8 @@ object InternalUser {
           JsObject(
             Map(
               "id" -> JsString(obj.id.toString),
-              "name" -> JsString(obj.name.toString)
+              "firstName" -> JsString(obj.firstName),
+              "lastName" -> JsString(obj.lastName)
             )
           )
         case None => JsNull
@@ -49,5 +52,5 @@ object InternalUser {
 
 object AnonymousUser extends InternalUser(
   UUID.fromString("00000000-0000-0000-0000-000000000000"),
-  "", "", "", "", true, None, false, false, false,
+  "", "", "", "", "", true, None, false, false, false,
   ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("America/New_York")), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("America/New_York")))

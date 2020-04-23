@@ -15,5 +15,6 @@ case class UpsertClient(
                          photoId: Option[UUID],
                          intakeDate: Option[LocalDate],
                          raceSecondary: Option[Race],
-                         hispanic: Option[Boolean]
+                         hispanic: Option[Boolean],
+                         intakeUserId: Option[UUID]
                  )

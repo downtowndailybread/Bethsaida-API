@@ -17,7 +17,8 @@ trait UserTest {
   this: BethsaidaSupport =>
 
   private val otherUserParameters = UserParameters(
-    "a b",
+    "a",
+    "b",
     LoginParameters(
       "nobody@nobody.com",
       "initialPassword"
@@ -52,7 +53,8 @@ trait UserTest {
   "a user" should "be able to create a new user" taggedAs IntegrationTest in {
     Post(apiBaseUrl + "/user/new").authenticate().withEntity(ContentTypes.`application/json`, JsObject(
       ("email", otherUserParameters.loginParameters.email),
-      ("name", otherUserParameters.name),
+      ("firstName", otherUserParameters.firstName),
+      ("lastName", otherUserParameters.lastName),
       ("password", otherUserParameters.loginParameters.password)
     ).toString) ~> routes ~> check {
       assert(status == StatusCodes.Created)
@@ -101,7 +103,8 @@ trait UserTest {
     }
     Post(apiBaseUrl + s"/user/${loggedInUser.id}/update").withEntity(ContentTypes.`application/json`,
       JsObject(
-        ("name", userParams.name),
+        ("firstName", userParams.firstName),
+        ("lastName", userParams.lastName),
         ("email", userParams.loginParameters.email),
         ("password", userParams.loginParameters.password),
       ).toString()

@@ -5,6 +5,8 @@ import org.downtowndailybread.bethsaida.controller.attendance.AttendanceRoutes
 import org.downtowndailybread.bethsaida.controller.authentication.AuthenticationRoutes
 import org.downtowndailybread.bethsaida.controller.client.ClientRoutes
 import org.downtowndailybread.bethsaida.controller.event.EventRoutes
+import org.downtowndailybread.bethsaida.controller.locker.LockerRoutes
+import org.downtowndailybread.bethsaida.controller.mail.MailRoutes
 import org.downtowndailybread.bethsaida.controller.note.NoteRoutes
 import org.downtowndailybread.bethsaida.controller.service.ServiceRoutes
 import org.downtowndailybread.bethsaida.controller.stats.StatsRoutes
@@ -22,6 +24,8 @@ trait ApplicationRoutes
     with AttendanceRoutes
     with NoteRoutes
     with StatsRoutes
+    with LockerRoutes
+    with MailRoutes
     with DatabaseConnectionProvider {
 
   this: AuthenticationProvider with SettingsProvider with JsonSupport with MaterializerProvider with S3Provider =>
@@ -34,6 +38,8 @@ trait ApplicationRoutes
       allEventRoutes ~
       allAttendanceRoutes ~
       allStatsRoutes ~
-    allNoteRoutes
+      allLockerRoutes ~
+      allNoteRoutes ~
+      allMailRoutes
   }
 }

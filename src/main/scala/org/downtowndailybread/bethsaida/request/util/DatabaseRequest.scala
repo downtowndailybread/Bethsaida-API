@@ -56,6 +56,14 @@ trait DatabaseRequest {
       ps.setString(parameterIndex, x.toString)
     }
 
+    def setLocalDateTime(parameterIndex: Int, t: LocalDateTime): Unit = {
+      ps.setTimestamp(parameterIndex, Timestamp.valueOf(t))
+    }
+
+    def setLocalDateTimeOption(parameterIndex: Int, t: Option[LocalDateTime]): Unit = {
+      setNullableTimestamp(parameterIndex, t.map(Timestamp.valueOf))
+    }
+
     def setNullableTimestamp(parameterIndex: Int, x: Option[Timestamp]): Unit = {
       x match {
         case Some(i) => ps.setTimestamp(parameterIndex, i)

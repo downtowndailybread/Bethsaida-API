@@ -18,6 +18,7 @@ object Bootstrap {
 
     if(numUsers == 0) {
       sqlRunner.runSql(conn => new UserRequest(s, conn).insertUser(UserParameters(
+        "Admin",
         "Administrator",
         LoginParameters(
           s.emailFrom,

@@ -26,7 +26,8 @@ trait AuthenticationTest {
   "creating a new user" should "work" taggedAs IntegrationTest  in {
     Post(apiBaseUrl + "/user/new").withEntity(ContentTypes.`application/json`,
       JsObject(
-        ("name", JsString(userParams.name)),
+        ("firstName", JsString(userParams.firstName)),
+        ("lastName", JsString(userParams.lastName)),
         ("email", JsString(userParams.loginParameters.email)),
         ("password", JsString(userParams.loginParameters.password + "DD"))
       ).toString
@@ -38,7 +39,8 @@ trait AuthenticationTest {
   "creating a duplicate user" should "not work" taggedAs IntegrationTest  in {
     Post(apiBaseUrl + "/user/new").withEntity(ContentTypes.`application/json`,
       JsObject(
-        ("name", JsString(userParams.name)),
+        ("firstName", JsString(userParams.firstName)),
+        ("lastName", JsString(userParams.lastName)),
         ("email", JsString(userParams.loginParameters.email)),
         ("password", JsString(userParams.loginParameters.password + "DD"))
       ).toString

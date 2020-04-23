@@ -38,7 +38,8 @@ trait BethsaidaSupport
   lazy val authHeader = new Authorization(OAuth2BearerToken(authToken))
 
   lazy val userParams = UserParameters(
-    "Andy Guenin",
+    "Andy",
+    "Guenin",
     LoginParameters(
       "andy@guenin.com",
       "AndyGueninPassword"

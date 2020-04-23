@@ -8,16 +8,20 @@ import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, RootJsonWri
 trait JsonSupport
   extends SprayJsonSupport
     with DefaultJsonProtocol
-    with ClientJson
-    with UserJson
-    with AttendanceJson
-    with ServiceJson
-    with EventJson
-    with NoteJson
     with SettingsProvider
+
+    with DatabaseConnectionProvider
+
+    with AttendanceJson
+    with ClientJson
+    with EventJson
     with ExceptionJson
+    with LockerJson
+    with MailJson
+    with NoteJson
+    with ServiceJson
     with StatsJson
-    with DatabaseConnectionProvider {
+    with UserJson {
 
 
   implicit val metadataFormat = jsonFormat1(Metadata)
