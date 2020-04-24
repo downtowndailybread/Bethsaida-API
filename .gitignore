@@ -8,4 +8,4 @@ project/target
 
 .DS_Store
 logs/*
-db/
+/db/
