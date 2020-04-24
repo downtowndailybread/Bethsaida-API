@@ -6,7 +6,7 @@ import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.service.ServiceNotFoundException
-import org.downtowndailybread.bethsaida.model.{InternalUser, Service, ServiceAttributes, ServiceType}
+import org.downtowndailybread.bethsaida.model.{InternalUser, Service, ServiceAttributes, ServiceType, ServiceTypeObj}
 import org.downtowndailybread.bethsaida.providers.UUIDProvider
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 
@@ -34,7 +34,7 @@ class ServiceRequest(val settings: Settings, val conn: Connection)
     val ps = conn.prepareStatement(sql)
     ps.setString(1, id)
     ps.setString(2, attributes.name)
-    ps.setString(3, attributes.serviceType.toString)
+    ps.setString(3, attributes.serviceType.toString.toLowerCase())
     ps.setNullableInt(4, attributes.defaultCapacity)
     ps.executeUpdate()
     id
@@ -110,7 +110,7 @@ class ServiceRequest(val settings: Settings, val conn: Connection)
     (rs.getString("id"),
       ServiceAttributes(
         rs.getString("name"),
-        ServiceType.apply(rs.getString("type")),
+        ServiceTypeObj.apply(rs.getString("type")),
         Option(rs.getInt("default_capacity"))
       )
     )

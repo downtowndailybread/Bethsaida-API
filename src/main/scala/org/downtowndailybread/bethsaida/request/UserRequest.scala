@@ -4,10 +4,12 @@ import java.sql.{Connection, ResultSet}
 import java.time.{ZoneId, ZonedDateTime}
 import java.util.UUID
 
+import com.sun.jna.platform.win32.WinNT.SYSTEM_LOGICAL_PROCESSOR_INFORMATION.AnonymousUnionPayload
 import org.downtowndailybread.bethsaida.Settings
+import org.downtowndailybread.bethsaida.emailer.Emailer
 import org.downtowndailybread.bethsaida.exception.user.{EmailAlreadyExistsException, UserNotFoundException}
 import org.downtowndailybread.bethsaida.model.parameters.UserParameters
-import org.downtowndailybread.bethsaida.model.{ConfirmEmail, InternalUser}
+import org.downtowndailybread.bethsaida.model.{AnonymousUser, ConfirmEmail, InternalUser}
 import org.downtowndailybread.bethsaida.providers.{HashProvider, UUIDProvider}
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 import org.postgresql.util.PSQLException
@@ -131,9 +133,18 @@ class UserRequest(val settings: Settings, val conn: Connection)
     userId
   }
 
-  def initiatePasswordReset(email: String)(implicit iu: InternalUser): Unit = {
-    val user = getRawUserFromEmail(email)
-    updateUserRecords(user.copy(resetToken = Some(getUUID())))
+  def initiatePasswordReset(email: String): Unit = {
+    val user = getRawUserFromEmail(email).copy(resetToken = Some(getUUID()))
+    updateUserRecords(user)(AnonymousUser)
+
+    Emailer.sendEmail(
+      user.email,
+      "Reset your Bethsaida password",
+      "Please click the following link to complete your signup.\n\n" +
+        s"https://${if(settings.isDev) "edge." else ""}bethsaida.downtowndailybread.org/confirm/${user.email}/${user.resetToken.getOrElse("")}",
+      settings
+    )
+
   }
 
   private def updateUserRecords(t: InternalUser)(implicit iu: InternalUser): UUID = {
@@ -141,8 +152,8 @@ class UserRequest(val settings: Settings, val conn: Connection)
       s"""
          |update user_account
          |  set email = ?,
-         |      firstName = ?,
-         |      lastName = ?,
+         |      first_name = ?,
+         |      last_name = ?,
          |      salt = ?,
          |      hash = ?,
          |      confirmed = ?,

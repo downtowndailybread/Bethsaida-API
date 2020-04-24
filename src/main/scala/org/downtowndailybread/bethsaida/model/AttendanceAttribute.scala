@@ -6,5 +6,6 @@ import java.util.UUID
 case class AttendanceAttribute(
                                 eventId: UUID,
                                 clientId: UUID,
-                                checkInTime: ZonedDateTime
+                                checkInTime: ZonedDateTime,
+                                userId: UUID
                               )

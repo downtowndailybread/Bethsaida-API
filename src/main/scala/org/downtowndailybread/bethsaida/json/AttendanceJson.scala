@@ -19,7 +19,8 @@ trait AttendanceJson extends BaseSupport {
       AttendanceAttribute(
         jo("eventId").convertTo[UUID],
         jo("clientId").convertTo[UUID],
-        jo("checkInTime").convertTo[ZonedDateTime]
+        jo("checkInTime").convertTo[ZonedDateTime],
+        jo("userId").convertTo[UUID]
       )
     }
 
@@ -28,7 +29,8 @@ trait AttendanceJson extends BaseSupport {
         Map(
           "eventId" -> uuidFormat.write(obj.eventId),
           "clientId" -> uuidFormat.write(obj.clientId),
-          "checkInTime" -> zonedDateTimeFormat.write(obj.checkInTime)
+          "checkInTime" -> zonedDateTimeFormat.write(obj.checkInTime),
+          "userId" -> uuidFormat.write(obj.userId)
         )
       )
     }

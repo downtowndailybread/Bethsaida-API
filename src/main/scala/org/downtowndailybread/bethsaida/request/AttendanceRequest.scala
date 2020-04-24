@@ -48,7 +48,8 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
          |set check_in_time  = ?,
          |    check_out_time = ?,
          |    event_id       = cast(? as uuid),
-         |    client_id      = cast(? as uuid)
+         |    client_id      = cast(? as uuid),
+         |    user_id        = cast(? as uuid)
          |from attendance
          |where id = cast(? as uuid)
        """.stripMargin
@@ -57,7 +58,8 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
     ps.setZonedDateTime(2, attribute.checkInTime)
     ps.setString(3, attribute.eventId)
     ps.setString(4, attribute.clientId)
-    ps.setString(5, attendanceId)
+    ps.setUUID(5, attribute.userId)
+    ps.setString(6, attendanceId)
     ps.executeUpdate()
   }
 
@@ -86,8 +88,8 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
     val sql =
       s"""
          |insert into attendance
-         |    (id, check_in_time, event_id, client_id)
-         |VALUES (cast(? as uuid), ?, cast(? as uuid), cast(? as uuid))
+         |    (id, check_in_time, event_id, client_id, user_id)
+         |VALUES (cast(? as uuid), ?, cast(? as uuid), cast(? as uuid), cast(? as uuid))
        """.stripMargin
     val ps = conn.prepareStatement(sql)
     ps.setString(1, attendanceId)
@@ -95,6 +97,7 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
     ps.setTimestamp(2, s)
     ps.setString(3, attrib.eventId)
     ps.setString(4, attrib.clientId)
+    ps.setUUID(5, attrib.userId)
     ps.executeUpdate()
 
 
@@ -107,7 +110,8 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
       AttendanceAttribute(
         rs.getUUID("event_id"),
         rs.getUUID("client_id"),
-        ZonedDateTime.of(rs.getTimestamp("check_in_time").toLocalDateTime, ZoneId.of("America/New_York"))
+        ZonedDateTime.of(rs.getTimestamp("check_in_time").toLocalDateTime, ZoneId.of("America/New_York")),
+        rs.getUUID("user_id")
       )
     )
   }
@@ -117,7 +121,8 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
        |select id,
        |       check_in_time,
        |       event_id,
-       |       client_id
+       |       client_id,
+       |       user_id
        |from attendance
        |where $filter
        """.stripMargin

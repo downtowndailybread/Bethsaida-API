@@ -6,7 +6,7 @@ import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.event.EventNotFoundException
-import org.downtowndailybread.bethsaida.model.{Event, EventAttribute, InternalUser}
+import org.downtowndailybread.bethsaida.model.{Event, EventAttribute, InternalUser, ServiceType}
 import org.downtowndailybread.bethsaida.providers.UUIDProvider
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 
@@ -16,11 +16,11 @@ class EventRequest(val settings: Settings, val conn: Connection)
     with UUIDProvider {
 
   def getAllServiceEvents(serviceId: UUID): Seq[Event] = {
-    getAllEventsInternal(Some(serviceId), None, None)
+    getAllEventsInternal(Some(serviceId), None, None, None)
   }
 
   def getEvent(eventId: UUID): Event = {
-    getAllEventsInternal(None, Some(eventId), None) match {
+    getAllEventsInternal(None, Some(eventId), None, None) match {
       case e :: Nil => e
       case _ => throw new EventNotFoundException
     }
@@ -75,15 +75,20 @@ class EventRequest(val settings: Settings, val conn: Connection)
     ps.executeUpdate()
   }
 
-  def getAllEvents(): Seq[Event] = {
-    getAllEventsInternal(None, None, None)
+  def getAllEvents(service: ServiceType): Seq[Event] = {
+    getAllEventsInternal(None, None, None, Some(service))
   }
 
-  def getAllActiveEvents(): Seq[Event] = {
-    getAllEventsInternal(None, None, Some(LocalDate.now().minusDays(1L).atStartOfDay()))
+  def getAllActiveEvents(service: ServiceType): Seq[Event] = {
+    getAllEventsInternal(None, None, Some(LocalDate.now().minusDays(1L).atStartOfDay()), Some(service))
   }
 
-  private def getAllEventsInternal(serviceId: Option[UUID], eventId: Option[UUID], date: Option[LocalDateTime]): Seq[Event] = {
+  private def getAllEventsInternal(
+                                    serviceId: Option[UUID],
+                                    eventId: Option[UUID],
+                                    date: Option[LocalDateTime],
+                                    serviceType: Option[ServiceType]
+                                  ): Seq[Event] = {
     val serviceIdFilter = serviceId match {
       case Some(i) => "e.service_id = cast(? as uuid)"
       case None => "(1 = 1 or '' = ?)"
@@ -96,24 +101,32 @@ class EventRequest(val settings: Settings, val conn: Connection)
       case Some(i) => "e.date >= ?"
       case None => "(1 = 1 or ? = e.date)"
     }
+    val serviceTypeFilter = serviceType match {
+      case Some(_) => "lower(s.type) = ?"
+      case None => "(1 = 1 or ? = lower(s.type))"
+    }
     val sql =
       s"""
          |select
-         |       id,
-         |       capacity,
-         |       service_id,
-         |       user_creator,
-         |       date
+         |       e.id,
+         |       e.capacity,
+         |       e.service_id,
+         |       e.user_creator,
+         |       e.date
          |from event e
+         |left join service s
+         |on e.service_id = s.id
          |where $serviceIdFilter
          |and $eventIdFilter
          |and $dateFilter
+         |and $serviceTypeFilter
          |""".stripMargin
 
     val ps = conn.prepareStatement(sql)
     ps.setString(1, serviceId.map(_.toString).getOrElse(""))
     ps.setString(2, eventId.map(_.toString).getOrElse(""))
     ps.setTimestamp(3, date.map(Timestamp.valueOf).getOrElse(Timestamp.valueOf(LocalDateTime.now())))
+    ps.setString(4, serviceType.map(_.toString.toLowerCase()).getOrElse(""))
 
     val result = createSeq(ps.executeQuery(), eventCreator)
     result
