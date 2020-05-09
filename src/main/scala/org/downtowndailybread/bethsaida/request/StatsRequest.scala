@@ -52,8 +52,8 @@ class StatsRequest(val settings: Settings, val conn: Connection)
     val seq = createSeq(rs, rs => {
       ServiceMonthlyStats(
         rs.getString("name"),
-        rs.getInt("year"),
-        rs.getInt("month"),
+        rs.getString("year").toInt,
+        rs.getString("month").toInt,
         rs.getInt("num_clients"),
         rs.getInt("total_visits"),
         rs.getInt("num_events"),

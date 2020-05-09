@@ -2,8 +2,8 @@ package org.downtowndailybread.bethsaida.model
 
 case class ServiceMonthlyStats(
                                 serviceName: String,
-                                month: Int,
                                 year: Int,
+                                month: Int,
                                 numClients: Int,
                                 totalVisits: Int,
                                 numEvents: Int,
