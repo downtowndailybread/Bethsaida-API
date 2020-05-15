@@ -1,6 +1,6 @@
 package org.downtowndailybread.bethsaida.model
 
-case class ServiceDailyStats(
+case class ServiceStats(
                                 serviceName: String,
                                 year: Int,
                                 month: Int,

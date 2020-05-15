@@ -4,6 +4,8 @@ case class SummaryStats(
                        numClients: Int,
                        numAttendanceSheets: Int,
                        numUniqueVisits: Int,
-                       monthlyStats: List[ServiceMonthlyStats],
-                       dailyStats: List[ServiceDailyStats]
+                       monthlyStats: List[ServiceStats],
+                       dailyStats: List[ServiceStats],
+                       yearlyStats: List[ServiceStats],
+                       yearlyRaceStats: List[RaceStats]
                        )
