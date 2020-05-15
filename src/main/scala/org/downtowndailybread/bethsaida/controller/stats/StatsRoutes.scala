@@ -17,12 +17,7 @@ trait StatsRoutes extends ControllerBase {
       implicit user =>
         get {
           futureComplete {
-            val s = runSql(conn => new StatsRequest(settings, conn).getSummaryStats())
-            val t = s.monthlyStats
-            //val c = t.toList.flatMap(_._2.toList.flatMap(_._2.toList.map(_._2)))
-            val c = t.toList.flatMap(_._2.toList)
-            println(t)
-            s
+            runSql(conn => new StatsRequest(settings, conn).getSummaryStats())
           }
         }
     }

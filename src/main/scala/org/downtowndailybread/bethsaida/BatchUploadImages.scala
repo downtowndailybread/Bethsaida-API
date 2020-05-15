@@ -75,9 +75,6 @@ object BatchUploadImages {
               ps.setString(2, "95a65c9a-c216-43f0-9f3f-d6573d64c873")
               ps.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now))
             })
-
-            println("uploaded image")
-            println(s"user: $id maps to tag: ${tag.toString}")
         }
     }
   }

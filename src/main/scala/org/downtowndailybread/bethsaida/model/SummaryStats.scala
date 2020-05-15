@@ -4,5 +4,6 @@ case class SummaryStats(
                        numClients: Int,
                        numAttendanceSheets: Int,
                        numUniqueVisits: Int,
-                       monthlyStats: Map[Int, Map[Int, Map[String, ServiceMonthlyStats]]]
+                       monthlyStats: List[ServiceMonthlyStats],
+                       dailyStats: List[ServiceDailyStats]
                        )
