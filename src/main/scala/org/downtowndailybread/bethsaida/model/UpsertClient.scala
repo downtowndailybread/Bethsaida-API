@@ -16,5 +16,7 @@ case class UpsertClient(
                          intakeDate: Option[LocalDate],
                          raceSecondary: Option[Race],
                          hispanic: Option[Boolean],
-                         intakeUserId: Option[UUID]
+                         intakeUserId: Option[UUID],
+                         caseworkerName: Option[String],
+                         caseworkerPhone: Option[String]
                  )

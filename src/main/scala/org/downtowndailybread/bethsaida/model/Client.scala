@@ -19,5 +19,7 @@ case class Client(
                    isBanned: Boolean,
                    banId: Option[UUID],
                    raceSecondary: Option[Race],
-                   hispanic: Boolean
+                   hispanic: Boolean,
+                   caseworkerName: Option[String],
+                   caseworkerPhone: Option[String]
                  )

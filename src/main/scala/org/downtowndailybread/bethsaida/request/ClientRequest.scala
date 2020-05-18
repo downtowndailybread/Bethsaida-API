@@ -41,7 +41,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |       not b.id is null as is_banned,
          |       b.id as banned_id,
          |       c.secondary_race as race_secondary,
-         |       c.hispanic
+         |       c.hispanic,
+         |       c.caseworker_name,
+         |       c.caseworker_phone
          |from client c
          |left join ban b
          |on c.id = b.client_id and current_timestamp > b.start and (b.stop is null or current_timestamp < b.stop)
@@ -89,13 +91,15 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       false,
       None,
       upsertClient.raceSecondary,
-      upsertClient.hispanic.getOrElse(false)
+      upsertClient.hispanic.getOrElse(false),
+      upsertClient.caseworkerName,
+      upsertClient.caseworkerPhone
     )
     val sql =
       s"""
          |insert into client
-         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, photo_id, intake_date, intake_user, secondary_race, hispanic)
-         |VALUES (cast(? as uuid), true, ?, ?, ?, cast(? as uuid), ?, ?, ?, ?, cast(? as uuid), ?, cast(? as uuid), ?, ?)
+         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, photo_id, intake_date, intake_user, secondary_race, hispanic, caseworker_name, caseworker_phone)
+         |VALUES (cast(? as uuid), true, ?, ?, ?, cast(? as uuid), ?, ?, ?, ?, cast(? as uuid), ?, cast(? as uuid), ?, ?, ?, ?)
          |""".stripMargin
 
     val ps = conn.prepareStatement(sql)
@@ -113,6 +117,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setUUID(12, client.intakeUserId)
     ps.setString(13, client.raceSecondary.getOrElse(NotApplicable).string)
     ps.setBoolean(14, client.hispanic)
+    ps.setNullableString(15, client.caseworkerName)
+    ps.setNullableString(16, client.caseworkerPhone)
     ps.executeUpdate()
 
     id
@@ -153,7 +159,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |intake_date = ?,
          |secondary_race = ?,
          |hispanic = ?,
-         |intake_user = cast(? as uuid)
+         |intake_user = cast(? as uuid),
+         |caseworker_name = ?,
+         |caseworker_phone = ?
          |where id = (cast(? as uuid))
          |""".stripMargin
     val ps = conn.prepareStatement(sql)
@@ -171,7 +179,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setString(11, client.raceSecondary.getOrElse(NotApplicable).string)
     ps.setBoolean(12, client.hispanic.getOrElse(false))
     ps.setUUID(13, client.intakeUserId.get)
-    ps.setString(14, id.toString)
+    ps.setNullableString(14, client.caseworkerName)
+    ps.setNullableString(15, client.caseworkerPhone)
+    ps.setString(16, id.toString)
     ps.executeUpdate()
 
     val imageReq = new ImageRequest(settings, conn)
@@ -199,7 +209,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       rs.getBoolean("is_banned"),
       rs.getOptionalUUID("banned_id"),
       rs.getOptionalString("race_secondary").map(Race.apply),
-      rs.getBoolean("hispanic")
+      rs.getBoolean("hispanic"),
+      rs.getOptionalString("caseworker_name"),
+      rs.getOptionalString("caseworker_phone")
     )
   }
 
