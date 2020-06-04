@@ -7,7 +7,7 @@ sealed abstract class Race(val idx: Int, val string: String)
 /*
 •	African American or Black
 •	Asian
-•	Caucasian
+•	White
 •	Native American
 •	Other
 •	Client Refused to Identify
@@ -18,7 +18,7 @@ sealed abstract class Race(val idx: Int, val string: String)
 
 case object Black extends Race(0, "black")
 case object Asian extends Race(1, "asian")
-case object Caucasian extends Race(2, "caucasian")
+case object White extends Race(2, "white")
 case object NativeAmerican extends Race(3, "native_american")
 case object PacificIslander extends Race(4, "pacific_islander")
 case object OtherRace extends Race(5, "other")
@@ -27,7 +27,7 @@ case object NotApplicable extends Race(7, "not_applicable")
 
 object Race {
 
-  private val all = List(Black, Asian, Caucasian, NativeAmerican, PacificIslander, OtherRace, Refused, NotApplicable)
+  private val all = List(Black, Asian, White, NativeAmerican, PacificIslander, OtherRace, Refused, NotApplicable)
 
   def apply(str: String): Race = all.find(_.string == str).getOrElse(throw new Exception(s"could not find race $str"))
 
