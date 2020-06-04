@@ -18,5 +18,6 @@ case class UpsertClient(
                          hispanic: Option[Boolean],
                          intakeUserId: Option[UUID],
                          caseworkerName: Option[String],
-                         caseworkerPhone: Option[String]
+                         caseworkerPhone: Option[String],
+                         last4Ssn: Option[String]
                  )

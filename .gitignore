@@ -9,3 +9,5 @@ project/target
 .DS_Store
 logs/*
 /db/
+
+LOG_DIR_IS_UNDEFINED
