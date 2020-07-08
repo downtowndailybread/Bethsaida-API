@@ -104,7 +104,7 @@ class UserRequest(val settings: Settings, val conn: Connection)
     val createBaseRecordSql =
       s"""
          |insert into user_account
-         |    (id, email, firstName, lastName, salt, hash, confirmed, admin_lock, user_lock, reset_token, admin)
+         |    (id, email, first_name, last_name, salt, hash, confirmed, admin_lock, user_lock, reset_token, admin)
          |VALUES
          |    (cast(? as uuid), ?, ?, ?, ?, ?, ?, ?, ?, cast(? as uuid), ?)
        """.stripMargin
