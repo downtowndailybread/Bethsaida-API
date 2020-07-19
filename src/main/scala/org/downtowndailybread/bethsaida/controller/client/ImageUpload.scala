@@ -1,5 +1,6 @@
 package org.downtowndailybread.bethsaida.controller.client
 
+import java.nio.file.{Files, Path, Paths}
 import java.util.UUID
 
 import akka.http.scaladsl.server
@@ -34,16 +35,22 @@ trait ImageUpload extends ControllerBase {
 
   val client_imageuploadRoute = path("imageupload") {
     post {
-      fileUpload("fileUpload") {
-        case (fileInfo, fileStream) if fileInfo.getContentType.mediaType.isImage =>
-          val fileTag = UUID.randomUUID().toString
+      withoutSizeLimit {
+        fileUpload("fileUpload") {
+          case (fileInfo, fileStream) if fileInfo.getContentType.mediaType.isImage =>
+            val fileTag = UUID.randomUUID().toString
 
-          val uploader = uploadToTarget(fileInfo, fileStream, fileTag) _
+            val uploader = uploadToTarget(fileInfo, fileStream, fileTag) _
 
-
-          uploader(writeToS3)
+            //            uploader(tmp_writer)
+            uploader(writeToS3)
+        }
       }
     }
+  }
+
+  private def tmp_writer(stream: Array[Byte], s: String): Unit = {
+    Files.write(Paths.get(s"./images/$s"), stream)
   }
 
   private def uploadToTarget(

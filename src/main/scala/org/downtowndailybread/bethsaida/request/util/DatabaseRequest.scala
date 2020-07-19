@@ -41,8 +41,8 @@ trait DatabaseRequest {
     }
     def setNullableString(parameterIndex: Int, x: Option[String]): Unit = {
       x match {
-        case Some(i) => ps.setString(parameterIndex, i)
-        case None => ps.setNull(parameterIndex, java.sql.Types.VARCHAR)
+        case Some(i) if !i.isEmpty => ps.setString(parameterIndex, i)
+        case _ => ps.setNull(parameterIndex, java.sql.Types.VARCHAR)
       }
     }
     def setNullableUUID(parameterIndex: Int, x: Option[UUID]): Unit = {
