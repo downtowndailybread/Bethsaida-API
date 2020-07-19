@@ -29,7 +29,7 @@ object Race {
 
   private val all = List(Black, Asian, White, NativeAmerican, PacificIslander, OtherRace, Refused, NotApplicable)
 
-  def apply(str: String): Race = all.find(_.string == str).getOrElse(throw new Exception(s"could not find race $str"))
+  def apply(str: String): Race = all.find(_.string == str).getOrElse(throw new Exception(s"could not find `race $str"))
 
   implicit val raceFormat = new RootJsonFormat[Race] {
     override def read(json: JsValue): Race = {
