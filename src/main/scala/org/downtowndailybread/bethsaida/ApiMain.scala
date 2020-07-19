@@ -90,7 +90,7 @@ class ApiMain(val settings: Settings)
   implicit def exceptionHandler: ExceptionHandler = ExceptionHandlers.exceptionHandlers(CorsSettings(settings.config))
 
   implicit def rejectionHandler: RejectionHandler = RejectionHandler.newBuilder.handle(RejectionHandlers.
-    rejectionHanders(CorsSettings(settings.config))).result
+    rejectionHanders).result
 
   implicit val system = ActorSystem("bethsaida-api")
   implicit val actorMaterializer = ActorMaterializer()
