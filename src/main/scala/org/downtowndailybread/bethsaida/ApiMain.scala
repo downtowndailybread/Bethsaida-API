@@ -45,8 +45,9 @@ class ApiMain(val settings: Settings)
 
   def requestMethodAndResponseStatusAsInfo(req: HttpRequest): RouteResult => Option[LogEntry] = {
     case RouteResult.Complete(res) => Some(LogEntry(req.method.name + " " + req.uri + ": " + res.status, Logging.InfoLevel))
-    case _                         => None // no log entries for rejections
+    case _ => None // no log entries for rejections
   }
+
   val logRoutes = DebuggingDirectives.logRequestResult(requestMethodAndResponseStatusAsInfo _)
 
   object RouteLogger extends LoggingAdapter {
@@ -86,9 +87,10 @@ class ApiMain(val settings: Settings)
     }
   }
 
-  implicit def exceptionHandler: ExceptionHandler = ExceptionHandlers.exceptionHandlers
+  implicit def exceptionHandler: ExceptionHandler = ExceptionHandlers.exceptionHandlers(CorsSettings(settings.config))
 
-  implicit def rejectionHandler: RejectionHandler = RejectionHandler.newBuilder.handle(RejectionHandlers.rejectionHanders).result
+  implicit def rejectionHandler: RejectionHandler = RejectionHandler.newBuilder.handle(RejectionHandlers.
+    rejectionHanders(CorsSettings(settings.config))).result
 
   implicit val system = ActorSystem("bethsaida-api")
   implicit val actorMaterializer = ActorMaterializer()
@@ -98,7 +100,7 @@ class ApiMain(val settings: Settings)
 
     val workerSystem = ActorSystem("worker-api")
 
-//    workerSystem.actorOf(Props(classOf[ImageCleanup], settings), "image-cleanup")
+    //    workerSystem.actorOf(Props(classOf[ImageCleanup], settings), "image-cleanup")
 
     Http().bindAndHandle(Route.handlerFlow(routes), settings.interface, settings.port)
 

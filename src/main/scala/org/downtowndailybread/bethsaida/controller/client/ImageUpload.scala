@@ -35,14 +35,14 @@ trait ImageUpload extends ControllerBase {
 
   val client_imageuploadRoute = path("imageupload") {
     post {
-      withoutSizeLimit {
+      withSizeLimit(20000000L) {
         fileUpload("fileUpload") {
           case (fileInfo, fileStream) if fileInfo.getContentType.mediaType.isImage =>
             val fileTag = UUID.randomUUID().toString
 
             val uploader = uploadToTarget(fileInfo, fileStream, fileTag) _
 
-            //            uploader(tmp_writer)
+//                        uploader(tmp_writer)
             uploader(writeToS3)
         }
       }
