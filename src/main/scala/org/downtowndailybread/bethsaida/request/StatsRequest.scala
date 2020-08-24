@@ -16,7 +16,7 @@ class StatsRequest(val settings: Settings, val conn: Connection)
 
   val currentKey = "current_total"
   val previousKey = "prev_total"
-  val projectedKey = "projected_total"
+  val projectedKey = "current_projection"
 
   def getSummaryStats(): SummaryStats = {
     SummaryStats(
