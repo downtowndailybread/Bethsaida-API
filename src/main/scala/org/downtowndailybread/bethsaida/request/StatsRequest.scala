@@ -66,8 +66,7 @@ class StatsRequest(val settings: Settings, val conn: Connection)
         } else {
           List(item)
         }
-    }
-    seq.toList
+    }.toList
   }
 
   private def getYearlyStats: List[ServiceStats] = {
