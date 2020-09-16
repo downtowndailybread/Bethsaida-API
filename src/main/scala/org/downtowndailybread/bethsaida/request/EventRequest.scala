@@ -80,7 +80,7 @@ class EventRequest(val settings: Settings, val conn: Connection)
   }
 
   def getAllActiveEvents(service: ServiceType): Seq[Event] = {
-    getAllEventsInternal(None, None, Some(LocalDate.now().minusDays(1L).atStartOfDay()), Some(service))
+    getAllEventsInternal(None, None, Some(LocalDate.now().minusDays(7L).atStartOfDay()), Some(service))
   }
 
   private def getAllEventsInternal(
@@ -120,6 +120,7 @@ class EventRequest(val settings: Settings, val conn: Connection)
          |and $eventIdFilter
          |and $dateFilter
          |and $serviceTypeFilter
+         |order by e.date desc
          |""".stripMargin
 
     val ps = conn.prepareStatement(sql)

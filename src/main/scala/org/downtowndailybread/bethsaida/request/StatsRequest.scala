@@ -13,6 +13,11 @@ class StatsRequest(val settings: Settings, val conn: Connection)
     with DatabaseRequest
     with UUIDProvider {
 
+
+  val currentKey = "current_total"
+  val previousKey = "prev_total"
+  val projectedKey = "current_projection"
+
   def getSummaryStats(): SummaryStats = {
     SummaryStats(
       getNumberOfClients,
@@ -30,7 +35,7 @@ class StatsRequest(val settings: Settings, val conn: Connection)
       s"""
          |
          |    select
-         |       case when date_part('year', e.date) = date_part('year', current_date) then 'current_total' else 'prev_total' end as name,
+         |       case when date_part('year', e.date) = date_part('year', current_date) then '$currentKey' else '$previousKey' end as name,
          |       c.race, count(*) as total
          |        from attendance att
          |    inner join client c on att.client_id = c.id
@@ -50,15 +55,25 @@ class StatsRequest(val settings: Settings, val conn: Connection)
     }
 
     val seq = createSeq(rs, rsConverter)
-
-    seq.toList
+    val factor = getFactor()
+    seq.flatMap{
+      item =>
+        if (item.name == currentKey) {
+          List(
+            item,
+            item.copy(name = projectedKey, count = Math.round(item.count * factor).toInt)
+          )
+        } else {
+          List(item)
+        }
+    }.toList
   }
 
   private def getYearlyStats: List[ServiceStats] = {
     val ps = conn.prepareStatement(
-      """
+      s"""
         |select
-        |       case when date_part('year', e.date) = date_part('year', current_date) then 'current_total' else 'prev_total' end as name,
+        |       case when date_part('year', e.date) = date_part('year', current_date) then '$currentKey' else '$previousKey' end as name,
         |       date_part('year', e.date) as year,
         |       count(distinct att.client_id) as num_clients,
         |       count(*) as total_visits,
@@ -93,24 +108,26 @@ class StatsRequest(val settings: Settings, val conn: Connection)
     }
 
     val seq = createSeq(rs, rsConverter).toList
-    val projection = seq.find(r => r.serviceName == "current_total").map{ s =>
-      val factor =
-        LocalDate.now()
-          .withDayOfYear(1)
-          .plusYears(1)
-          .minusDays(1).getDayOfYear.toDouble /
-          LocalDate.now().getDayOfYear.toDouble
-      s.copy(serviceName = "current_projection",
+    val projection = seq.find(r => r.serviceName == currentKey).map { s =>
+      val factor = getFactor()
+      s.copy(serviceName = projectedKey,
         numClients = Math.round(s.numClients * factor).toInt,
         totalVisits = Math.round(s.totalVisits * factor).toInt,
         numEvents = Math.round(s.numEvents * factor).toInt,
-        numMale =  Math.round(s.numMale * factor).toInt,
+        numMale = Math.round(s.numMale * factor).toInt,
         numFemale = Math.round(s.numFemale * factor).toInt
       )
     }
 
     (projection :: seq.map(r => Option(r))).flatten
   }
+
+  private def getFactor(): Double =
+    LocalDate.now()
+      .withDayOfYear(1)
+      .plusYears(1)
+      .minusDays(1).getDayOfYear.toDouble /
+      LocalDate.now().getDayOfYear.toDouble
 
   private def getDailyStats: List[ServiceStats] = {
     val ps = conn.prepareStatement(
