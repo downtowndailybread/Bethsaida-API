@@ -22,5 +22,6 @@ case class Client(
                    hispanic: Boolean,
                    caseworkerName: Option[String],
                    caseworkerPhone: Option[String],
-                   last4Ssn: Option[String]
+                   last4Ssn: Option[String],
+                   veteran: Boolean
                  )
