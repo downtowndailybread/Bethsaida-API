@@ -3,7 +3,7 @@ package org.downtowndailybread.bethsaida.json
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import org.downtowndailybread.bethsaida.model.{Attendance, AttendanceAttribute}
+import org.downtowndailybread.bethsaida.model.{Attendance, AttendanceAttribute, AttendanceExtended}
 import org.downtowndailybread.bethsaida.providers.SettingsProvider
 import spray.json.DefaultJsonProtocol._
 import spray.json.{JsObject, JsValue, RootJsonFormat, _}
@@ -53,4 +53,8 @@ trait AttendanceJson extends BaseSupport {
   }
 
   implicit val attendanceSeqJsonConverter = seqFormat[AttendanceAttribute]
+
+  implicit val attendanceExtended = jsonFormat2(AttendanceExtended)
+
+  implicit val attendanceExtendedSeq = seqFormat[AttendanceExtended]
 }

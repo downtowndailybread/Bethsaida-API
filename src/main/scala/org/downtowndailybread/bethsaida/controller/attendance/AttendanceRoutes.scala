@@ -10,7 +10,7 @@ trait AttendanceRoutes extends Delete with New with Update with Find with Contro
 
 
   val allAttendanceRoutes = pathPrefix("attendance") {
-    attendance_findByEventRoute ~ attendance_deleteRoute ~ attendance_newRoute ~ attendance_updateRoute
+    attendance_findByEventRoute ~ attendance_deleteRoute ~ attendance_newRoute ~ attendance_updateRoute ~ attendance_findByClientRoute
   }
 
 }

@@ -6,7 +6,7 @@ import java.util.UUID
 
 import org.downtowndailybread.bethsaida.Settings
 import org.downtowndailybread.bethsaida.exception.attendance.BannedUserProhibitedException
-import org.downtowndailybread.bethsaida.model.{Attendance, AttendanceAttribute, InternalUser}
+import org.downtowndailybread.bethsaida.model.{Attendance, AttendanceAttribute, AttendanceExtended, InternalUser}
 import org.downtowndailybread.bethsaida.providers.UUIDProvider
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 
@@ -23,12 +23,25 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
     getSingle(ps.executeQuery(), createRs)
   }
 
-  def getAttendanceByClientId(clientId: UUID): Seq[AttendanceAttribute] = {
-    val sql = getAttendanceSql("client_id = ?")
-    val ps = conn.prepareStatement(sql)
-    ps.setString(1, clientId)
+  def getAttendanceByClientId(clientId: UUID): Seq[AttendanceExtended] = {
 
-    createSeq(ps.executeQuery(), createRs).map(_.attribute)
+    val sql =
+      s"""
+           |select s.name as name,
+           |       e.date as date
+           |from client c
+           |inner join attendance a on c.id = a.client_id
+           |inner join event e on a.event_id = e.id
+           |inner join service s on e.service_id = s.id
+           |where c.id = cast(? as uuid)
+           |""".stripMargin
+    val ps = conn.prepareStatement(sql)
+    ps.setUUID(1, clientId)
+
+    val s = createSeq(ps.executeQuery(), (rs) => {
+      AttendanceExtended(rs.getString("name"), rs.getLocalDateTime("date").toLocalDate)
+    })
+    s
   }
 
   def getAttendanceByEventId(eventId: UUID): Seq[Attendance] = {

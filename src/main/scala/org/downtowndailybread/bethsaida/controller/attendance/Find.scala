@@ -22,4 +22,18 @@ trait Find  extends ControllerBase {
           }
       }
   }
+
+  val attendance_findByClientRoute = path("event" / "client" / JavaUUID) {
+    clientId =>
+      authorizeNotAnonymous {
+        implicit iu =>
+          get {
+            futureComplete {
+              runSql(c =>
+                new AttendanceRequest(settings, c).getAttendanceByClientId(clientId)
+              )
+            }
+          }
+      }
+  }
 }
