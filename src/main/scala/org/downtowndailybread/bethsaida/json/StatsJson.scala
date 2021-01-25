@@ -7,7 +7,7 @@ import spray.json.DefaultJsonProtocol._
 trait StatsJson extends BaseSupport {
     this: SettingsProvider =>
 
-  implicit val serviceStats = jsonFormat9(ServiceStats)
+  implicit val serviceStats = jsonFormat12(ServiceStats)
   implicit val serviceListStats = seqFormat[ServiceStats]
   implicit val raceStats = jsonFormat3(RaceStats)
   implicit val raceListStats = seqFormat[RaceStats]
