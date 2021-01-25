@@ -76,6 +76,9 @@ class StatsRequest(val settings: Settings, val conn: Connection)
         |       case when date_part('year', e.date) = date_part('year', current_date) then '$currentKey' else '$previousKey' end as name,
         |       date_part('year', e.date) as year,
         |       count(distinct att.client_id) as num_clients,
+        |       count(case when s.name = 'Day Shelter' then 1 else null end) as day_shelter_visits,
+        |       count(case when s.name = 'Night Shelter' then 1 else null end) as night_shelter_visits,
+        |       count(case when s.name = 'Showers' then 1 else null end) as shower_visits,
         |       count(*) as total_visits,
         |       count(distinct e.id) as num_events,
         |       count(case c.gender when 'male' then 1 else null end) as count_male,
@@ -86,7 +89,6 @@ class StatsRequest(val settings: Settings, val conn: Connection)
         |inner join service s on e.service_id = s.id
         |where date_part('year', e.date) between date_part('year', current_date) - 1 and date_part('year', current_date)
         |group by date_part('year', e.date)
-        |
         |""".stripMargin
     )
 
