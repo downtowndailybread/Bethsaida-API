@@ -120,7 +120,10 @@ class StatsRequest(val settings: Settings, val conn: Connection)
         totalVisits = Math.round(s.totalVisits * factor).toInt,
         numEvents = Math.round(s.numEvents * factor).toInt,
         numMale = Math.round(s.numMale * factor).toInt,
-        numFemale = Math.round(s.numFemale * factor).toInt
+        numFemale = Math.round(s.numFemale * factor).toInt,
+        dayShelterVisits = Math.round(s.dayShelterVisits * factor).toInt,
+        nightShelterVisits = Math.round(s.nightShelterVisits * factor).toInt,
+        showerVisits = Math.round(s.showerVisits * factor).toInt
       )
     }
 
@@ -198,6 +201,9 @@ class StatsRequest(val settings: Settings, val conn: Connection)
         |date_part('year', c.intake_date) as year,
         |date_part('month', c.intake_date) as month,
         |count(*) as num_clients,
+        |0 as day_shelter_visits,
+        |0 as night_shelter_visits,
+        |0 as shower_visits,
         |count(*) as total_visits,
         |0 as num_events,
         |count(case c.gender when 'male' then 1 else null end) as count_male,
