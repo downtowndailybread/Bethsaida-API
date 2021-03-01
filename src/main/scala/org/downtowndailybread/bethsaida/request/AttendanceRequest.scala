@@ -131,13 +131,15 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
 
   private def getAttendanceSql(filter: String): String = {
     s"""
-       |select id,
-       |       check_in_time,
-       |       event_id,
-       |       client_id,
-       |       user_id
-       |from attendance
+       |select a.id,
+       |       a.check_in_time,
+       |       a.event_id,
+       |       a.client_id,
+       |       a.user_id
+       |from attendance a
+       |inner join client c on c.id = a.client_id
        |where $filter
+       |and c.active
        """.stripMargin
   }
 }
