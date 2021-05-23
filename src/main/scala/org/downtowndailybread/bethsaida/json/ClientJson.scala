@@ -35,14 +35,15 @@ trait ClientJson extends BaseSupport {
             o.get("caseworkerName").map(_.convertTo[String]),
             o.get("caseworkerPhone").map(_.convertTo[String]),
             o.get("last4Ssn").map(_.convertTo[String]),
-            o.get("veteran").map(_.convertTo[Boolean])
+            o.get("veteran").map(_.convertTo[Boolean]),
+            o.get("covidVaccine").map(_.convertTo[Boolean])
           )
       }
     }
   }
 
 
-  implicit val clientFormat = jsonFormat20(Client)
+  implicit val clientFormat = jsonFormat21(Client)
 
   implicit val seqClientFormat = seqFormat[Client]
 

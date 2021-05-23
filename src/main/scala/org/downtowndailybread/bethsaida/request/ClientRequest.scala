@@ -45,7 +45,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |       c.caseworker_name,
          |       c.caseworker_phone,
          |       c.last_4_ssn,
-         |       c.veteran
+         |       c.veteran,
+         |       c.covid_vaccine
          |from client c
          |left join ban b
          |on c.id = b.client_id and current_timestamp > b.start and (b.stop is null or current_timestamp < b.stop)
@@ -97,13 +98,14 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       upsertClient.caseworkerName,
       upsertClient.caseworkerPhone,
       upsertClient.last4Ssn,
-      upsertClient.veteran.getOrElse(false)
+      upsertClient.veteran.getOrElse(false),
+      upsertClient.covidVaccine.getOrElse(false)
     )
     val sql =
       s"""
          |insert into client
-         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, photo_id, intake_date, intake_user, secondary_race, hispanic, caseworker_name, caseworker_phone, last_4_ssn, veteran)
-         |VALUES (cast(? as uuid), true, ?, ?, ?, cast(? as uuid), ?, ?, ?, ?, cast(? as uuid), ?, cast(? as uuid), ?, ?, ?, ?, ?, ?)
+         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, photo_id, intake_date, intake_user, secondary_race, hispanic, caseworker_name, caseworker_phone, last_4_ssn, veteran, covid_vaccine)
+         |VALUES (cast(? as uuid), true, ?, ?, ?, cast(? as uuid), ?, ?, ?, ?, cast(? as uuid), ?, cast(? as uuid), ?, ?, ?, ?, ?, ?, ?)
          |""".stripMargin
 
     val ps = conn.prepareStatement(sql)
@@ -125,6 +127,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setNullableString(16, client.caseworkerPhone)
     ps.setNullableString(17, client.last4Ssn)
     ps.setBoolean(18, client.veteran)
+    ps.setBoolean(19, client.covidVaccine)
     ps.executeUpdate()
 
     id
@@ -169,7 +172,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |caseworker_name = ?,
          |caseworker_phone = ?,
          |last_4_ssn = ?,
-         |veteran = ?
+         |veteran = ?,
+         |covid_vaccine = ?
          |where id = (cast(? as uuid))
          |""".stripMargin
     val ps = conn.prepareStatement(sql)
@@ -191,7 +195,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setNullableString(15, client.caseworkerPhone)
     ps.setNullableString(16, client.last4Ssn)
     ps.setBoolean(17, client.veteran.getOrElse(false))
-    ps.setString(18, id.toString)
+    ps.setBoolean(18, client.covidVaccine.getOrElse(false))
+    ps.setString(19, id.toString)
     ps.executeUpdate()
 
     val imageReq = new ImageRequest(settings, conn)
@@ -223,7 +228,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       rs.getOptionalString("caseworker_name"),
       rs.getOptionalString("caseworker_phone"),
       rs.getOptionalString("last_4_ssn"),
-      rs.getBoolean("veteran")
+      rs.getBoolean("veteran"),
+      rs.getBoolean("covid_vaccine")
     )
   }
 

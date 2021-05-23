@@ -23,5 +23,6 @@ case class Client(
                    caseworkerName: Option[String],
                    caseworkerPhone: Option[String],
                    last4Ssn: Option[String],
-                   veteran: Boolean
+                   veteran: Boolean,
+                   covidVaccine: Boolean
                  )

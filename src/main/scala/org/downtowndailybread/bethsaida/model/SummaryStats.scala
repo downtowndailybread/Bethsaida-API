@@ -7,5 +7,6 @@ case class SummaryStats(
                        monthlyStats: List[ServiceStats],
                        dailyStats: List[ServiceStats],
                        yearlyStats: List[ServiceStats],
-                       yearlyRaceStats: List[RaceStats]
+                       yearlyRaceStats: List[RaceStats],
+                       covidStats: CovidStats
                        )

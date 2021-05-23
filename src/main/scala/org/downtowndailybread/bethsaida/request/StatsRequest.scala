@@ -2,9 +2,8 @@ package org.downtowndailybread.bethsaida.request
 
 import java.sql.{Connection, ResultSet}
 import java.time.LocalDate
-
 import org.downtowndailybread.bethsaida.Settings
-import org.downtowndailybread.bethsaida.model.{RaceStats, ServiceStats, SummaryStats}
+import org.downtowndailybread.bethsaida.model.{CovidStats, RaceStats, ServiceStats, SummaryStats}
 import org.downtowndailybread.bethsaida.providers.UUIDProvider
 import org.downtowndailybread.bethsaida.request.util.{BaseRequest, DatabaseRequest}
 
@@ -27,7 +26,33 @@ class StatsRequest(val settings: Settings, val conn: Connection)
       getDailyStats,
       getYearlyStats,
       getYearlyRaceStats,
+      getCovidStats,
     )
+  }
+
+  private def getCovidStats: CovidStats = {
+    val ps = conn.prepareStatement(
+      s"""
+         |with clients as (select distinct client_id
+         |from attendance
+         |where check_in_time > now() - interval '1 year')
+         |select coalesce(covid_vaccine, false) as covid_vaccine, count(*) as count
+         |from client c
+         |right join clients cl
+         |on c.id = cl.client_id
+         |group by coalesce(covid_vaccine, false)
+         |""".stripMargin
+    )
+
+    val rs = ps.executeQuery()
+
+    val rsConverter = (rs: ResultSet) => {
+      (rs.getBoolean("covid_vaccine"), rs.getInt("count"))
+    }
+
+    val seq = createSeq(rs, rsConverter)
+
+    CovidStats(seq.find(_._1).map(_._2).getOrElse(0), seq.find(!_._1).map(_._2).getOrElse(0))
   }
 
   private def getYearlyRaceStats: List[RaceStats] = {
