@@ -98,5 +98,7 @@ trait ClientJson extends BaseSupport {
       obj.map(banFormat.write).toVector
     )
   }
+
+  implicit val mergeClientFormat = jsonFormat2(MergeClients)
 }
 

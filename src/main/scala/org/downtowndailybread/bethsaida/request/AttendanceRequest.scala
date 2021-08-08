@@ -52,6 +52,14 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
     createSeq(ps.executeQuery(), createRs)
   }
 
+  def getFullAttendanceByClientId(clientId: UUID): Seq[Attendance] = {
+    val sql = getAttendanceSql("client_id = cast(? as uuid)")
+    val ps = conn.prepareStatement(sql)
+    ps.setString(1, clientId)
+
+    createSeq(ps.executeQuery(), createRs)
+  }
+
   def updateAttendance(attendanceId: UUID, attribute: AttendanceAttribute)(
     implicit user: InternalUser
   ): Unit = {
@@ -89,11 +97,11 @@ class AttendanceRequest(val settings: Settings, val conn: Connection)
     ps.executeUpdate()
   }
 
-  def createAttendance(attrib: AttendanceAttribute)(
+  def createAttendance(attrib: AttendanceAttribute, ignoreBan: Boolean = false)(
     implicit user: InternalUser
   ): UUID = {
 
-    if(new ClientRequest(settings, conn).getClientById(attrib.clientId).isBanned) {
+    if(new ClientRequest(settings, conn).getClientById(attrib.clientId).isBanned && !ignoreBan) {
       throw new BannedUserProhibitedException()
     }
 

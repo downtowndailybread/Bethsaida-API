@@ -200,7 +200,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.executeUpdate()
 
     val imageReq = new ImageRequest(settings, conn)
-    if(existingClient.photoId != client.photoId) {
+    if (existingClient.photoId != client.photoId) {
       imageReq.deleteImage(existingClient.photoId)
       imageReq.createImage(existingClient.photoId)
     }
@@ -235,5 +235,70 @@ class ClientRequest(val settings: Settings, val conn: Connection)
 
   private def createNicknameFromResultSet(rs: ResultSet): (UUID, String) = {
     (rs.getUUID("client_id"), rs.getString("nickname"))
+  }
+
+  private def makeOption[T](to: Client, from: Client, c: Client => T): Option[T] = {
+    Some(c(to)).orElse(Some(c(from)))
+  }
+
+  def mergeClients(merge: MergeClients)(implicit iu: InternalUser): UUID = {
+
+    val from = getClientById(merge.from)
+    val to = getClientById(merge.to)
+
+    val clientToUpdate = UpsertClient(
+      makeOption(to, from, c => c.firstName),
+      to.middleName.orElse(from.middleName),
+      makeOption(to, from, c => c.lastName),
+      makeOption(to, from, c => c.dateOfBirth),
+      makeOption(to, from, c => c.gender),
+      makeOption(to, from, c => c.race),
+      to.phone.orElse(from.phone),
+      to.clientPhoto.orElse(from.clientPhoto),
+      to.photoId.orElse(from.photoId),
+      Some(List(to.intakeDate, from.intakeDate).flatten.minBy(_.toEpochDay)),
+      to.raceSecondary.orElse(from.raceSecondary),
+      makeOption(to, from, c => c.hispanic),
+      makeOption(to, from, c => c.intakeUserId),
+      to.caseworkerName.orElse(from.caseworkerName),
+      to.caseworkerPhone.orElse(from.caseworkerPhone),
+      to.last4Ssn.orElse(from.last4Ssn),
+      makeOption(to, from, c => c.veteran),
+      makeOption(to, from, c => c.covidVaccine)
+    )
+
+    updateClient(to.id, clientToUpdate)
+
+    val attendanceReq = new AttendanceRequest(settings, conn)
+    val fromClientAttendance = attendanceReq.getFullAttendanceByClientId(from.id)
+    val toClientAttendance = attendanceReq.getFullAttendanceByClientId(to.id).map(r => r.attribute)
+
+    val toEvents = toClientAttendance.map(r => r.eventId).toSet
+    val eventsToInsert = fromClientAttendance.map(r => r.attribute).filter(r => !toEvents.contains(r.eventId)).map(r => r.copy(clientId = to.id))
+
+    eventsToInsert.foreach(r => attendanceReq.createAttendance(r, true))
+    fromClientAttendance.foreach(r => attendanceReq.deleteAttendance(r.id))
+
+    val lockerReq = new LockerRequest(settings, conn)
+    val allLockers = lockerReq.getLockers()
+    val oldLocker = allLockers.find(_.lockerDetails.clientId == from.id)
+    oldLocker match {
+      case Some(locker) if !allLockers.exists(_.lockerDetails.clientId == to.id) =>
+        lockerReq.insertLocker(locker.lockerDetails.copy(clientId = to.id))
+      case _ =>
+    }
+
+    val mailReq = new MailRequest(settings, conn)
+    val allMail = mailReq.getMail()
+    val oldMail = allMail.find(_.mailDetails.clientId == from.id)
+    oldMail match {
+      case Some(mail) if !allMail.exists(_.mailDetails.clientId == to.id) =>
+        mailReq.insertMail(mail.mailDetails.copy(clientId = to.id))
+      case _ =>
+    }
+
+    deleteClient(from.id)
+
+    to.id
   }
 }
