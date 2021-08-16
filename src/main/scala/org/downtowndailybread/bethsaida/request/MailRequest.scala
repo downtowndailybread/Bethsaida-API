@@ -21,7 +21,10 @@ class MailRequest(val settings: Settings, val conn: Connection)
       s"""
          |select m.id, m.client_id, m.start_date, m.end_date, m.input_user
          |from mail m
+         |left join client c
+         |on m.client_id = c.id
          |where end_date is null
+         |and c.active
          |""".stripMargin
 
 
