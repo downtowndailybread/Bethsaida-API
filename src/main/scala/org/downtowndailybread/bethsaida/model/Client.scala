@@ -24,5 +24,12 @@ case class Client(
                    caseworkerPhone: Option[String],
                    last4Ssn: Option[String],
                    veteran: Boolean,
-                   covidVaccine: Boolean
+                   covidVaccine: Boolean,
+                   extraParameters: ExtraParameters
                  )
+
+case class ExtraParameters(
+                            idVoucher: Option[LocalDate],
+                            hmis: Option[Int],
+                            path: Option[Boolean]
+                          )

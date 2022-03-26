@@ -45,6 +45,12 @@ trait DatabaseRequest {
         case _ => ps.setNull(parameterIndex, java.sql.Types.VARCHAR)
       }
     }
+    def setNullableBoolean(parameterIndex: Int, x: Option[Boolean]): Unit = {
+      x match {
+        case Some(i) => ps.setBoolean(parameterIndex, i)
+        case _ => ps.setNull(parameterIndex, java.sql.Types.BOOLEAN)
+      }
+    }
     def setNullableUUID(parameterIndex: Int, x: Option[UUID]): Unit = {
       x match {
         case Some(i) => ps.setString(parameterIndex, i)
@@ -81,11 +87,27 @@ trait DatabaseRequest {
   class EnhancedResultSet(rs: ResultSet) {
 
     def getOptionalInt(col: String): Option[Int] = {
-      Option(rs.getInt(col))
+      val a = rs.getInt(col)
+      val isNull = rs.wasNull()
+      if (isNull) {
+        None
+      } else {
+        Option(a)
+      }
     }
 
     def getOptionalString(col: String): Option[String] = {
       Option(rs.getString(col))
+    }
+
+    def getOptionalBoolean(col: String): Option[Boolean] = {
+      val a = rs.getBoolean(col)
+      val isNull = rs.wasNull()
+      if (isNull) {
+        None
+      } else {
+        Option(a)
+      }
     }
 
     def getOptionalUUID(col: String): Option[UUID] = {

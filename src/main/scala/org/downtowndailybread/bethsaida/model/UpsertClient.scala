@@ -21,5 +21,6 @@ case class UpsertClient(
                          caseworkerPhone: Option[String],
                          last4Ssn: Option[String],
                          veteran: Option[Boolean],
-                         covidVaccine: Option[Boolean]
-                 )
+                         covidVaccine: Option[Boolean],
+                         extraParameters: Option[ExtraParameters]
+                       )

@@ -46,7 +46,10 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |       c.caseworker_phone,
          |       c.last_4_ssn,
          |       c.veteran,
-         |       c.covid_vaccine
+         |       c.covid_vaccine,
+         |       c.id_voucher,
+         |       c.hmis,
+         |       c.path
          |from client c
          |left join ban b
          |on c.id = b.client_id and current_timestamp > b.start and (b.stop is null or current_timestamp < b.stop)
@@ -60,7 +63,6 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       result,
       createClientFromResultSet()
     )
-
     r.toList
   }
 
@@ -99,13 +101,18 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       upsertClient.caseworkerPhone,
       upsertClient.last4Ssn,
       upsertClient.veteran.getOrElse(false),
-      upsertClient.covidVaccine.getOrElse(false)
+      upsertClient.covidVaccine.getOrElse(false),
+      ExtraParameters(
+        upsertClient.extraParameters.flatMap(_.idVoucher),
+        upsertClient.extraParameters.flatMap(_.hmis),
+        upsertClient.extraParameters.flatMap(_.path)
+      )
     )
     val sql =
       s"""
          |insert into client
-         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, photo_id, intake_date, intake_user, secondary_race, hispanic, caseworker_name, caseworker_phone, last_4_ssn, veteran, covid_vaccine)
-         |VALUES (cast(? as uuid), true, ?, ?, ?, cast(? as uuid), ?, ?, ?, ?, cast(? as uuid), ?, cast(? as uuid), ?, ?, ?, ?, ?, ?, ?)
+         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, photo_id, intake_date, intake_user, secondary_race, hispanic, caseworker_name, caseworker_phone, last_4_ssn, veteran, covid_vaccine, id_voucher, hmis, path)
+         |VALUES (cast(? as uuid), true, ?, ?, ?, cast(? as uuid), ?, ?, ?, ?, cast(? as uuid), ?, cast(? as uuid), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          |""".stripMargin
 
     val ps = conn.prepareStatement(sql)
@@ -128,6 +135,9 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setNullableString(17, client.last4Ssn)
     ps.setBoolean(18, client.veteran)
     ps.setBoolean(19, client.covidVaccine)
+    ps.setNullableTimestamp(20, client.extraParameters.idVoucher.map(r => Timestamp.valueOf(r.atStartOfDay())))
+    ps.setNullableInt(21, client.extraParameters.hmis)
+    ps.setNullableBoolean(22, client.extraParameters.path)
     ps.executeUpdate()
 
     id
@@ -173,7 +183,10 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |caseworker_phone = ?,
          |last_4_ssn = ?,
          |veteran = ?,
-         |covid_vaccine = ?
+         |covid_vaccine = ?,
+         |id_voucher = ?,
+         |hmis = ?,
+         |path = ?
          |where id = (cast(? as uuid))
          |""".stripMargin
     val ps = conn.prepareStatement(sql)
@@ -196,7 +209,10 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setNullableString(16, client.last4Ssn)
     ps.setBoolean(17, client.veteran.getOrElse(false))
     ps.setBoolean(18, client.covidVaccine.getOrElse(false))
-    ps.setString(19, id.toString)
+    ps.setNullableTimestamp(19, client.extraParameters.flatMap(r => r.idVoucher).map(r => Timestamp.valueOf(r.atStartOfDay())))
+    ps.setNullableInt(20, client.extraParameters.flatMap(_.hmis))
+    ps.setNullableBoolean(21, client.extraParameters.flatMap(_.path))
+    ps.setString(22, id.toString)
     ps.executeUpdate()
 
     val imageReq = new ImageRequest(settings, conn)
@@ -229,12 +245,13 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       rs.getOptionalString("caseworker_phone"),
       rs.getOptionalString("last_4_ssn"),
       rs.getBoolean("veteran"),
-      rs.getBoolean("covid_vaccine")
+      rs.getBoolean("covid_vaccine"),
+      ExtraParameters(
+        rs.getOptionalLocalDate(col = "id_voucher"),
+        rs.getOptionalInt(col = "hmis"),
+        rs.getOptionalBoolean(col = "path"),
+      )
     )
-  }
-
-  private def createNicknameFromResultSet(rs: ResultSet): (UUID, String) = {
-    (rs.getUUID("client_id"), rs.getString("nickname"))
   }
 
   private def makeOption[T](to: Client, from: Client, c: Client => T): Option[T] = {
@@ -264,7 +281,12 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       to.caseworkerPhone.orElse(from.caseworkerPhone),
       to.last4Ssn.orElse(from.last4Ssn),
       makeOption(to, from, c => c.veteran),
-      makeOption(to, from, c => c.covidVaccine)
+      makeOption(to, from, c => c.covidVaccine),
+      Option(ExtraParameters(
+        to.extraParameters.idVoucher.orElse(from.extraParameters.idVoucher),
+        to.extraParameters.hmis.orElse(from.extraParameters.hmis),
+        to.extraParameters.path.orElse(from.extraParameters.path)
+      ))
     )
 
     updateClient(to.id, clientToUpdate)
