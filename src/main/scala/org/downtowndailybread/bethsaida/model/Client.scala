@@ -31,5 +31,6 @@ case class Client(
 case class ExtraParameters(
                             idVoucher: Option[LocalDate],
                             hmis: Option[Int],
-                            path: Option[Boolean]
+                            path: Option[Boolean],
+                            prior_stay: Option[String]
                           )

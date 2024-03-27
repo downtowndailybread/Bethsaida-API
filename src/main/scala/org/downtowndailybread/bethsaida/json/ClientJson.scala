@@ -43,7 +43,7 @@ trait ClientJson extends BaseSupport {
     }
   }
 
-  implicit val extraParametersFormat = jsonFormat3(ExtraParameters)
+  implicit val extraParametersFormat = jsonFormat4(ExtraParameters)
 
   implicit val clientFormat = jsonFormat22(Client)
 

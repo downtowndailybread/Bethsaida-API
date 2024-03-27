@@ -5,12 +5,20 @@ import spray.json._
 sealed abstract class Gender(val idx: Int, val string: String)
 
 case object Male extends Gender(0, "male")
+
 case object Female extends Gender(1, "female")
+
 case object OtherGender extends Gender(2, "other")
+
+case object NonBinary extends Gender(3, "non_binary")
+
+case object FemaleBornMale extends Gender(4, "f_born_m")
+
+case object MaleBornFemale extends Gender(5, "m_born_f")
 
 object Gender {
 
-  private val all = List(Male, Female, OtherGender)
+  private val all = List(Male, Female, OtherGender, NonBinary, FemaleBornMale, MaleBornFemale)
 
   def apply(str: String): Gender = all.find(_.string == str).get
 

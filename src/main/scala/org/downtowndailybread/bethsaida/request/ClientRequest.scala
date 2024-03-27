@@ -49,7 +49,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |       c.covid_vaccine,
          |       c.id_voucher,
          |       c.hmis,
-         |       c.path
+         |       c.path,
+         |       c.prior_stay
          |from client c
          |left join ban b
          |on c.id = b.client_id and current_timestamp > b.start and (b.stop is null or current_timestamp < b.stop)
@@ -105,14 +106,15 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       ExtraParameters(
         upsertClient.extraParameters.flatMap(_.idVoucher),
         upsertClient.extraParameters.flatMap(_.hmis),
-        upsertClient.extraParameters.flatMap(_.path)
+        upsertClient.extraParameters.flatMap(_.path),
+        upsertClient.extraParameters.flatMap(_.prior_stay)
       )
     )
     val sql =
       s"""
          |insert into client
-         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, photo_id, intake_date, intake_user, secondary_race, hispanic, caseworker_name, caseworker_phone, last_4_ssn, veteran, covid_vaccine, id_voucher, hmis, path)
-         |VALUES (cast(? as uuid), true, ?, ?, ?, cast(? as uuid), ?, ?, ?, ?, cast(? as uuid), ?, cast(? as uuid), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         | (id, active, first_name, last_name, date_of_birth, client_photo, middle_name, race, phone, gender, photo_id, intake_date, intake_user, secondary_race, hispanic, caseworker_name, caseworker_phone, last_4_ssn, veteran, covid_vaccine, id_voucher, hmis, path, prior_stay)
+         |VALUES (cast(? as uuid), true, ?, ?, ?, cast(? as uuid), ?, ?, ?, ?, cast(? as uuid), ?, cast(? as uuid), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          |""".stripMargin
 
     val ps = conn.prepareStatement(sql)
@@ -138,6 +140,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setNullableTimestamp(20, client.extraParameters.idVoucher.map(r => Timestamp.valueOf(r.atStartOfDay())))
     ps.setNullableInt(21, client.extraParameters.hmis)
     ps.setNullableBoolean(22, client.extraParameters.path)
+    ps.setNullableString(23, client.extraParameters.prior_stay)
     ps.executeUpdate()
 
     id
@@ -186,7 +189,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
          |covid_vaccine = ?,
          |id_voucher = ?,
          |hmis = ?,
-         |path = ?
+         |path = ?,
+         |prior_stay = ?
          |where id = (cast(? as uuid))
          |""".stripMargin
     val ps = conn.prepareStatement(sql)
@@ -212,7 +216,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
     ps.setNullableTimestamp(19, client.extraParameters.flatMap(r => r.idVoucher).map(r => Timestamp.valueOf(r.atStartOfDay())))
     ps.setNullableInt(20, client.extraParameters.flatMap(_.hmis))
     ps.setNullableBoolean(21, client.extraParameters.flatMap(_.path))
-    ps.setString(22, id.toString)
+    ps.setNullableString(22, client.extraParameters.flatMap(_.prior_stay))
+    ps.setString(23, id.toString)
     ps.executeUpdate()
 
     val imageReq = new ImageRequest(settings, conn)
@@ -250,6 +255,7 @@ class ClientRequest(val settings: Settings, val conn: Connection)
         rs.getOptionalLocalDate(col = "id_voucher"),
         rs.getOptionalInt(col = "hmis"),
         rs.getOptionalBoolean(col = "path"),
+        rs.getOptionalString(col = "prior_stay")
       )
     )
   }
@@ -285,7 +291,8 @@ class ClientRequest(val settings: Settings, val conn: Connection)
       Option(ExtraParameters(
         to.extraParameters.idVoucher.orElse(from.extraParameters.idVoucher),
         to.extraParameters.hmis.orElse(from.extraParameters.hmis),
-        to.extraParameters.path.orElse(from.extraParameters.path)
+        to.extraParameters.path.orElse(from.extraParameters.path),
+        to.extraParameters.prior_stay.orElse(from.extraParameters.prior_stay)
       ))
     )
 
