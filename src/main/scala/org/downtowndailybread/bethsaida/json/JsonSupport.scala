@@ -18,6 +18,7 @@ trait JsonSupport
     with ExceptionJson
     with LockerJson
     with MailJson
+    with MealJson
     with NoteJson
     with ServiceJson
     with StatsJson
